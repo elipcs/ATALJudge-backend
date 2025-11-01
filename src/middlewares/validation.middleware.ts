@@ -1,0 +1,55 @@
+import { Request, Response, NextFunction } from 'express';
+import { validateDto, ValidationException } from '../utils/validators';
+import { validationErrorResponse } from '../utils/responses';
+import { logger } from '../utils';
+
+/**
+ * Middleware para validar o body da requisição com um DTO
+ */
+export function validateBody<T extends object>(dtoClass: new () => T) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      req.body = await validateDto(dtoClass, req.body);
+      next();
+    } catch (error) {
+      if (error instanceof ValidationException) {
+        const formattedErrors = error.formatErrors();
+        logger.warn('[VALIDATION] Erros de validação', { 
+          path: req.path,
+          method: req.method,
+          errors: formattedErrors,
+          bodyKeys: Object.keys(req.body || {}),
+          bodyValues: Object.keys(req.body || {}).reduce((acc, key) => {
+            acc[key] = key === 'newPassword' || key === 'password' ? '[HIDDEN]' : req.body[key];
+            return acc;
+          }, {} as Record<string, any>)
+        });
+        validationErrorResponse(res, formattedErrors);
+        return;
+      }
+      
+      logger.error('[VALIDATION] Erro desconhecido', { error, path: req.path });
+      validationErrorResponse(res, { general: ['Erro de validação'] });
+    }
+  };
+}
+
+/**
+ * Middleware para validar query parameters com um DTO
+ */
+export function validateQuery<T extends object>(dtoClass: new () => T) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      req.query = await validateDto(dtoClass, req.query) as any;
+      next();
+    } catch (error) {
+      if (error instanceof ValidationException) {
+        validationErrorResponse(res, error.formatErrors());
+        return;
+      }
+      
+      validationErrorResponse(res, { general: ['Erro de validação'] });
+    }
+  };
+}
+
