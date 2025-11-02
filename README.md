@@ -1,312 +1,145 @@
-# AtalJudge Backend - TypeScript
+# ⚡ AtalJudge Backend
 
-Sistema de juiz online para avaliação automática de código - Backend API em TypeScript.
+> RESTful API for a modern online judge platform, built with TypeScript, Express, and PostgreSQL.
 
-## 📋 Sobre o Projeto
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green?style=flat&logo=node.js)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.18-black?style=flat&logo=express)](https://expressjs.com/)
+[![TypeORM](https://img.shields.io/badge/TypeORM-0.3-red?style=flat&logo=typeorm)](https://typeorm.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue?style=flat&logo=postgresql)](https://www.postgresql.org/)
 
-AtalJudge é uma plataforma completa para avaliação automática de código, permitindo que professores criem questões de programação e estudantes submetam suas soluções para avaliação automática.
+## ✨ Features
 
-Esta é a versão em **TypeScript** do backend, reescrita do zero com as melhores práticas e tecnologias modernas.
+- 🔐 **JWT Authentication** - Secure access & refresh tokens
+- 👥 **Role-Based Access** - Student, Assistant, Professor
+- 📝 **Question Management** - Local & Codeforces integration
+- 🎯 **Code Judging** - Judge0 multi-language support
+- 📊 **Submission Tracking** - Real-time results
+- 🏫 **Class System** - Organize students and assignments
+- ️🌐 **IP Whitelisting** - Restrict access for exams
+-  **Email Service** - Password reset & notifications
 
-### Funcionalidades Principais
+## 🚀 Tech Stack
 
-- ✅ **Autenticação e Autorização** (JWT)
-- 👥 **Gerenciamento de Usuários** (Professores, Assistentes e Estudantes)
-- 🏫 **Gestão de Turmas**
-- 📝 **Criação e Gestão de Questões**
-- 📚 **Listas de Exercícios**
-- 💻 **Execução de Código** (Judge0)
-- 🔍 **Submissões e Resultados**
-- 🧪 **Casos de Teste Públicos e Privados**
-- 🔗 **Integração com Codeforces**
-- 📧 **Sistema de Convites**
-- 🔐 **Recuperação de Senha**
+- **[Node.js 20](https://nodejs.org/)** & **[TypeScript 5.3](https://www.typescriptlang.org/)** - Runtime & type safety
+- **[Express 4.18](https://expressjs.com/)** - Web framework
+- **[PostgreSQL 14+](https://www.postgresql.org/)** & **[TypeORM 0.3](https://typeorm.io/)** - Database & ORM
+- **[Judge0](https://judge0.com/)** - Code execution engine
+- **[class-validator](https://github.com/typestack/class-validator)** - DTO validation
 
-## 🚀 Tecnologias
+## 📁 Project Structure
 
-- **TypeScript** - Linguagem principal
-- **Node.js** - Runtime
-- **Express** - Framework web
-- **PostgreSQL** - Banco de dados
-- **TypeORM** - ORM
-- **JWT** - Autenticação
-- **class-validator** - Validação de dados
-- **bcrypt** - Criptografia de senhas
-- **Judge0** - Execução de código
-
-## 📦 Instalação
-
-### Pré-requisitos
-
-- Node.js 18+ ou superior
-- npm ou yarn
-- PostgreSQL 13 ou superior
-- Judge0 (opcional, para execução de código)
-
-### 1. Clone o repositório
-
-```bash
-git clone <url-do-repositorio>
-cd backend-ts
+```
+src/
+├── app.ts                # Express app setup
+├── server.ts             # Entry point
+├── config/               # Configuration & DI
+│   ├── database.ts
+│   ├── di.ts
+│   └── environment.ts
+├── controllers/          # HTTP handlers (11)
+├── services/             # Business logic (16)
+├── repositories/         # Data access (15)
+├── models/               # TypeORM entities (18)
+├── dtos/                 # Data validation
+├── middlewares/          # Request processing
+├── enums/                # Type enumerations
+├── migrations/           # Database migrations (11)
+└── utils/                # Helper functions
 ```
 
-### 2. Instale as dependências
+## 🏗️ Architecture
+
+```
+Controllers → Services → Repositories → Database
+```
+
+- **Controllers** - HTTP logic, routing
+- **Services** - Business logic
+- **Repositories** - Data access
+- **DTOs** - Validated input/output
+- **Middleware** - Auth, validation, errors
+
+## 🚦 Quick Start
+
+### Prerequisites
+- Node.js 20+
+- PostgreSQL 14+
+- Judge0 instance (optional)
+
+### Setup
 
 ```bash
+# Clone repository
+git clone https://github.com/elipcs/ataljudge-backend.git
+cd ataljudge-backend
+
+# Install dependencies
 npm install
-# ou
-yarn install
-```
 
-### 3. Configure as variáveis de ambiente
+# Configure environment
+# Create .env file with your settings
 
-Copie o arquivo `.env.example` para `.env`:
-
-```bash
-cp .env.example .env
-```
-
-Edite o arquivo `.env` com suas configurações:
-
-```env
-# Servidor
-NODE_ENV=development
-PORT=5000
-
-# Banco de dados
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-DB_DATABASE=ataljudge
-
-# Segurança
-SECRET_KEY=sua-chave-secreta-super-segura
-JWT_SECRET=sua-chave-jwt-super-segura
-
-# Email
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=seu-email@gmail.com
-MAIL_PASSWORD=sua-senha-de-app
-
-# Judge0
-JUDGE0_URL=http://localhost:2358
-
-# Frontend
-FRONTEND_URL=http://localhost:3000
-```
-
-### 4. Execute as migrações
-
-```bash
-npm run migration:run
-# ou
-yarn migration:run
-```
-
-### 5. Execute o servidor
-
-**Desenvolvimento:**
-
-```bash
-npm run dev
-# ou
-yarn dev
-```
-
-**Produção:**
-
-```bash
-npm run build
-npm start
-# ou
-yarn build
-yarn start
-```
-
-A API estará disponível em `http://localhost:5000`
-
-## 📁 Estrutura do Projeto
-
-```
-backend-ts/
-├── src/
-│   ├── config/           # Configurações (database, environment)
-│   ├── controllers/      # Controllers/Routes da API
-│   ├── dtos/             # Data Transfer Objects (validação)
-│   ├── enums/            # Enumerações
-│   ├── middlewares/      # Middlewares (auth, validation, error)
-│   ├── migrations/       # Migrações do banco
-│   ├── models/           # Entidades TypeORM
-│   ├── repositories/     # Repositórios de dados
-│   ├── services/         # Lógica de negócio
-│   ├── utils/            # Utilitários
-│   ├── app.ts            # Configuração do Express
-│   └── server.ts         # Inicialização do servidor
-├── dist/                 # Build de produção
-├── .env                  # Variáveis de ambiente
-├── .env.example          # Exemplo de variáveis
-├── tsconfig.json         # Configuração TypeScript
-├── package.json          # Dependências
-└── README.md             # Este arquivo
-```
-
-## 🔗 API Endpoints
-
-### Autenticação
-
-- `POST /api/auth/register` - Registro de usuário com convite
-- `POST /api/auth/login` - Login com email/senha
-- `POST /api/auth/refresh` - Renovar token
-- `POST /api/auth/logout` - Logout
-- `GET /api/auth/me` - Dados do usuário autenticado
-
-### Usuários
-
-- `GET /api/users/profile` - Perfil do usuário
-- `PUT /api/users/profile` - Atualizar perfil
-- `POST /api/users/change-password` - Alterar senha
-- `GET /api/users` - Listar usuários (professor)
-- `GET /api/users/:id` - Buscar usuário (professor)
-
-### Convites
-
-- `POST /api/invites` - Criar convite (professor/assistente)
-- `GET /api/invites` - Listar convites (professor/assistente)
-- `GET /api/invites/validate/:token` - Validar convite
-- `DELETE /api/invites/:id` - Revogar convite (professor/assistente)
-
-### Questões
-
-- `POST /api/questions` - Criar questão (professor/assistente)
-- `GET /api/questions` - Listar questões
-- `GET /api/questions/:id` - Buscar questão
-- `PUT /api/questions/:id` - Atualizar questão (professor/assistente)
-- `DELETE /api/questions/:id` - Deletar questão (professor/assistente)
-
-## 🛠️ Desenvolvimento
-
-### Comandos Úteis
-
-```bash
-# Desenvolvimento com hot-reload
-npm run dev
-
-# Build para produção
-npm run build
-
-# Executar em produção
-npm start
-
-# Gerar migração
-npm run migration:generate -- -n NomeDaMigracao
-
-# Executar migrações
+# Run migrations
 npm run migration:run
 
-# Reverter migração
-npm run migration:revert
-
-# Executar testes
-npm test
-
-# Executar testes com cobertura
-npm run test:coverage
-
-# Lint
-npm run lint
-
-# Lint com correção automática
-npm run lint:fix
+# Start development server
+npm run dev
 ```
 
-### Arquitetura
+Open [http://localhost:5000](http://localhost:5000)
 
-O projeto segue uma arquitetura em camadas:
+## 📜 Available Scripts
 
-1. **Controllers** - Recebem requisições HTTP, validam entrada e retornam respostas
-2. **Services** - Contêm a lógica de negócio
-3. **Repositories** - Gerenciam acesso aos dados
-4. **Models** - Definem estrutura dos dados (TypeORM entities)
-5. **DTOs** - Validam e transformam dados de entrada/saída
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server (hot reload) |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run migration:generate` | Generate migration |
+| `npm run migration:run` | Run migrations |
+| `npm run migration:revert` | Revert last migration |
+| `npm test` | Run tests |
 
-### Padrões de Código
+##  User Roles
 
-- **TypeScript** com strict mode ativado
-- **Decorators** para validação (class-validator)
-- **Async/Await** para operações assíncronas
-- **Try/Catch** para tratamento de erros
-- **Interface Segregation** - interfaces pequenas e focadas
-- **Dependency Injection** via construtores
+- **Student** - Submit solutions, view grades
+- **Assistant** - Help manage classes, grade students  
+- **Professor** - Full access, create questions/classes
 
-## 🔒 Segurança
+## � Key Features
 
-- Senhas criptografadas com bcrypt
-- Autenticação via JWT
-- Rate limiting para prevenir ataques
-- Helmet para segurança de headers HTTP
-- CORS configurado
-- Validação de entrada com class-validator
-- Blacklist de tokens revogados
+### TypeORM Entities
+```typescript
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+  
+  @Column()
+  email: string;
+}
+```
 
-## 📝 Licença
+### DTO Validation
+```typescript
+export class CreateQuestionDto {
+  @IsString()
+  @Length(1, 200)
+  title: string;
+  
+  @IsEnum(JudgeType)
+  judgeType: JudgeType;
+}
+```
 
-Este projeto está sob a licença MIT.
-
-## 👥 Autores
-
-- Equipe AtalJudge
-
-## 🤝 Contribuindo
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona MinhaFeature'`)
-4. Push para a branch (`git push origin feature/MinhaFeature`)
-5. Abra um Pull Request
-
-## 📧 Contato
-
-Para dúvidas e sugestões, abra uma issue no GitHub.
+### Dependency Injection
+```typescript
+const authService = container.getAuthService();
+```
 
 ---
 
-## 🎯 Diferenças da Versão Python
-
-Esta versão TypeScript apresenta algumas melhorias em relação à versão Python:
-
-### Vantagens do TypeScript
-
-✅ **Tipagem estática** - Menos erros em tempo de execução
-✅ **Autocompletar melhorado** - Melhor experiência de desenvolvimento
-✅ **Refatoração mais segura** - Mudanças com confiança
-✅ **Validação em tempo de compilação** - Erros detectados antes da execução
-✅ **Performance** - Node.js é mais rápido para I/O
-
-### Tecnologias Equivalentes
-
-| Python | TypeScript |
-|--------|-----------|
-| Flask | Express |
-| SQLAlchemy | TypeORM |
-| Pydantic | class-validator |
-| Alembic | TypeORM migrations |
-| Flask-JWT-Extended | jsonwebtoken |
-
-### Estrutura Similar
-
-Ambas as versões mantêm a mesma arquitetura:
-- Models/Entities
-- Repositories
-- Services
-- Controllers
-- DTOs
-- Middlewares
-
-Isso facilita a migração e manutenção de ambos os projetos.
-
----
-
-**Última atualização:** Outubro 2025
+**Built with ❤️ for education**
 

@@ -46,11 +46,11 @@ router.post(
   validateBody(CreateClassDTO),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      logger.debug('[CREATE CLASS] Body recebido', { body: req.body, userId: req.user?.userId });
+      logger.debug('[CREATE CLASS] Body recebido', { body: req.body, userId: req.user?.sub });
       
       const classData = await classService.createClass(
         req.body,
-        req.user?.userId
+        req.user?.sub
       );
       
       logger.info('[CREATE CLASS] Turma criada com sucesso', { classId: classData.id });
@@ -72,7 +72,7 @@ router.put(
       const classData = await classService.updateClass(
         req.params.id,
         req.body,
-        req.user?.userId
+        req.user?.sub
       );
       
       successResponse(res, classData, 'Turma atualizada com sucesso');
@@ -88,7 +88,7 @@ router.delete(
   authenticate,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      await classService.deleteClass(req.params.id, req.user?.userId);
+      await classService.deleteClass(req.params.id, req.user?.sub);
       
       successResponse(res, null, 'Turma deletada com sucesso');
     } catch (error) {
