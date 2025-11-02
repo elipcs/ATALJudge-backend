@@ -4,9 +4,6 @@ import { User } from './User';
 import { Question } from './Question';
 import { SubmissionResult } from './SubmissionResult';
 
-/**
- * Entidade Submission - representa uma submissão de código
- */
 @Entity('submissions')
 export class Submission {
   @PrimaryGeneratedColumn('uuid')
@@ -61,7 +58,6 @@ export class Submission {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
 
-  // Relacionamentos
   @ManyToOne(() => User, user => user.submissions)
   @JoinColumn({ name: 'user_id' })
   user!: User;

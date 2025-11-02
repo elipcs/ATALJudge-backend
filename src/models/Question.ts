@@ -3,18 +3,11 @@ import { User } from './User';
 import { Submission } from './Submission';
 import { ValidationError } from '../utils';
 
-/**
- * Interface para exemplos de entrada/saída
- */
 export interface QuestionExample {
   input: string;
   output: string;
 }
 
-/**
- * Entidade Question - classe base para questões de programação
- * Usa Single Table Inheritance para separar LocalQuestion e CodeforcesQuestion
- */
 @Entity('questions')
 @TableInheritance({ column: { type: 'varchar', name: 'type', default: 'local' } })
 export abstract class Question {
@@ -63,7 +56,6 @@ export abstract class Question {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
 
-  // Relacionamentos
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'author_id' })
   author?: User;
@@ -71,9 +63,6 @@ export abstract class Question {
   @OneToMany(() => Submission, submission => submission.question)
   submissions!: Submission[];
 
-  /**
-   * Validações antes de inserir/atualizar
-   */
   @BeforeInsert()
   @BeforeUpdate()
   validate(): void {
@@ -98,23 +87,14 @@ export abstract class Question {
     }
   }
 
-  /**
-   * Retorna o tempo limite de CPU em segundos (para Judge0)
-   */
   getCpuTimeLimitSeconds(): number {
     return this.timeLimitMs / 1000;
   }
 
-  /**
-   * Retorna o limite de memória em KB (para Judge0)
-   */
   getMemoryLimitKb(): number {
     return this.memoryLimitKb;
   }
 
-  /**
-   * Retorna o limite de wall time em segundos (para Judge0)
-   */
   getWallTimeLimitSeconds(): number | undefined {
     return this.wallTimeLimitSeconds;
   }

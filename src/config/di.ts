@@ -1,8 +1,5 @@
-/**
- * Container de Injeção de Dependência com padrão Singleton
- */
 
-// Repositories
+
 import { UserRepository } from '../repositories/UserRepository';
 import { QuestionRepository } from '../repositories/QuestionRepository';
 import { SubmissionRepository } from '../repositories/SubmissionRepository';
@@ -15,8 +12,8 @@ import { QuestionListRepository } from '../repositories/QuestionListRepository';
 import { TokenBlacklistRepository } from '../repositories/TokenBlacklistRepository';
 import { RefreshTokenRepository } from '../repositories/RefreshTokenRepository';
 import { PasswordResetTokenRepository } from '../repositories/PasswordResetTokenRepository';
+import { AllowedIPRepository } from '../repositories/AllowedIPRepository';
 
-// Services
 import { AuthService } from '../services/AuthService';
 import { UserService } from '../services/UserService';
 import { InviteService } from '../services/InviteService';
@@ -30,8 +27,9 @@ import { GradeService } from '../services/GradeService';
 import { EmailService } from '../services/EmailService';
 import { Judge0Service } from '../services/Judge0Service';
 import { PasswordResetService } from '../services/PasswordResetService';
+import { AllowedIPService } from '../services/AllowedIPService';
+import { SystemResetService } from '../services/SystemResetService';
 
-// Controllers (factory functions)
 import createAuthController from '../controllers/auth.controller';
 import createUserController from '../controllers/user.controller';
 import createInviteController from '../controllers/invite.controller';
@@ -41,15 +39,12 @@ import createSubmissionController from '../controllers/submission.controller';
 import createTestCaseController from '../controllers/testcase.controller';
 import createQuestionListController from '../controllers/questionlist.controller';
 import createGradeController from '../controllers/grade.controller';
+import createConfigController from '../controllers/config.controller';
 import { Router } from 'express';
 
-/**
- * Container de DI Singleton
- */
 class DIContainer {
   private static instance: DIContainer;
 
-  // Repositories (singletons)
   private _userRepository?: UserRepository;
   private _questionRepository?: QuestionRepository;
   private _submissionRepository?: SubmissionRepository;
@@ -62,8 +57,8 @@ class DIContainer {
   private _tokenBlacklistRepository?: TokenBlacklistRepository;
   private _refreshTokenRepository?: RefreshTokenRepository;
   private _passwordResetTokenRepository?: PasswordResetTokenRepository;
+  private _allowedIPRepository?: AllowedIPRepository;
 
-  // Services (singletons)
   private _emailService?: EmailService;
   private _judge0Service?: Judge0Service;
   private _passwordResetService?: PasswordResetService;
@@ -77,8 +72,9 @@ class DIContainer {
   private _testCaseService?: TestCaseService;
   private _questionListService?: QuestionListService;
   private _gradeService?: GradeService;
+  private _allowedIPService?: AllowedIPService;
+  private _systemResetService?: SystemResetService;
 
-  // Controllers (singletons)
   private _authController?: Router;
   private _userController?: Router;
   private _inviteController?: Router;
@@ -88,6 +84,7 @@ class DIContainer {
   private _testCaseController?: Router;
   private _questionListController?: Router;
   private _gradeController?: Router;
+  private _configController?: Router;
 
   private constructor() {}
 
@@ -98,7 +95,6 @@ class DIContainer {
     return DIContainer.instance;
   }
 
-  // Getters para Repositories
   get userRepository(): UserRepository {
     if (!this._userRepository) {
       this._userRepository = new UserRepository();
@@ -183,7 +179,13 @@ class DIContainer {
     return this._passwordResetTokenRepository;
   }
 
-  // Getters para Services (dependem de repositories e outros services)
+  get allowedIPRepository(): AllowedIPRepository {
+    if (!this._allowedIPRepository) {
+      this._allowedIPRepository = new AllowedIPRepository();
+    }
+    return this._allowedIPRepository;
+  }
+
   get emailService(): EmailService {
     if (!this._emailService) {
       this._emailService = new EmailService();
@@ -298,7 +300,26 @@ class DIContainer {
     return this._gradeService;
   }
 
-  // Getters para Controllers (dependem de services)
+  get allowedIPService(): AllowedIPService {
+    if (!this._allowedIPService) {
+      this._allowedIPService = new AllowedIPService(this.allowedIPRepository);
+    }
+    return this._allowedIPService;
+  }
+
+  get systemResetService(): SystemResetService {
+    if (!this._systemResetService) {
+      this._systemResetService = new SystemResetService(
+        this.submissionRepository,
+        this.userRepository,
+        this.classRepository,
+        this.questionListRepository,
+        this.inviteRepository
+      );
+    }
+    return this._systemResetService;
+  }
+
   get authController(): Router {
     if (!this._authController) {
       this._authController = createAuthController(this.authService);
@@ -361,10 +382,17 @@ class DIContainer {
     }
     return this._gradeController;
   }
+
+  get configController(): Router {
+    if (!this._configController) {
+      this._configController = createConfigController(
+        this.allowedIPService,
+        this.systemResetService
+      );
+    }
+    return this._configController;
+  }
 }
 
-/**
- * Exporta instância singleton do container
- */
 export const container = DIContainer.getInstance();
 

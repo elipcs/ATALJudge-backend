@@ -8,10 +8,6 @@ import { logger } from '../utils';
 function createClassController(classService: ClassService): Router {
   const router = Router();
 
-/**
- * GET /api/classes
- * Lista todas as turmas
- */
 router.get(
   '/',
   authenticate,
@@ -27,10 +23,6 @@ router.get(
   }
 );
 
-/**
- * GET /api/classes/:id
- * Busca turma por ID
- */
 router.get(
   '/:id',
   authenticate,
@@ -41,16 +33,12 @@ router.get(
       
       successResponse(res, classData, 'Turma encontrada');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * POST /api/classes
- * Cria uma nova turma (apenas professores)
- */
 router.post(
   '/',
   authenticate,
@@ -69,16 +57,12 @@ router.post(
       successResponse(res, classData, 'Turma criada com sucesso', 201);
     } catch (error) {
       logger.error('[CREATE CLASS] Erro', { error });
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * PUT /api/classes/:id
- * Atualiza uma turma
- */
 router.put(
   '/:id',
   authenticate,
@@ -93,16 +77,12 @@ router.put(
       
       successResponse(res, classData, 'Turma atualizada com sucesso');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * DELETE /api/classes/:id
- * Deleta uma turma
- */
 router.delete(
   '/:id',
   authenticate,
@@ -112,16 +92,12 @@ router.delete(
       
       successResponse(res, null, 'Turma deletada com sucesso');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * GET /api/classes/:id/students
- * Lista alunos de uma turma
- */
 router.get(
   '/:id/students',
   authenticate,
@@ -131,16 +107,12 @@ router.get(
       
       successResponse(res, { students }, 'Alunos da turma');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * POST /api/classes/:id/students
- * Adiciona aluno à turma
- */
 router.post(
   '/:id/students',
   authenticate,
@@ -157,16 +129,12 @@ router.post(
       
       successResponse(res, null, 'Aluno adicionado à turma');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * DELETE /api/classes/:id/students/:studentId
- * Remove aluno da turma
- */
 router.delete(
   '/:id/students/:studentId',
   authenticate,
@@ -179,7 +147,7 @@ router.delete(
       
       successResponse(res, null, 'Aluno removido da turma');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
@@ -189,5 +157,4 @@ router.delete(
 }
 
 export default createClassController;
-
 

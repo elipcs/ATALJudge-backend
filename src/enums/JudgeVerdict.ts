@@ -1,6 +1,5 @@
-/**
- * Enum de vereditos do judge
- */
+
+
 export enum JudgeVerdict {
   ACCEPTED = 'Accepted',
   WRONG_ANSWER = 'Wrong Answer',

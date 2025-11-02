@@ -5,9 +5,6 @@ import { In } from 'typeorm';
 import { NotFoundError } from '../utils';
 import { QuestionListRepository, QuestionRepository, ClassRepository } from '../repositories';
 
-/**
- * Service para gerenciamento de listas de questões
- */
 export class QuestionListService {
   private listRepository: QuestionListRepository;
   private questionRepository: QuestionRepository;
@@ -23,9 +20,6 @@ export class QuestionListService {
     this.classRepository = classRepository;
   }
 
-  /**
-   * Lista todas as listas com filtros
-   */
   async getAllLists(filters?: {
     search?: string;
     classId?: string;
@@ -49,15 +43,11 @@ export class QuestionListService {
       queryBuilder.andWhere('classes.id = :classId', { classId: filters.classId });
     }
 
-
     const lists = await queryBuilder.getMany();
 
     return lists.map(list => this.toResponseDTO(list));
   }
 
-  /**
-   * Busca lista por ID
-   */
   async getListById(id: string): Promise<QuestionListResponseDTO> {
     const list = await this.listRepository.findByIdWithRelations(id, true, true, true);
 
@@ -68,9 +58,6 @@ export class QuestionListService {
     return this.toResponseDTO(list);
   }
 
-  /**
-   * Cria uma nova lista
-   */
   async createList(data: CreateQuestionListDTO, authorId?: string): Promise<QuestionListResponseDTO> {
     const list = await this.listRepository.create({
       title: data.title,
@@ -85,7 +72,6 @@ export class QuestionListService {
       isRestricted: data.isRestricted || false
     });
 
-    // Associar turmas
     if (data.classIds && data.classIds.length > 0) {
       const classes = await this.classRepository.getRepository().findBy({
         id: In(data.classIds)
@@ -100,9 +86,6 @@ export class QuestionListService {
     return this.toResponseDTO(list);
   }
 
-  /**
-   * Atualiza uma lista
-   */
   async updateList(id: string, data: UpdateQuestionListDTO): Promise<QuestionListResponseDTO> {
     const list = await this.listRepository.findByIdWithRelations(id, true, true);
 
@@ -110,7 +93,6 @@ export class QuestionListService {
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    // Atualizar campos
     if (data.title) list.title = data.title;
     if (data.description !== undefined) list.description = data.description;
     if (data.startDate) list.startDate = new Date(data.startDate);
@@ -121,7 +103,6 @@ export class QuestionListService {
     if (data.questionGroups) list.questionGroups = data.questionGroups;
     if (data.isRestricted !== undefined) list.isRestricted = data.isRestricted;
 
-    // Atualizar turmas
     if (data.classIds) {
       const classes = await this.classRepository.getRepository().findBy({
         id: In(data.classIds)
@@ -134,9 +115,6 @@ export class QuestionListService {
     return this.toResponseDTO(list);
   }
 
-  /**
-   * Deleta uma lista
-   */
   async deleteList(id: string): Promise<void> {
     const list = await this.listRepository.findById(id);
 
@@ -147,9 +125,6 @@ export class QuestionListService {
     await this.listRepository.delete(id);
   }
 
-  /**
-   * Publica uma lista
-   */
   async publishList(id: string): Promise<QuestionListResponseDTO> {
     const list = await this.listRepository.findByIdWithRelations(id, true, true);
 
@@ -162,9 +137,6 @@ export class QuestionListService {
     return this.toResponseDTO(list);
   }
 
-  /**
-   * Despublica uma lista
-   */
   async unpublishList(id: string): Promise<QuestionListResponseDTO> {
     const list = await this.listRepository.findByIdWithRelations(id, true, true);
 
@@ -177,9 +149,6 @@ export class QuestionListService {
     return this.toResponseDTO(list);
   }
 
-  /**
-   * Adiciona questão à lista
-   */
   async addQuestionToList(listId: string, questionId: string): Promise<void> {
     const list = await this.listRepository.findByIdWithRelations(listId, true);
 
@@ -193,7 +162,6 @@ export class QuestionListService {
       throw new NotFoundError('Questão não encontrada', 'QUESTION_NOT_FOUND');
     }
 
-    // Verificar se já está na lista
     const alreadyAdded = list.questions.some(q => q.id === questionId);
     if (!alreadyAdded) {
       list.questions.push(question);
@@ -201,9 +169,6 @@ export class QuestionListService {
     }
   }
 
-  /**
-   * Remove questão da lista
-   */
   async removeQuestionFromList(listId: string, questionId: string): Promise<void> {
     const list = await this.listRepository.findByIdWithRelations(listId, true);
 
@@ -215,9 +180,6 @@ export class QuestionListService {
     await this.listRepository.save(list);
   }
 
-  /**
-   * Converte entidade para DTO de resposta
-   */
   private toResponseDTO(list: any): QuestionListResponseDTO {
     const classIds = list.classes?.map((c: { id: string }) => c.id) || [];
     
@@ -255,5 +217,4 @@ export class QuestionListService {
     });
   }
 }
-
 

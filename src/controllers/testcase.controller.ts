@@ -7,10 +7,6 @@ import { successResponse } from '../utils/responses';
 function createTestCaseController(testCaseService: TestCaseService): Router {
   const router = Router();
 
-/**
- * GET /api/questions/:questionId/testcases
- * Lista casos de teste de uma questão
- */
 router.get(
   '/questions/:questionId/testcases',
   authenticate,
@@ -25,10 +21,6 @@ router.get(
   }
 );
 
-/**
- * POST /api/questions/:questionId/testcases
- * Cria um novo caso de teste (apenas professores/assistentes)
- */
 router.post(
   '/questions/:questionId/testcases',
   authenticate,
@@ -36,7 +28,7 @@ router.post(
   validateBody(CreateTestCaseDTO),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      // Adicionar questionId do parâmetro da URL ao body
+      
       const data = {
         ...req.body,
         questionId: req.params.questionId
@@ -51,10 +43,6 @@ router.post(
   }
 );
 
-/**
- * GET /api/testcases/:id
- * Busca caso de teste por ID
- */
 router.get(
   '/testcases/:id',
   authenticate,
@@ -69,10 +57,6 @@ router.get(
   }
 );
 
-/**
- * PUT /api/testcases/:id
- * Atualiza um caso de teste (apenas professores/assistentes)
- */
 router.put(
   '/testcases/:id',
   authenticate,
@@ -89,10 +73,6 @@ router.put(
   }
 );
 
-/**
- * DELETE /api/testcases/:id
- * Deleta um caso de teste (apenas professores/assistentes)
- */
 router.delete(
   '/testcases/:id',
   authenticate,
@@ -112,5 +92,4 @@ router.delete(
 }
 
 export default createTestCaseController;
-
 

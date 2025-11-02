@@ -1,12 +1,8 @@
 import { IsString, MinLength, IsOptional } from 'class-validator';
 import { CreateQuestionDTO, UpdateQuestionDTO } from './QuestionDtos';
 
-/**
- * DTO para criação de questão do Codeforces
- * Herda de CreateQuestionDTO e adiciona campos específicos
- */
 export class CreateCodeforcesQuestionDTO extends CreateQuestionDTO {
-  // Campos específicos do Codeforces
+  
   @IsString()
   @MinLength(1, { message: 'Contest ID é obrigatório' })
   contestId!: string;
@@ -20,10 +16,6 @@ export class CreateCodeforcesQuestionDTO extends CreateQuestionDTO {
   codeforcesLink?: string;
 }
 
-/**
- * DTO para atualização de questão do Codeforces
- * Herda de UpdateQuestionDTO e adiciona campos específicos
- */
 export class UpdateCodeforcesQuestionDTO extends UpdateQuestionDTO {
   @IsOptional()
   @IsString()
@@ -37,5 +29,4 @@ export class UpdateCodeforcesQuestionDTO extends UpdateQuestionDTO {
   @IsString()
   codeforcesLink?: string;
 }
-
 

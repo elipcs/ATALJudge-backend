@@ -1,9 +1,6 @@
 import { IsEnum, IsOptional, IsUUID, IsInt, Min, IsString } from 'class-validator';
 import { UserRole } from '../enums';
 
-/**
- * DTO para criação de convite
- */
 export class CreateInviteDTO {
   @IsEnum(UserRole, { message: 'Papel de usuário inválido' })
   role!: UserRole;
@@ -31,9 +28,6 @@ export class CreateInviteDTO {
   creatorName!: string;
 }
 
-/**
- * DTO de resposta de convite
- */
 export class InviteResponseDTO {
   id!: string;
   role!: UserRole;

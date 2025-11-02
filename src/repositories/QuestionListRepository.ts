@@ -3,17 +3,11 @@ import { QuestionList } from '../models/QuestionList';
 import { Question } from '../models/Question';
 import { Class } from '../models/Class';
 
-/**
- * Repositório de listas de questões
- */
 export class QuestionListRepository extends BaseRepository<QuestionList> {
   constructor() {
     super(QuestionList);
   }
 
-  /**
-   * Busca lista por ID com relações
-   */
   async findByIdWithRelations(
     id: string,
     includeQuestions: boolean = false,
@@ -39,9 +33,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     return queryBuilder.getOne();
   }
 
-  /**
-   * Busca todas as listas com relações
-   */
   async findAllWithRelations(
     includeQuestions: boolean = false,
     includeClasses: boolean = false,
@@ -66,9 +57,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     return queryBuilder.getMany();
   }
 
-  /**
-   * Busca listas de um autor
-   */
   async findByAuthor(authorId: string): Promise<QuestionList[]> {
     return this.repository.find({
       where: { authorId },
@@ -76,9 +64,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     });
   }
 
-  /**
-   * Busca listas de uma turma
-   */
   async findByClass(classId: string): Promise<QuestionList[]> {
     return this.repository
       .createQueryBuilder('list')
@@ -87,9 +72,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
       .getMany();
   }
 
-  /**
-   * Busca listas abertas (dentro do período)
-   */
   async findOpenLists(): Promise<QuestionList[]> {
     const now = new Date();
     return this.repository
@@ -100,9 +82,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
       .getMany();
   }
 
-  /**
-   * Busca listas futuras (ainda não abertas)
-   */
   async findFutureLists(): Promise<QuestionList[]> {
     const now = new Date();
     return this.repository
@@ -112,9 +91,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
       .getMany();
   }
 
-  /**
-   * Adiciona questão à lista
-   */
   async addQuestion(listId: string, question: Question): Promise<void> {
     const list = await this.findByIdWithRelations(listId, true);
     if (!list) {
@@ -125,7 +101,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
       list.questions = [];
     }
 
-    // Verifica se questão já está na lista
     const isAlreadyAdded = list.questions.some(q => q.id === question.id);
     if (!isAlreadyAdded) {
       list.questions.push(question);
@@ -133,9 +108,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     }
   }
 
-  /**
-   * Remove questão da lista
-   */
   async removeQuestion(listId: string, questionId: string): Promise<void> {
     const list = await this.findByIdWithRelations(listId, true);
     if (!list) {
@@ -148,9 +120,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     }
   }
 
-  /**
-   * Adiciona turma à lista
-   */
   async addClass(listId: string, classEntity: Class): Promise<void> {
     const list = await this.findByIdWithRelations(listId, false, true);
     if (!list) {
@@ -161,7 +130,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
       list.classes = [];
     }
 
-    // Verifica se turma já está associada à lista
     const isAlreadyAdded = list.classes.some(c => c.id === classEntity.id);
     if (!isAlreadyAdded) {
       list.classes.push(classEntity);
@@ -169,9 +137,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     }
   }
 
-  /**
-   * Remove turma da lista
-   */
   async removeClass(listId: string, classId: string): Promise<void> {
     const list = await this.findByIdWithRelations(listId, false, true);
     if (!list) {
@@ -184,21 +149,14 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     }
   }
 
-  /**
-   * Busca questões de uma lista
-   */
   async findQuestions(listId: string): Promise<Question[]> {
     const list = await this.findByIdWithRelations(listId, true);
     return list?.questions || [];
   }
 
-  /**
-   * Busca turmas de uma lista
-   */
   async findClasses(listId: string): Promise<Class[]> {
     const list = await this.findByIdWithRelations(listId, false, true);
     return list?.classes || [];
   }
 }
-
 

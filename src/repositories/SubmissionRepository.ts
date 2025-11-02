@@ -2,17 +2,11 @@ import { BaseRepository } from './BaseRepository';
 import { Submission } from '../models/Submission';
 import { SubmissionStatus } from '../enums';
 
-/**
- * Repositório de submissões
- */
 export class SubmissionRepository extends BaseRepository<Submission> {
   constructor() {
     super(Submission);
   }
 
-  /**
-   * Busca submissões de um usuário
-   */
   async findByUser(userId: string): Promise<Submission[]> {
     return this.repository.find({
       where: { userId },
@@ -21,9 +15,6 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     });
   }
 
-  /**
-   * Busca submissões de uma questão
-   */
   async findByQuestion(questionId: string): Promise<Submission[]> {
     return this.repository.find({
       where: { questionId },
@@ -32,9 +23,6 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     });
   }
 
-  /**
-   * Busca submissões de um usuário em uma questão
-   */
   async findByUserAndQuestion(userId: string, questionId: string): Promise<Submission[]> {
     return this.repository.find({
       where: { userId, questionId },
@@ -42,9 +30,6 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     });
   }
 
-  /**
-   * Busca submissão com resultados
-   */
   async findWithResults(id: string): Promise<Submission | null> {
     return this.repository.findOne({
       where: { id },
@@ -52,9 +37,6 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     });
   }
 
-  /**
-   * Busca submissões por status
-   */
   async findByStatus(status: SubmissionStatus): Promise<Submission[]> {
     return this.repository.find({
       where: { status },
@@ -62,9 +44,6 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     });
   }
 
-  /**
-   * Conta submissões aceitas de um usuário
-   */
   async countAcceptedByUser(userId: string): Promise<number> {
     return this.repository.count({
       where: {
@@ -74,9 +53,6 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     });
   }
 
-  /**
-   * Busca submissões com filtros
-   */
   async findByFilters(filters: {
     questionId?: string;
     userId?: string;

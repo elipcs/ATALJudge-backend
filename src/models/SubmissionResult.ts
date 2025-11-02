@@ -3,9 +3,6 @@ import { JudgeVerdict } from '../enums';
 import { Submission } from './Submission';
 import { TestCase } from './TestCase';
 
-/**
- * Entidade SubmissionResult - resultado de um teste individual
- */
 @Entity('submission_results')
 export class SubmissionResult {
   @PrimaryGeneratedColumn('uuid')
@@ -41,7 +38,6 @@ export class SubmissionResult {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 
-  // Relacionamentos
   @ManyToOne(() => Submission, submission => submission.results, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'submission_id' })
   submission!: Submission;

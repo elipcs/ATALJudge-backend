@@ -1,4 +1,4 @@
-// User DTOs
+
 export {
   UserRegisterDTO,
   UserLoginDTO,
@@ -11,7 +11,6 @@ export {
   RefreshTokenDTO
 } from './UserDtos';
 
-// Question DTOs
 export {
   QuestionExampleDTO,
   CreateQuestionDTO,
@@ -19,19 +18,16 @@ export {
   QuestionResponseDTO
 } from './QuestionDtos';
 
-// LocalQuestion DTOs
 export {
   CreateLocalQuestionDTO,
   UpdateLocalQuestionDTO
 } from './LocalQuestionDtos';
 
-// CodeforcesQuestion DTOs
 export {
   CreateCodeforcesQuestionDTO,
   UpdateCodeforcesQuestionDTO
 } from './CodeforcesQuestionDtos';
 
-// Submission DTOs
 export {
   CreateSubmissionDTO,
   SubmissionResponseDTO,
@@ -40,26 +36,22 @@ export {
   SubmissionDetailDTO
 } from './SubmissionDtos';
 
-// Invite DTOs
 export {
   CreateInviteDTO,
   InviteResponseDTO
 } from './InviteDtos';
 
-// Class DTOs
 export {
   CreateClassDTO,
   ClassResponseDTO
 } from './ClassDtos';
 
-// TestCase DTOs
 export {
   CreateTestCaseDTO,
   UpdateTestCaseDTO,
   TestCaseResponseDTO
 } from './TestCaseDtos';
 
-// QuestionList DTOs
 export {
   QuestionGroupDTO,
   CreateQuestionListDTO,
@@ -67,10 +59,15 @@ export {
   QuestionListResponseDTO
 } from './QuestionListDtos';
 
-// Grade DTOs
 export {
   CreateGradeDTO,
   UpdateGradeDTO,
   GradeResponseDTO
 } from './GradeDtos';
+
+export {
+  AllowedIPDTO,
+  CreateAllowedIPDTO,
+  UpdateAllowedIPDTO
+} from './AllowedIPDtos';
 

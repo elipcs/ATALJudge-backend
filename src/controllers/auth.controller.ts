@@ -9,13 +9,9 @@ import { asyncHandler } from '../utils/asyncHandler';
 function createAuthController(authService: AuthService): Router {
   const router = Router();
 
-/**
- * POST /api/auth/register
- * Registra um novo usuário com convite
- */
 router.post(
   '/register',
-  registerRateLimiter, // Rate limiting rigoroso: 3 registros/hora
+  registerRateLimiter, 
   (req, _res, next) => {
     logger.debug('[REGISTER] Body recebido', { 
       body: sanitizeForLog(req.body), 
@@ -37,19 +33,15 @@ router.post(
         201
       );
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * POST /api/auth/login
- * Login com email e senha
- */
 router.post(
   '/login',
-  authRateLimiter, // Rate limiting rigoroso: 5 tentativas/15min
+  authRateLimiter, 
   validateBody(UserLoginDTO),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -61,8 +53,7 @@ router.post(
         ipAddress,
         userAgent
       );
-      
-      // Log para verificar o que está sendo retornado
+
       logger.debug('[LOGIN] Retornando resposta', {
         hasUser: !!result.user,
         hasAccessToken: !!result.accessToken,
@@ -73,21 +64,17 @@ router.post(
       
       successResponse(res, result, 'Login realizado com sucesso');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * POST /api/auth/refresh
- * Renova os tokens de acesso
- */
 router.post(
   '/refresh',
   authRateLimiter,
   (req, _res, next) => {
-    // Log detalhado ANTES da validação para ver o que está chegando
+    
     logger.debug('[REFRESH] Request recebido (antes da validação)', {
       bodyKeys: Object.keys(req.body || {}),
       refreshTokenType: typeof req.body?.refreshToken,
@@ -101,7 +88,7 @@ router.post(
   },
   validateBody(RefreshTokenDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    // Após validação do DTO, o refreshToken já está validado
+    
     const { refreshToken } = req.body;
     
     logger.debug('[REFRESH] Token validado, iniciando renovação', {
@@ -116,10 +103,6 @@ router.post(
   })
 );
 
-/**
- * POST /api/auth/logout
- * Faz logout do usuário
- */
 router.post(
   '/logout',
   authenticate,
@@ -137,23 +120,19 @@ router.post(
       
       successResponse(res, null, 'Logout realizado com sucesso');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * GET /api/auth/me
- * Retorna dados do usuário autenticado
- */
 router.get(
   '/me',
   authenticate,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       logger.debug('[ME] Buscando dados do usuário autenticado...');
-      logger.debug('[ME] User', { user: req.user ? { userId: req.user.userId, email: req.user.email } : 'não autenticado' });
+      logger.debug('[ME] User', { user: req.user ? { userId: req.user.sub, email: req.user.email } : 'não autenticado' });
       
       if (!req.user) {
         logger.warn('[ME] Usuário não autenticado');
@@ -165,19 +144,15 @@ router.get(
       successResponse(res, req.user, 'Dados do usuário');
     } catch (error) {
       logger.error('[ME] Erro ao buscar dados', { error });
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * POST /api/auth/forgot-password
- * Solicita reset de senha e envia email
- */
 router.post(
   '/forgot-password',
-  authRateLimiter, // Rate limiting: 5 tentativas/15min
+  authRateLimiter, 
   validateBody(RequestPasswordResetDTO),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -187,19 +162,15 @@ router.post(
       if (error instanceof Error) {
         logger.error('[FORGOT-PASSWORD] Erro ao solicitar reset', { error: error.message });
       }
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * POST /api/auth/reset-password
- * Confirma reset de senha com token
- */
 router.post(
   '/reset-password',
-  authRateLimiter, // Rate limiting: 5 tentativas/15min
+  authRateLimiter, 
   (req, _res, next) => {
     logger.debug('[RESET-PASSWORD] Body recebido', { 
       body: sanitizeForLog(req.body), 
@@ -218,7 +189,7 @@ router.post(
       if (error instanceof Error) {
         logger.error('[RESET-PASSWORD] Erro ao resetar senha', { error: error.message });
       }
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
@@ -227,6 +198,5 @@ router.post(
   return router;
 }
 
-// Exportar função factory e instância default para compatibilidade
 export default createAuthController;
 

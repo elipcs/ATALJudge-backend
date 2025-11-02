@@ -9,10 +9,6 @@ import { UnauthorizedError, ValidationError } from '../utils';
 function createSubmissionController(submissionService: SubmissionService): Router {
   const router = Router();
 
-/**
- * GET /api/submissions
- * Lista submissões com filtros
- */
 router.get(
   '/',
   authenticate,
@@ -34,10 +30,6 @@ router.get(
   }
 );
 
-/**
- * GET /api/submissions/:id
- * Busca submissão por ID
- */
 router.get(
   '/:id',
   authenticate,
@@ -52,10 +44,6 @@ router.get(
   }
 );
 
-/**
- * POST /api/submissions
- * Cria uma nova submissão
- */
 router.post(
   '/',
   authenticate,
@@ -68,7 +56,7 @@ router.post(
       
       const submission = await submissionService.createSubmission(
         req.body,
-        req.user.userId
+        req.user.sub
       );
       
       successResponse(res, submission, 'Submissão criada com sucesso', 201);
@@ -78,10 +66,6 @@ router.post(
   }
 );
 
-/**
- * POST /api/submissions/submit
- * Submete código para avaliação
- */
 router.post(
   '/submit',
   authenticate,
@@ -101,7 +85,7 @@ router.post(
         questionId,
         code,
         language,
-        userId: req.user.userId
+        userId: req.user.sub
       });
       
       successResponse(res, result, 'Código submetido com sucesso', 201);
@@ -111,10 +95,6 @@ router.post(
   }
 );
 
-/**
- * GET /api/submissions/:id/results
- * Busca submissão com resultados detalhados
- */
 router.get(
   '/:id/results',
   authenticate,
@@ -133,5 +113,4 @@ router.get(
 }
 
 export default createSubmissionController;
-
 

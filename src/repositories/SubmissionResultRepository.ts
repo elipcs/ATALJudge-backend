@@ -1,17 +1,11 @@
 import { BaseRepository } from './BaseRepository';
 import { SubmissionResult } from '../models/SubmissionResult';
 
-/**
- * Repositório de resultados de submissões
- */
 export class SubmissionResultRepository extends BaseRepository<SubmissionResult> {
   constructor() {
     super(SubmissionResult);
   }
 
-  /**
-   * Busca resultados de uma submissão
-   */
   async findBySubmission(submissionId: string): Promise<SubmissionResult[]> {
     return this.repository.find({
       where: { submissionId },
@@ -20,9 +14,6 @@ export class SubmissionResultRepository extends BaseRepository<SubmissionResult>
     });
   }
 
-  /**
-   * Busca resultados de uma submissão com separação de casos de exemplo
-   */
   async findBySubmissionWithSamples(submissionId: string): Promise<{
     sampleResults: SubmissionResult[];
     hiddenResults: SubmissionResult[];
@@ -39,27 +30,18 @@ export class SubmissionResultRepository extends BaseRepository<SubmissionResult>
     return { sampleResults, hiddenResults };
   }
 
-  /**
-   * Conta casos de teste passados de uma submissão
-   */
   async countPassedBySubmission(submissionId: string): Promise<number> {
     return this.repository.count({
       where: { submissionId, passed: true }
     });
   }
 
-  /**
-   * Conta casos de teste falhados de uma submissão
-   */
   async countFailedBySubmission(submissionId: string): Promise<number> {
     return this.repository.count({
       where: { submissionId, passed: false }
     });
   }
 
-  /**
-   * Busca resultado de um caso de teste específico de uma submissão
-   */
   async findBySubmissionAndTestCase(
     submissionId: string,
     testCaseId: string
@@ -70,25 +52,16 @@ export class SubmissionResultRepository extends BaseRepository<SubmissionResult>
     });
   }
 
-  /**
-   * Remove todos os resultados de uma submissão
-   */
   async deleteBySubmission(submissionId: string): Promise<number> {
     const result = await this.repository.delete({ submissionId });
     return result.affected || 0;
   }
 
-  /**
-   * Cria múltiplos resultados em batch
-   */
   async createMany(results: Partial<SubmissionResult>[]): Promise<SubmissionResult[]> {
     const entities = this.repository.create(results);
     return this.repository.save(entities);
   }
 
-  /**
-   * Calcula estatísticas de uma submissão
-   */
   async getSubmissionStatistics(submissionId: string): Promise<{
     totalTests: number;
     passedTests: number;

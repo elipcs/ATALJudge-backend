@@ -3,9 +3,6 @@ import { UserRole } from '../enums';
 import { User } from './User';
 import { Class } from './Class';
 
-/**
- * Entidade Invite - representa um convite para registro
- */
 @Entity('invites')
 export class Invite {
   @PrimaryGeneratedColumn('uuid')
@@ -51,7 +48,6 @@ export class Invite {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 
-  // Relacionamentos
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'created_by_id' })
   createdBy?: User;
@@ -60,30 +56,18 @@ export class Invite {
   @JoinColumn({ name: 'class_id' })
   class?: Class;
 
-  /**
-   * Verifica se o convite está expirado
-   */
   isExpired(): boolean {
     return new Date() > this.expiresAt;
   }
 
-  /**
-   * Verifica se o convite é válido (não esgotado e não expirado)
-   */
   isValid(): boolean {
     return this.currentUses < this.maxUses && !this.isExpired();
   }
 
-  /**
-   * Verifica se o convite pode ser usado
-   */
   canBeUsed(): boolean {
     return this.isValid();
   }
 
-  /**
-   * Incrementa o contador de usos
-   */
   incrementUses(): void {
     this.currentUses++;
     if (this.currentUses >= this.maxUses) {

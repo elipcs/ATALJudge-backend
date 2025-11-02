@@ -8,10 +8,6 @@ import { logger, sanitizeForLog, ValidationError } from '../utils';
 function createInviteController(inviteService: InviteService): Router {
   const router = Router();
 
-/**
- * POST /api/invites
- * Cria um novo convite (apenas professores)
- */
 router.post(
   '/',
   authenticate,
@@ -28,10 +24,6 @@ router.post(
   }
 );
 
-/**
- * POST /api/invites/create
- * Alias para POST /api/invites (compatibilidade com frontend)
- */
 router.post(
   '/create',
   authenticate,
@@ -43,16 +35,12 @@ router.post(
       
       successResponse(res, { invite }, 'Convite criado com sucesso', 201);
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * GET /api/invites
- * Lista todos os convites (apenas professores/assistentes)
- */
 router.get(
   '/',
   authenticate,
@@ -63,16 +51,12 @@ router.get(
       
       successResponse(res, invites, 'Lista de convites');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * POST /api/invites/verify
- * Verifica/valida um convite pelo token
- */
 router.post(
   '/verify',
   async (req: AuthRequest, res: Response): Promise<void> => {
@@ -102,8 +86,7 @@ router.post(
         maxUses: invite.maxUses,
         expiresAt: invite.expiresAt 
       });
-      
-      // Formatar resposta como frontend espera
+
       const inviteData = {
         id: invite.id,
         role: invite.role,
@@ -122,16 +105,12 @@ router.post(
       logger.error('[INVITE] Erro ao validar convite', { 
         error: error instanceof Error ? error.message : 'Erro desconhecido' 
       });
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * DELETE /api/invites/:id
- * Deleta um convite permanentemente (apenas professores/assistentes)
- */
 router.delete(
   '/:id',
   authenticate,
@@ -142,16 +121,12 @@ router.delete(
       
       successResponse(res, null, 'Convite deletado com sucesso');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }
 );
 
-/**
- * POST /api/invites/:id/revoke
- * Revoga um convite (alias para compatibilidade com frontend)
- */
 router.post(
   '/:id/revoke',
   authenticate,
@@ -162,7 +137,7 @@ router.post(
       
       successResponse(res, null, 'Convite revogado com sucesso');
     } catch (error) {
-      // Erros são tratados pelo middleware global
+      
       throw error;
     }
   }

@@ -5,9 +5,6 @@ import { Judge0Service } from './Judge0Service';
 import { LocalQuestion } from '../models/LocalQuestion';
 import { logger, NotFoundError, ValidationError } from '../utils';
 
-/**
- * Service para gerenciamento de submissões
- */
 export class SubmissionService {
   private submissionRepository: SubmissionRepository;
   private submissionResultRepository: SubmissionResultRepository;
@@ -29,9 +26,6 @@ export class SubmissionService {
     this.judge0Service = judge0Service;
   }
 
-  /**
-   * Lista submissões com filtros
-   */
   async getSubmissions(filters: {
     questionId?: string;
     userId?: string;
@@ -64,9 +58,6 @@ export class SubmissionService {
     }));
   }
 
-  /**
-   * Busca submissão por ID
-   */
   async getSubmissionById(id: string): Promise<SubmissionResponseDTO> {
     const submission = await this.submissionRepository.findById(id);
     
@@ -93,9 +84,6 @@ export class SubmissionService {
     });
   }
 
-  /**
-   * Cria uma nova submissão
-   */
   async createSubmission(data: CreateSubmissionDTO, userId: string): Promise<SubmissionResponseDTO> {
     const submission = await this.submissionRepository.create({
       userId,
@@ -107,8 +95,7 @@ export class SubmissionService {
       totalTests: 0,
       passedTests: 0
     });
-    
-    // Processar submissão assincronamente
+
     this.processSubmission(submission.id).catch(error => {
       logger.error('Erro ao processar submissão', { submissionId: submission.id, error });
     });
@@ -132,21 +119,17 @@ export class SubmissionService {
     });
   }
 
-  /**
-   * Submete código para avaliação
-   */
   async submitCode(data: {
     questionId: string;
     code: string;
     language: string;
     userId: string;
   }): Promise<any> {
-    // Validar linguagem
+    
     if (!Object.values(ProgrammingLanguage).includes(data.language as ProgrammingLanguage)) {
       throw new ValidationError('Linguagem de programação inválida', 'INVALID_LANGUAGE');
     }
-    
-    // Criar submissão
+
     const submission = await this.submissionRepository.create({
       userId: data.userId,
       questionId: data.questionId,
@@ -157,9 +140,7 @@ export class SubmissionService {
       totalTests: 0,
       passedTests: 0
     });
-    
-    // TODO: Integração com Judge0 para processar submissão
-    
+
     return {
       submissionId: submission.id,
       id: submission.id,
@@ -176,50 +157,36 @@ export class SubmissionService {
     };
   }
 
-  /**
-   * Busca submissões de uma questão
-   */
   async getQuestionSubmissions(questionId: string, userId?: string): Promise<SubmissionResponseDTO[]> {
     return this.getSubmissions({ questionId, userId });
   }
 
-  /**
-   * Busca submissões de um usuário
-   */
   async getUserSubmissions(userId: string, limit: number = 10): Promise<SubmissionResponseDTO[]> {
     return this.getSubmissions({ userId, limit });
   }
 
-  /**
-   * Processa uma submissão de forma assíncrona
-   */
   async processSubmission(submissionId: string): Promise<void> {
     try {
       logger.info('Iniciando processamento de submissão', { submissionId });
 
-      // Buscar submissão
       const submission = await this.submissionRepository.findById(submissionId);
       if (!submission) {
         throw new Error('Submissão não encontrada');
       }
 
-      // Atualizar status para PROCESSING
       await this.submissionRepository.update(submissionId, {
         status: SubmissionStatus.PROCESSING
       });
 
-      // Buscar questão com casos de teste
       const question = await this.questionRepository.findWithTestCases(submission.questionId);
       if (!question) {
         throw new NotFoundError('Questão não encontrada', 'QUESTION_NOT_FOUND');
       }
 
-      // Verificar se é uma questão local
       if (!(question instanceof LocalQuestion)) {
         throw new ValidationError('Apenas questões locais podem ser processadas', 'INVALID_QUESTION_TYPE');
       }
 
-      // Buscar casos de teste
       const testCases = await this.testCaseRepository.findByQuestion(question.id);
       if (testCases.length === 0) {
         throw new ValidationError('Questão não possui casos de teste', 'NO_TEST_CASES');
@@ -230,14 +197,12 @@ export class SubmissionService {
         testCaseCount: testCases.length 
       });
 
-      // Preparar limites de execução
       const limits = {
         cpuTimeLimit: question.getCpuTimeLimitSeconds(),
         memoryLimit: question.getMemoryLimitKb(),
         wallTimeLimit: question.getWallTimeLimitSeconds()
       };
 
-      // Criar submissões em batch no Judge0
       const batchSubmissions = testCases.map(testCase => ({
         sourceCode: submission.code,
         language: submission.language,
@@ -257,7 +222,6 @@ export class SubmissionService {
 
       logger.info('Aguardando resultados do Judge0', { submissionId });
 
-      // Aguardar processamento
       const results = await this.judge0Service.waitForBatchSubmissions(tokens);
 
       logger.info('Resultados recebidos do Judge0', { 
@@ -265,7 +229,6 @@ export class SubmissionService {
         count: results.length 
       });
 
-      // Processar resultados e salvar
       const submissionResults: Array<{
         submissionId: string;
         testCaseId: string;
@@ -319,10 +282,8 @@ export class SubmissionService {
         }
       }
 
-      // Salvar resultados em batch
       await this.submissionResultRepository.createMany(submissionResults);
 
-      // Calcular score baseado em peso dos casos de teste
       const totalWeight = testCases.reduce((sum, tc) => sum + tc.weight, 0);
       const earnedWeight = testCases.reduce((sum, tc, index) => {
         return sum + (submissionResults[index].passed ? tc.weight : 0);
@@ -330,7 +291,6 @@ export class SubmissionService {
 
       const score = totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0;
 
-      // Determinar veredito final
       let finalVerdict = '';
       let finalStatus = SubmissionStatus.COMPLETED;
 
@@ -340,12 +300,11 @@ export class SubmissionService {
       } else if (passedTests === testCases.length) {
         finalVerdict = JudgeVerdict.ACCEPTED;
       } else {
-        // Pegar o primeiro veredito que não é ACCEPTED
+        
         const failedResult = submissionResults.find(r => !r.passed);
         finalVerdict = failedResult?.verdict || JudgeVerdict.WRONG_ANSWER;
       }
 
-      // Atualizar submissão com resultados finais
       await this.submissionRepository.update(submissionId, {
         status: finalStatus,
         score,
@@ -365,7 +324,6 @@ export class SubmissionService {
         verdict: finalVerdict
       });
 
-      // DEBUG: Log do resultado do processamento
       console.log('\n[DEBUG] Processamento concluído:');
       console.log(JSON.stringify({
         submissionId,
@@ -381,7 +339,6 @@ export class SubmissionService {
     } catch (error) {
       logger.error('Erro ao processar submissão', { submissionId, error });
 
-      // Atualizar submissão com erro
       await this.submissionRepository.update(submissionId, {
         status: SubmissionStatus.ERROR,
         errorMessage: error instanceof Error ? error.message : 'Erro desconhecido'
@@ -391,20 +348,15 @@ export class SubmissionService {
     }
   }
 
-  /**
-   * Busca submissão com resultados detalhados
-   */
   async getSubmissionWithResults(submissionId: string): Promise<SubmissionDetailDTO> {
     const submission = await this.submissionRepository.findById(submissionId);
     if (!submission) {
       throw new NotFoundError('Submissão não encontrada', 'SUBMISSION_NOT_FOUND');
     }
 
-    // Buscar resultados separados por tipo (sample vs hidden)
     const { sampleResults, hiddenResults } = await this.submissionResultRepository
       .findBySubmissionWithSamples(submissionId);
 
-    // Mapear resultados de casos de exemplo para DTO
     const sampleTestResults = sampleResults.map(result => new TestCaseResultDTO({
       testCaseId: result.testCaseId,
       isSample: true,
@@ -418,7 +370,6 @@ export class SubmissionService {
       errorMessage: result.errorMessage
     }));
 
-    // Criar resumo dos casos ocultos
     const hiddenPassed = hiddenResults.filter(r => r.passed).length;
     const hiddenTestsSummary = new HiddenTestsSummaryDTO({
       total: hiddenResults.length,
@@ -447,5 +398,4 @@ export class SubmissionService {
     });
   }
 }
-
 

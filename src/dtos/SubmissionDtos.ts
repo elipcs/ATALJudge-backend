@@ -1,9 +1,6 @@
 import { IsString, IsUUID, IsEnum, MinLength } from 'class-validator';
 import { ProgrammingLanguage, SubmissionStatus, JudgeVerdict } from '../enums';
 
-/**
- * DTO para criação de submissão
- */
 export class CreateSubmissionDTO {
   @IsUUID('4', { message: 'ID da questão deve ser um UUID válido' })
   questionId!: string;
@@ -16,9 +13,6 @@ export class CreateSubmissionDTO {
   language!: ProgrammingLanguage;
 }
 
-/**
- * DTO de resposta de submissão
- */
 export class SubmissionResponseDTO {
   id!: string;
   userId!: string;
@@ -41,9 +35,6 @@ export class SubmissionResponseDTO {
   }
 }
 
-/**
- * DTO para resultado de um caso de teste individual
- */
 export class TestCaseResultDTO {
   testCaseId!: string;
   isSample!: boolean;
@@ -61,9 +52,6 @@ export class TestCaseResultDTO {
   }
 }
 
-/**
- * DTO para resumo de casos de teste não-exemplo
- */
 export class HiddenTestsSummaryDTO {
   total!: number;
   passed!: number;
@@ -74,9 +62,6 @@ export class HiddenTestsSummaryDTO {
   }
 }
 
-/**
- * DTO para submissão com resultados detalhados
- */
 export class SubmissionDetailDTO {
   id!: string;
   userId!: string;
@@ -93,8 +78,7 @@ export class SubmissionDetailDTO {
   errorMessage?: string;
   createdAt!: Date;
   updatedAt!: Date;
-  
-  // Resultados detalhados
+
   sampleTestResults!: TestCaseResultDTO[];
   hiddenTestsSummary!: HiddenTestsSummaryDTO;
 

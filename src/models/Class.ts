@@ -1,9 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinColumn, JoinTable } from 'typeorm';
 import { User } from './User';
 
-/**
- * Entidade Class - representa uma turma
- */
 @Entity('classes')
 export class Class {
   @PrimaryGeneratedColumn('uuid')
@@ -21,7 +18,6 @@ export class Class {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
 
-  // Relacionamentos
   @ManyToOne(() => User, user => user.classesTaught)
   @JoinColumn({ name: 'professor_id' })
   professor!: User;

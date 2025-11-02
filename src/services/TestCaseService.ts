@@ -3,9 +3,6 @@ import { CreateTestCaseDTO, UpdateTestCaseDTO, TestCaseResponseDTO } from '../dt
 import { NotFoundError, InternalServerError } from '../utils';
 import { DeepPartial } from 'typeorm';
 
-/**
- * Service para gerenciamento de casos de teste
- */
 export class TestCaseService {
   private testCaseRepository: TestCaseRepository;
 
@@ -13,9 +10,6 @@ export class TestCaseService {
     this.testCaseRepository = testCaseRepository;
   }
 
-  /**
-   * Lista casos de teste de uma questão
-   */
   async getTestCasesByQuestion(questionId: string): Promise<TestCaseResponseDTO[]> {
     const testCases = await this.testCaseRepository.findByQuestion(questionId);
     
@@ -30,9 +24,6 @@ export class TestCaseService {
     }));
   }
 
-  /**
-   * Busca caso de teste por ID
-   */
   async getTestCaseById(id: string): Promise<TestCaseResponseDTO> {
     const testCase = await this.testCaseRepository.findById(id);
     
@@ -51,9 +42,6 @@ export class TestCaseService {
     });
   }
 
-  /**
-   * Cria um novo caso de teste
-   */
   async createTestCase(data: CreateTestCaseDTO): Promise<TestCaseResponseDTO> {
     const testCase = await this.testCaseRepository.create({
       questionId: data.questionId,
@@ -74,9 +62,6 @@ export class TestCaseService {
     });
   }
 
-  /**
-   * Atualiza um caso de teste
-   */
   async updateTestCase(id: string, data: UpdateTestCaseDTO): Promise<TestCaseResponseDTO> {
     const testCase = await this.testCaseRepository.findById(id);
     
@@ -107,9 +92,6 @@ export class TestCaseService {
     });
   }
 
-  /**
-   * Deleta um caso de teste
-   */
   async deleteTestCase(id: string): Promise<void> {
     const testCase = await this.testCaseRepository.findById(id);
     
@@ -120,9 +102,6 @@ export class TestCaseService {
     await this.testCaseRepository.delete(id);
   }
 
-  /**
-   * Deleta todos os casos de teste de uma questão
-   */
   async deleteTestCasesByQuestion(questionId: string): Promise<void> {
     const testCases = await this.testCaseRepository.findByQuestion(questionId);
     
@@ -131,5 +110,4 @@ export class TestCaseService {
     }
   }
 }
-
 

@@ -4,9 +4,6 @@ import { logger, NotFoundError, ForbiddenError, ValidationError } from '../utils
 import { ClassRepository, UserRepository } from '../repositories';
 import { Class } from '../models/Class';
 
-/**
- * Service para gerenciamento de turmas
- */
 export class ClassService {
   private classRepository: ClassRepository;
   private userRepository: UserRepository;
@@ -19,9 +16,6 @@ export class ClassService {
     this.userRepository = userRepository;
   }
 
-  /**
-   * Lista todas as turmas
-   */
   async getAllClasses(includeRelations: boolean = false): Promise<ClassResponseDTO[]> {
     const queryBuilder = this.classRepository
       .getRepository()
@@ -39,9 +33,6 @@ export class ClassService {
     return classes.map(classEntity => this.toResponseDTO(classEntity, includeRelations));
   }
 
-  /**
-   * Busca turma por ID
-   */
   async getClassById(id: string, includeRelations: boolean = false): Promise<ClassResponseDTO> {
     const queryBuilder = this.classRepository
       .getRepository()
@@ -63,13 +54,9 @@ export class ClassService {
     return this.toResponseDTO(classEntity, includeRelations);
   }
 
-  /**
-   * Cria uma nova turma
-   */
   async createClass(data: CreateClassDTO, professorId?: string): Promise<ClassResponseDTO> {
     logger.debug('[SERVICE] Criando turma', { name: data.name, professorId });
-    
-    // Validar professor
+
     if (!professorId) {
       logger.error('[SERVICE] Professor não especificado');
       throw new ValidationError('Professor não especificado', 'PROFESSOR_REQUIRED');
@@ -91,8 +78,7 @@ export class ClassService {
     }
 
     logger.debug('[SERVICE] Criando entidade de turma', { name: data.name, professorId });
-    
-    // Criar turma
+
     const classEntity = await this.classRepository.create({
       name: data.name,
       professorId: professorId,
@@ -104,9 +90,6 @@ export class ClassService {
     return this.toResponseDTO(classEntity, false);
   }
 
-  /**
-   * Atualiza uma turma
-   */
   async updateClass(id: string, data: CreateClassDTO, userId?: string): Promise<ClassResponseDTO> {
     const classEntity = await this.classRepository.findById(id);
 
@@ -114,7 +97,6 @@ export class ClassService {
       throw new NotFoundError('Turma não encontrada', 'CLASS_NOT_FOUND');
     }
 
-    // Verificar permissão
     if (userId && classEntity.professorId !== userId) {
       const user = await this.userRepository.findById(userId);
       if (user?.role !== UserRole.PROFESSOR) {
@@ -122,7 +104,6 @@ export class ClassService {
       }
     }
 
-    // Atualizar
     const updated = await this.classRepository.update(id, { name: data.name });
     
     if (!updated) {
@@ -132,9 +113,6 @@ export class ClassService {
     return this.toResponseDTO(updated, false);
   }
 
-  /**
-   * Deleta uma turma
-   */
   async deleteClass(id: string, userId?: string): Promise<void> {
     const classEntity = await this.classRepository.findById(id);
 
@@ -142,7 +120,6 @@ export class ClassService {
       throw new NotFoundError('Turma não encontrada', 'CLASS_NOT_FOUND');
     }
 
-    // Verificar permissão
     if (userId && classEntity.professorId !== userId) {
       const user = await this.userRepository.findById(userId);
       if (user?.role !== UserRole.PROFESSOR) {
@@ -153,9 +130,6 @@ export class ClassService {
     await this.classRepository.delete(id);
   }
 
-  /**
-   * Lista alunos de uma turma
-   */
   async getClassStudents(classId: string): Promise<any[]> {
     const students = await this.classRepository.findStudents(classId);
 
@@ -168,9 +142,6 @@ export class ClassService {
     }));
   }
 
-  /**
-   * Adiciona aluno à turma
-   */
   async addStudentToClass(classId: string, studentId: string): Promise<void> {
     const classEntity = await this.classRepository.findById(classId);
 
@@ -188,7 +159,6 @@ export class ClassService {
       throw new ValidationError('Usuário não é um estudante', 'INVALID_STUDENT_ROLE');
     }
 
-    // Verificar se já está na turma
     const alreadyEnrolled = await this.classRepository.isStudentEnrolled(classId, studentId);
     if (alreadyEnrolled) {
       throw new ValidationError('Estudante já está matriculado nesta turma', 'ALREADY_ENROLLED');
@@ -197,9 +167,6 @@ export class ClassService {
     await this.classRepository.addStudent(classId, student);
   }
 
-  /**
-   * Remove aluno da turma
-   */
   async removeStudentFromClass(classId: string, studentId: string): Promise<void> {
     const classEntity = await this.classRepository.findById(classId);
 
@@ -210,9 +177,6 @@ export class ClassService {
     await this.classRepository.removeStudent(classId, studentId);
   }
 
-  /**
-   * Converte entidade para DTO de resposta
-   */
   private toResponseDTO(classEntity: Class, includeRelations: boolean): ClassResponseDTO {
     const dto: Partial<ClassResponseDTO> = {
       id: classEntity.id,
@@ -222,13 +186,11 @@ export class ClassService {
       updatedAt: classEntity.updatedAt
     };
 
-    // Sempre incluir IDs e contagem de estudantes se disponível
     if (classEntity.students) {
       dto.studentIds = classEntity.students.map(s => s.id);
       dto.studentCount = classEntity.students.length;
     }
 
-    // Incluir objetos completos apenas se solicitado
     if (includeRelations) {
       if (classEntity.professor) {
         dto.professor = {
@@ -248,8 +210,7 @@ export class ClassService {
             role: student.role,
             createdAt: student.createdAt.toISOString()
           };
-          
-          // Adicionar studentRegistration se existir (campo específico de Student)
+
           if ('studentRegistration' in student) {
             studentData.studentRegistration = (student as { studentRegistration?: string }).studentRegistration;
           }
@@ -262,5 +223,4 @@ export class ClassService {
     return new ClassResponseDTO(dto);
   }
 }
-
 

@@ -3,30 +3,23 @@ import { createApp } from './app';
 import { config, validateConfig, initializeDatabase, closeDatabase } from './config';
 import { logger } from './utils';
 
-/**
- * Inicia o servidor
- */
 async function startServer() {
   try {
     logger.info('AtalJudge Backend - TypeScript');
     logger.info('================================\n');
 
-    // Validar configurações
     logger.info('Validando configurações...');
     validateConfig();
     logger.info('Configurações válidas\n');
 
-    // Conectar ao banco de dados
     logger.info('Conectando ao banco de dados...');
     await initializeDatabase();
     logger.info('');
 
-    // Criar aplicação Express
     logger.info('Criando aplicação Express...');
     const app = createApp();
     logger.info('Aplicação criada\n');
 
-    // Iniciar servidor
     const port = config.port;
     const server = app.listen(port, () => {
       logger.info('================================');
@@ -36,7 +29,6 @@ async function startServer() {
       logger.info('================================\n');
     });
 
-    // Graceful shutdown
     const gracefulShutdown = async (signal: string) => {
       logger.warn(`\nSinal ${signal} recebido, encerrando servidor...`);
       
@@ -49,18 +41,15 @@ async function startServer() {
         process.exit(0);
       });
 
-      // Forçar encerramento após 10 segundos
       setTimeout(() => {
         logger.error('Não foi possível encerrar graciosamente, forçando encerramento');
         process.exit(1);
       }, 10000);
     };
 
-    // Capturar sinais de encerramento
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-    // Capturar erros não tratados
     process.on('unhandledRejection', (reason) => {
       const errorInfo = reason instanceof Error
         ? {
@@ -78,9 +67,7 @@ async function startServer() {
         ...errorInfo,
         promiseRejection: true
       });
-      
-      // Em produção, podemos querer sair do processo
-      // Em desenvolvimento, apenas logar para debug
+
       if (config.nodeEnv === 'production') {
         logger.error('Encerrando processo devido a unhandled rejection');
         process.exit(1);
@@ -103,6 +90,5 @@ async function startServer() {
   }
 }
 
-// Iniciar servidor
 startServer();
 

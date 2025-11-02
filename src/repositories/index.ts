@@ -11,4 +11,5 @@ export { QuestionListRepository } from './QuestionListRepository';
 export { TokenBlacklistRepository } from './TokenBlacklistRepository';
 export { RefreshTokenRepository } from './RefreshTokenRepository';
 export { PasswordResetTokenRepository } from './PasswordResetTokenRepository';
+export { AllowedIPRepository } from './AllowedIPRepository';
 

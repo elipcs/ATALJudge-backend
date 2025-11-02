@@ -7,11 +7,6 @@ import { convertQuestionPayload } from '../middlewares/payload-converter.middlew
 function createQuestionController(questionService: QuestionService): Router {
   const router = Router();
 
-/**
- * POST /api/questions
- * Cria uma nova questão (local ou codeforces)
- * O tipo é detectado automaticamente baseado nos campos
- */
 router.post(
   '/',
   authenticate,
@@ -31,10 +26,6 @@ router.post(
   }
 );
 
-/**
- * GET /api/questions
- * Lista todas as questões
- */
 router.get(
   '/',
   authenticate,
@@ -49,10 +40,6 @@ router.get(
   }
 );
 
-/**
- * GET /api/questions/:id
- * Busca questão por ID
- */
 router.get(
   '/:id',
   authenticate,
@@ -67,10 +54,6 @@ router.get(
   }
 );
 
-/**
- * PUT /api/questions/:id
- * Atualiza uma questão (apenas professores/assistentes)
- */
 router.put(
   '/:id',
   authenticate,
@@ -90,10 +73,6 @@ router.put(
   }
 );
 
-/**
- * DELETE /api/questions/:id
- * Deleta uma questão (apenas professores/assistentes)
- */
 router.delete(
   '/:id',
   authenticate,

@@ -2,25 +2,21 @@ import * as nodemailer from 'nodemailer';
 import { config } from '../config';
 import { logger } from '../utils';
 
-/**
- * Serviço de envio de emails
- */
 export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    // Configurar transporter do nodemailer
+    
     this.transporter = nodemailer.createTransport({
       host: config.email.host,
       port: config.email.port,
-      secure: config.email.port === 465, // true para porta 465, false para outras portas
+      secure: config.email.port === 465, 
       auth: config.email.username && config.email.password ? {
         user: config.email.username,
         pass: config.email.password,
       } : undefined,
     });
 
-    // Verificar conexão (em desenvolvimento)
     if (config.nodeEnv === 'development') {
       this.transporter.verify((error, _success) => {
         if (error) {
@@ -32,9 +28,6 @@ export class EmailService {
     }
   }
 
-  /**
-   * Envia email de reset de senha
-   */
   async sendPasswordResetEmail(email: string, name: string, resetToken: string): Promise<void> {
     const resetUrl = `${config.frontendUrl}/reset-senha?token=${resetToken}`;
     
@@ -179,9 +172,6 @@ Este é um email automático, por favor não responda.
     }
   }
 
-  /**
-   * Envia email de confirmação de reset de senha
-   */
   async sendPasswordResetConfirmation(email: string, name: string): Promise<void> {
     const htmlContent = `
       <!DOCTYPE html>
@@ -302,9 +292,8 @@ Este é um email automático, por favor não responda.
         email, 
         error: error instanceof Error ? error.message : 'Erro desconhecido' 
       });
-      // Não lançar erro aqui, pois a senha já foi alterada
+      
     }
   }
 }
-
 

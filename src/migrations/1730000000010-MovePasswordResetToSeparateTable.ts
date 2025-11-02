@@ -2,7 +2,7 @@ import { MigrationInterface, QueryRunner, Table, TableColumn, TableForeignKey, T
 
 export class MovePasswordResetToSeparateTable1730000000010 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // 1. Criar tabela password_reset_tokens
+    
     await queryRunner.createTable(
       new Table({
         name: 'password_reset_tokens',
@@ -46,7 +46,6 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
       true
     );
 
-    // 2. Criar foreign key para users
     await queryRunner.createForeignKey(
       'password_reset_tokens',
       new TableForeignKey({
@@ -57,7 +56,6 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
       })
     );
 
-    // 3. Criar índices
     await queryRunner.createIndex(
       'password_reset_tokens',
       new TableIndex({
@@ -82,8 +80,6 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
       })
     );
 
-    // 4. Migrar dados existentes da tabela users para password_reset_tokens
-    // Apenas se houver dados válidos (token não nulo e não expirado)
     await queryRunner.query(`
       INSERT INTO password_reset_tokens (user_id, token_hash, expires_at, is_used, created_at)
       SELECT 
@@ -98,11 +94,9 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
         AND reset_password_expires > NOW()
     `);
 
-    // 5. Remover índices antigos
     await queryRunner.query(`DROP INDEX IF EXISTS idx_users_reset_token`);
     await queryRunner.query(`DROP INDEX IF EXISTS idx_users_reset_expires`);
 
-    // 6. Remover colunas da tabela users
     const table = await queryRunner.getTable('users');
     
     const resetExpiresColumn = table?.findColumnByName('reset_password_expires');
@@ -119,7 +113,6 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
   public async down(queryRunner: QueryRunner): Promise<void> {
     const table = await queryRunner.getTable('users');
 
-    // 1. Adicionar colunas de volta na tabela users
     const resetTokenColumn = table?.findColumnByName('reset_password_token');
     if (!resetTokenColumn) {
       await queryRunner.addColumn(
@@ -145,7 +138,6 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
       );
     }
 
-    // 2. Recriar índices antigos
     await queryRunner.query(`
       CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_password_token)
     `);
@@ -153,7 +145,6 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
       CREATE INDEX IF NOT EXISTS idx_users_reset_expires ON users(reset_password_expires)
     `);
 
-    // 3. Migrar dados de volta (apenas tokens não usados e não expirados)
     await queryRunner.query(`
       UPDATE users u
       SET 
@@ -165,12 +156,10 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
         AND prt.expires_at > NOW()
     `);
 
-    // 4. Remover índices da tabela password_reset_tokens
     await queryRunner.dropIndex('password_reset_tokens', 'idx_password_reset_user_id');
     await queryRunner.dropIndex('password_reset_tokens', 'idx_password_reset_token_hash');
     await queryRunner.dropIndex('password_reset_tokens', 'idx_password_reset_expires_at');
 
-    // 5. Remover foreign key
     const passwordResetTable = await queryRunner.getTable('password_reset_tokens');
     const foreignKey = passwordResetTable?.foreignKeys.find(
       (fk) => fk.columnNames.indexOf('user_id') !== -1
@@ -179,7 +168,6 @@ export class MovePasswordResetToSeparateTable1730000000010 implements MigrationI
       await queryRunner.dropForeignKey('password_reset_tokens', foreignKey);
     }
 
-    // 6. Remover tabela password_reset_tokens
     await queryRunner.dropTable('password_reset_tokens');
   }
 }

@@ -4,9 +4,6 @@ import { Question } from './Question';
 import { Class } from './Class';
 import { ValidationError } from '../utils';
 
-/**
- * Interface para grupos de questões
- */
 export interface QuestionGroup {
   id: string;
   name: string;
@@ -15,9 +12,6 @@ export interface QuestionGroup {
   percentage?: number;
 }
 
-/**
- * Entidade QuestionList - representa uma lista de questões
- */
 @Entity('question_lists')
 export class QuestionList {
   @PrimaryGeneratedColumn('uuid')
@@ -59,7 +53,6 @@ export class QuestionList {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
 
-  // Relacionamentos
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'author_id' })
   author?: User;
@@ -80,9 +73,6 @@ export class QuestionList {
   })
   classes!: Class[];
 
-  /**
-   * Validações antes de inserir/atualizar
-   */
   @BeforeInsert()
   @BeforeUpdate()
   validate(): void {
@@ -99,17 +89,11 @@ export class QuestionList {
     }
   }
 
-  /**
-   * Verifica se a lista está aberta (dentro do período)
-   */
   isOpen(): boolean {
     const now = new Date();
     return now >= this.startDate && now <= this.endDate;
   }
 
-  /**
-   * Calcula status calculado
-   */
   getCalculatedStatus(): 'next' | 'open' | 'closed' {
     const now = new Date();
     if (now < this.startDate) {
@@ -123,5 +107,4 @@ export class QuestionList {
     return 'open';
   }
 }
-
 

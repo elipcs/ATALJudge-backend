@@ -15,4 +15,5 @@ export { PasswordResetToken } from './PasswordResetToken';
 export { TokenBlacklist } from './TokenBlacklist';
 export { QuestionList, QuestionGroup } from './QuestionList';
 export { Grade } from './Grade';
+export { AllowedIP } from './AllowedIP';
 

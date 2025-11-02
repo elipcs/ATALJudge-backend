@@ -3,37 +3,35 @@ import * as crypto from 'crypto';
 import { config } from '../config';
 import { TokenError } from './errors';
 
-/**
- * Interface do payload JWT
- */
 export interface JwtPayload {
-  userId: string;
+  // Metadados de segurança (padrão RFC 7519)
+  sub: string;       // Subject - ID do usuário
+  jti?: string;      // JWT ID - Identificador único do token
+  tokenType?: 'access' | 'refresh';  // Tipo do token
+  
+  // Informações do usuário
   email: string;
   role: string;
+  
+  // Timestamps (adicionados automaticamente pelo jwt.sign, removidos ao verificar)
+  iat?: number;      // Issued At
+  exp?: number;      // Expiration Time
+  nbf?: number;      // Not Before
 }
 
-/**
- * Gerenciador de tokens (JWT + Refresh Token)
- * 
- * RESPONSABILIDADES:
- * - Geração de JWT (access + refresh)
- * - Verificação de JWT
- * - Hash de tokens (SHA256)
- * - Validações de expiração
- * 
- * NÃO FAZ:
- * - Persistência no banco
- * - Regras de negócio
- */
 export class TokenManager {
-  // ==================== GERAÇÃO DE JWT ====================
-  
-  /**
-   * Gera access token JWT (curta duração)
-   */
+
   static generateAccessToken(payload: JwtPayload): string {
+    const tokenId = crypto.randomBytes(16).toString('hex');
+    
     return jwt.sign(
-      payload,
+      {
+        sub: payload.sub,         // Subject - ID do usuário
+        email: payload.email,
+        role: payload.role,
+        jti: tokenId,             // JWT ID único
+        tokenType: 'access' as const
+      },
       config.jwt.secret,
       {
         expiresIn: config.jwt.accessExpires,
@@ -43,21 +41,25 @@ export class TokenManager {
     );
   }
 
-  /**
-   * Gera refresh token JWT (longa duração)
-   */
   static generateRefreshToken(payload: JwtPayload): string {
+    const tokenId = crypto.randomBytes(16).toString('hex');
+    
     const token = jwt.sign(
-      payload,
-      config.jwt.secret, // Usa mesmo secret (mais simples e seguro)
+      {
+        sub: payload.sub,         // Subject - ID do usuário
+        email: payload.email,
+        role: payload.role,
+        jti: tokenId,             // JWT ID único
+        tokenType: 'refresh' as const
+      },
+      config.jwt.secret, 
       {
         expiresIn: config.jwt.refreshExpires,
         issuer: 'ataljudge',
         audience: 'ataljudge-api'
       }
     );
-    
-    // Validação: JWT deve ter pelo menos 100 caracteres
+
     if (token.length < 100) {
       throw new Error(`Token gerado é muito curto: ${token.length} caracteres. Isso não é um JWT válido.`);
     }
@@ -65,9 +67,6 @@ export class TokenManager {
     return token;
   }
 
-  /**
-   * Gera par de tokens (access + refresh)
-   */
   static generateTokenPair(payload: JwtPayload): {
     accessToken: string;
     refreshToken: string;
@@ -78,12 +77,6 @@ export class TokenManager {
     };
   }
 
-  // ==================== VERIFICAÇÃO DE JWT ====================
-
-  /**
-   * Verifica e decodifica access token
-   * @throws Error se token inválido ou expirado
-   */
   static verifyAccessToken(token: string): JwtPayload {
     try {
       const decoded = jwt.verify(token, config.jwt.secret, {
@@ -91,8 +84,21 @@ export class TokenManager {
         audience: 'ataljudge-api'
       }) as JwtPayload;
 
-      return decoded;
+      // Validação adicional: verificar tipo de token
+      if (decoded.tokenType && decoded.tokenType !== 'access') {
+        throw new TokenError('Tipo de token inválido para access token', 'INVALID_TOKEN_TYPE');
+      }
+
+      // Remove propriedades de timing e metadados para evitar conflitos ao gerar novo token
+      return {
+        sub: decoded.sub,
+        email: decoded.email,
+        role: decoded.role
+      };
     } catch (error) {
+      if (error instanceof TokenError) {
+        throw error;
+      }
       if (error instanceof jwt.TokenExpiredError) {
         throw new TokenError('Token expirado', 'ACCESS_TOKEN_EXPIRED');
       }
@@ -103,19 +109,28 @@ export class TokenManager {
     }
   }
 
-  /**
-   * Verifica e decodifica refresh token
-   * @throws Error se token inválido ou expirado
-   */
   static verifyRefreshToken(token: string): JwtPayload {
     try {
-      const decoded = jwt.verify(token, config.jwt.secret, { // Usa mesmo secret
+      const decoded = jwt.verify(token, config.jwt.secret, { 
         issuer: 'ataljudge',
         audience: 'ataljudge-api'
       }) as JwtPayload;
 
-      return decoded;
+      // Validação adicional: verificar tipo de token
+      if (decoded.tokenType && decoded.tokenType !== 'refresh') {
+        throw new TokenError('Tipo de token inválido para refresh token', 'INVALID_TOKEN_TYPE');
+      }
+
+      // Remove propriedades de timing e metadados para evitar conflitos ao gerar novo token
+      return {
+        sub: decoded.sub,
+        email: decoded.email,
+        role: decoded.role
+      };
     } catch (error) {
+      if (error instanceof TokenError) {
+        throw error;
+      }
       if (error instanceof jwt.TokenExpiredError) {
         throw new TokenError('Refresh token expirado', 'REFRESH_TOKEN_EXPIRED');
       }
@@ -126,10 +141,6 @@ export class TokenManager {
     }
   }
 
-  /**
-   * Verifica token (tenta como access, depois refresh)
-   * Mantido para compatibilidade
-   */
   static verifyToken(token: string): JwtPayload {
     try {
       return this.verifyAccessToken(token);
@@ -138,12 +149,6 @@ export class TokenManager {
     }
   }
 
-  // ==================== HASH DE TOKENS ====================
-
-  /**
-   * Gera hash SHA256 de um token
-   * Usado para armazenar refresh tokens com segurança
-   */
   static hashToken(token: string): string {
     return crypto
       .createHash('sha256')
@@ -151,34 +156,19 @@ export class TokenManager {
       .digest('hex');
   }
 
-  /**
-   * Verifica se um token corresponde ao hash armazenado
-   */
   static validateTokenHash(token: string, hash: string): boolean {
     const tokenHash = this.hashToken(token);
     return tokenHash === hash;
   }
 
-  // ==================== VALIDAÇÕES ====================
-
-  /**
-   * Verifica se uma data de expiração já passou
-   */
   static isExpired(expiresAt: Date): boolean {
     return new Date() > expiresAt;
   }
 
-  /**
-   * Calcula data de expiração baseado em segundos
-   */
   static calculateExpirationDate(secondsFromNow: number): Date {
     return new Date(Date.now() + secondsFromNow * 1000);
   }
 
-  /**
-   * Extrai informações do token sem verificar assinatura
-   * ATENÇÃO: Apenas para logging/debug, não usar para autenticação!
-   */
   static decodeWithoutVerify(token: string): JwtPayload | null {
     try {
       const decoded = jwt.decode(token) as JwtPayload;
@@ -188,17 +178,12 @@ export class TokenManager {
     }
   }
 
-  /**
-   * Verifica se token está próximo de expirar (útil para renovação automática)
-   * @param token Token JWT
-   * @param thresholdSeconds Quantos segundos antes de expirar (padrão: 300 = 5 minutos)
-   */
   static isAboutToExpire(token: string, thresholdSeconds: number = 300): boolean {
     try {
       const decoded = jwt.decode(token) as any;
       if (!decoded || !decoded.exp) return false;
 
-      const expirationTime = decoded.exp * 1000; // Converter para milissegundos
+      const expirationTime = decoded.exp * 1000; 
       const timeUntilExpiration = expirationTime - Date.now();
       
       return timeUntilExpiration <= (thresholdSeconds * 1000);
@@ -207,18 +192,10 @@ export class TokenManager {
     }
   }
 
-  // ==================== UTILITÁRIOS ====================
-
-  /**
-   * Gera um ID único para família de tokens (usado em token rotation)
-   */
   static generateFamilyId(): string {
     return crypto.randomUUID();
   }
 
-  /**
-   * Extrai bearer token do header Authorization
-   */
   static extractBearerToken(authHeader: string | undefined): string | null {
     if (!authHeader) return null;
     
@@ -228,9 +205,6 @@ export class TokenManager {
     return parts[1];
   }
 
-  /**
-   * Valida formato básico de JWT (sem verificar assinatura)
-   */
   static isValidJwtFormat(token: string): boolean {
     const parts = token.split('.');
     return parts.length === 3;

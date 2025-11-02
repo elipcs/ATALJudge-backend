@@ -1,8 +1,5 @@
 import { IsString, IsBoolean, IsInt, Min, IsOptional, IsUUID } from 'class-validator';
 
-/**
- * DTO para criação de caso de teste
- */
 export class CreateTestCaseDTO {
   @IsUUID('4')
   questionId!: string;
@@ -23,9 +20,6 @@ export class CreateTestCaseDTO {
   weight?: number;
 }
 
-/**
- * DTO para atualização de caso de teste
- */
 export class UpdateTestCaseDTO {
   @IsOptional()
   @IsString()
@@ -45,9 +39,6 @@ export class UpdateTestCaseDTO {
   weight?: number;
 }
 
-/**
- * DTO de resposta de caso de teste
- */
 export class TestCaseResponseDTO {
   id!: string;
   questionId!: string;

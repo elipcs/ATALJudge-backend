@@ -3,9 +3,6 @@ import { Type } from 'class-transformer';
 import { JudgeType } from '../enums';
 import { QuestionExample } from '../models/Question';
 
-/**
- * DTO para exemplo de questão
- */
 export class QuestionExampleDTO {
   @IsString()
   input!: string;
@@ -14,10 +11,6 @@ export class QuestionExampleDTO {
   output!: string;
 }
 
-/**
- * DTO base para criação de questão (abstrato)
- * LocalQuestion e CodeforcesQuestion herdam deste
- */
 export abstract class CreateQuestionDTO {
   @IsString()
   @MinLength(3, { message: 'Título deve ter pelo menos 3 caracteres' })
@@ -68,10 +61,6 @@ export abstract class CreateQuestionDTO {
   judgeType!: JudgeType;
 }
 
-/**
- * DTO base para atualização de questão (abstrato)
- * LocalQuestion e CodeforcesQuestion herdam deste
- */
 export abstract class UpdateQuestionDTO {
   @IsOptional()
   @IsString()
@@ -147,9 +136,6 @@ export abstract class UpdateQuestionDTO {
   referenceLanguage?: string;
 }
 
-/**
- * DTO de resposta de questão
- */
 export class QuestionResponseDTO {
   id!: string;
   title!: string;

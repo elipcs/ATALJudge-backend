@@ -1,8 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
-/**
- * Entidade TokenBlacklist - tokens JWT revogados/blacklistados
- */
 @Entity('token_blacklist')
 export class TokenBlacklist {
   @PrimaryGeneratedColumn('uuid')

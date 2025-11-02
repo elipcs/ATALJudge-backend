@@ -7,10 +7,6 @@ import { successResponse } from '../utils/responses';
 function createGradeController(gradeService: GradeService): Router {
   const router = Router();
 
-/**
- * GET /api/grades/:id
- * Busca nota por ID (apenas professores/assistentes)
- */
 router.get(
   '/:id',
   authenticate,
@@ -26,10 +22,6 @@ router.get(
   }
 );
 
-/**
- * GET /api/grades/student/:studentId
- * Busca todas as notas de um estudante
- */
 router.get(
   '/student/:studentId',
   authenticate,
@@ -45,10 +37,6 @@ router.get(
   }
 );
 
-/**
- * GET /api/grades/list/:listId
- * Busca todas as notas de uma lista (apenas professores/assistentes)
- */
 router.get(
   '/list/:listId',
   authenticate,
@@ -64,10 +52,6 @@ router.get(
   }
 );
 
-/**
- * GET /api/grades/student/:studentId/list/:listId
- * Busca nota de um estudante em uma lista específica
- */
 router.get(
   '/student/:studentId/list/:listId',
   authenticate,
@@ -91,10 +75,6 @@ router.get(
   }
 );
 
-/**
- * POST /api/grades
- * Cria ou atualiza uma nota (apenas professores/assistentes)
- */
 router.post(
   '/',
   authenticate,
@@ -111,10 +91,6 @@ router.post(
   }
 );
 
-/**
- * PUT /api/grades/:id
- * Atualiza uma nota (apenas professores/assistentes)
- */
 router.put(
   '/:id',
   authenticate,
@@ -131,10 +107,6 @@ router.put(
   }
 );
 
-/**
- * DELETE /api/grades/:id
- * Deleta uma nota (apenas professores/assistentes)
- */
 router.delete(
   '/:id',
   authenticate,

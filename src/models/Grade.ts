@@ -2,9 +2,6 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { Student } from './Student';
 import { QuestionList } from './QuestionList';
 
-/**
- * Entidade Grade - representa a nota de um estudante em uma lista de questões
- */
 @Entity('grades')
 export class Grade {
   @PrimaryGeneratedColumn('uuid')
@@ -25,7 +22,6 @@ export class Grade {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
 
-  // Relacionamentos
   @ManyToOne(() => Student, student => student.grades, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'student_id' })
   student!: Student;

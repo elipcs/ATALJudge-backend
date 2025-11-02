@@ -2,9 +2,6 @@ import { GradeRepository, UserRepository, QuestionListRepository } from '../repo
 import { CreateGradeDTO, UpdateGradeDTO, GradeResponseDTO } from '../dtos';
 import { NotFoundError, InternalServerError } from '../utils';
 
-/**
- * Service para gerenciamento de notas
- */
 export class GradeService {
   private gradeRepository: GradeRepository;
   private userRepository: UserRepository;
@@ -20,9 +17,6 @@ export class GradeService {
     this.listRepository = listRepository;
   }
 
-  /**
-   * Busca nota por ID
-   */
   async getGradeById(id: string): Promise<GradeResponseDTO> {
     const grade = await this.gradeRepository.findById(id);
     
@@ -42,9 +36,6 @@ export class GradeService {
     });
   }
 
-  /**
-   * Busca nota de um estudante em uma lista
-   */
   async getGradeByStudentAndList(studentId: string, listId: string): Promise<GradeResponseDTO | null> {
     const grade = await this.gradeRepository.findByStudentAndList(studentId, listId);
     
@@ -64,9 +55,6 @@ export class GradeService {
     });
   }
 
-  /**
-   * Busca todas as notas de um estudante
-   */
   async getGradesByStudent(studentId: string): Promise<GradeResponseDTO[]> {
     const grades = await this.gradeRepository.findByStudent(studentId);
     
@@ -81,9 +69,6 @@ export class GradeService {
     }));
   }
 
-  /**
-   * Busca todas as notas de uma lista
-   */
   async getGradesByList(listId: string): Promise<GradeResponseDTO[]> {
     const grades = await this.gradeRepository.findByList(listId);
     
@@ -98,29 +83,24 @@ export class GradeService {
     }));
   }
 
-  /**
-   * Cria ou atualiza uma nota
-   */
   async upsertGrade(data: CreateGradeDTO): Promise<GradeResponseDTO> {
-    // Verificar se estudante existe
+    
     const student = await this.userRepository.findById(data.studentId);
     
     if (!student) {
       throw new NotFoundError('Estudante não encontrado', 'STUDENT_NOT_FOUND');
     }
 
-    // Verificar se lista existe
     const list = await this.listRepository.findById(data.listId);
     
     if (!list) {
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    // Verificar se já existe nota para esse estudante nessa lista
     const existingGrade = await this.gradeRepository.findByStudentAndList(data.studentId, data.listId);
     
     if (existingGrade) {
-      // Atualizar nota existente
+      
       const updated = await this.gradeRepository.update(existingGrade.id, {
         score: data.score
       });
@@ -141,7 +121,6 @@ export class GradeService {
       });
     }
 
-    // Criar nova nota
     const grade = await this.gradeRepository.create({
       studentId: data.studentId,
       listId: data.listId,
@@ -160,9 +139,6 @@ export class GradeService {
     });
   }
 
-  /**
-   * Atualiza uma nota
-   */
   async updateGrade(id: string, data: UpdateGradeDTO): Promise<GradeResponseDTO> {
     const grade = await this.gradeRepository.findById(id);
     
@@ -190,9 +166,6 @@ export class GradeService {
     });
   }
 
-  /**
-   * Deleta uma nota
-   */
   async deleteGrade(id: string): Promise<void> {
     const grade = await this.gradeRepository.findById(id);
     
@@ -203,16 +176,10 @@ export class GradeService {
     await this.gradeRepository.delete(id);
   }
 
-  /**
-   * Deleta todas as notas de um estudante
-   */
   async deleteGradesByStudent(studentId: string): Promise<void> {
     await this.gradeRepository.deleteByStudent(studentId);
   }
 
-  /**
-   * Deleta todas as notas de uma lista
-   */
   async deleteGradesByList(listId: string): Promise<void> {
     await this.gradeRepository.deleteByList(listId);
   }

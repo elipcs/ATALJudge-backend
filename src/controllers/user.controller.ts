@@ -8,10 +8,6 @@ import { UnauthorizedError } from '../utils';
 function createUserController(userService: UserService): Router {
   const router = Router();
 
-/**
- * GET /api/users/profile
- * Retorna perfil do usuário autenticado
- */
 router.get(
   '/profile',
   authenticate,
@@ -21,7 +17,7 @@ router.get(
         throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
       }
       
-      const user = await userService.getUserById(req.user.userId);
+      const user = await userService.getUserById(req.user.sub);
       
       successResponse(res, user, 'Perfil do usuário');
     } catch (error) {
@@ -30,10 +26,6 @@ router.get(
   }
 );
 
-/**
- * PUT /api/users/profile
- * Atualiza perfil do usuário autenticado
- */
 router.put(
   '/profile',
   authenticate,
@@ -44,7 +36,7 @@ router.put(
         throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
       }
       
-      const user = await userService.updateProfile(req.user.userId, req.body);
+      const user = await userService.updateProfile(req.user.sub, req.body);
       
       successResponse(res, user, 'Perfil atualizado com sucesso');
     } catch (error) {
@@ -53,10 +45,6 @@ router.put(
   }
 );
 
-/**
- * POST /api/users/change-password
- * Altera senha do usuário autenticado
- */
 router.post(
   '/change-password',
   authenticate,
@@ -67,7 +55,7 @@ router.post(
         throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
       }
       
-      await userService.changePassword(req.user.userId, req.body);
+      await userService.changePassword(req.user.sub, req.body);
       
       successResponse(res, null, 'Senha alterada com sucesso');
     } catch (error) {
@@ -76,10 +64,6 @@ router.post(
   }
 );
 
-/**
- * GET /api/users
- * Lista todos os usuários (apenas professores)
- */
 router.get(
   '/',
   authenticate,
@@ -95,10 +79,6 @@ router.get(
   }
 );
 
-/**
- * GET /api/users/:id
- * Busca usuário por ID (apenas professores)
- */
 router.get(
   '/:id',
   authenticate,
@@ -108,6 +88,21 @@ router.get(
       const user = await userService.getUserById(req.params.id);
       
       successResponse(res, user, 'Dados do usuário');
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
+router.get(
+  '/role/:role',
+  authenticate,
+  requireProfessor,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { role } = req.params;
+      const users = await userService.getUsersByRole(role);
+      successResponse(res, users, `Usuários com role: ${role}`);
     } catch (error) {
       throw error;
     }

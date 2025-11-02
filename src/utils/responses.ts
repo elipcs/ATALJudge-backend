@@ -1,8 +1,5 @@
 import { Response } from 'express';
 
-/**
- * Interface de resposta padrão
- */
 export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
@@ -11,9 +8,6 @@ export interface ApiResponse<T = any> {
   errors?: Record<string, string[]>;
 }
 
-/**
- * Resposta de sucesso
- */
 export function successResponse<T>(
   res: Response,
   data?: T,
@@ -29,9 +23,6 @@ export function successResponse<T>(
   return res.status(statusCode).json(response);
 }
 
-/**
- * Resposta de erro
- */
 export function errorResponse(
   res: Response,
   message: string,
@@ -49,9 +40,6 @@ export function errorResponse(
   return res.status(statusCode).json(response);
 }
 
-/**
- * Resposta de erro de validação
- */
 export function validationErrorResponse(
   res: Response,
   errors: Record<string, string[]>

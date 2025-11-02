@@ -1,8 +1,5 @@
 import { IsUUID, IsNumber, Min, Max, IsOptional } from 'class-validator';
 
-/**
- * DTO para criação de nota
- */
 export class CreateGradeDTO {
   @IsUUID()
   studentId!: string;
@@ -16,9 +13,6 @@ export class CreateGradeDTO {
   score!: number;
 }
 
-/**
- * DTO para atualização de nota
- */
 export class UpdateGradeDTO {
   @IsOptional()
   @IsNumber()
@@ -27,9 +21,6 @@ export class UpdateGradeDTO {
   score?: number;
 }
 
-/**
- * DTO de resposta de nota
- */
 export class GradeResponseDTO {
   id!: string;
   studentId!: string;
@@ -38,7 +29,6 @@ export class GradeResponseDTO {
   createdAt!: Date;
   updatedAt!: Date;
 
-  // Dados relacionados (opcionais)
   studentName?: string;
   listTitle?: string;
 

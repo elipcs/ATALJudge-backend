@@ -3,9 +3,6 @@ import { validateDto, ValidationException } from '../utils/validators';
 import { validationErrorResponse } from '../utils/responses';
 import { logger } from '../utils';
 
-/**
- * Middleware para validar o body da requisição com um DTO
- */
 export function validateBody<T extends object>(dtoClass: new () => T) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -34,9 +31,6 @@ export function validateBody<T extends object>(dtoClass: new () => T) {
   };
 }
 
-/**
- * Middleware para validar query parameters com um DTO
- */
 export function validateQuery<T extends object>(dtoClass: new () => T) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

@@ -6,16 +6,10 @@ import { AppDataSource } from '../config/database';
 import { TokenBlacklist } from '../models/TokenBlacklist';
 import { UserRole } from '../enums';
 
-/**
- * Estende o Request do Express para incluir o usuário autenticado
- */
 export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
 
-/**
- * Middleware de autenticação JWT
- */
 export async function authenticate(
   req: AuthRequest,
   res: Response,
@@ -23,8 +17,7 @@ export async function authenticate(
 ): Promise<void> {
   try {
     logger.debug('[AUTH] Verificando autenticação...');
-    
-    // Extrair token do header
+
     const token = TokenManager.extractBearerToken(req.headers.authorization);
     
     if (!token) {
@@ -34,8 +27,7 @@ export async function authenticate(
     }
     
     logger.debug('[AUTH] Token encontrado, verificando blacklist...');
-    
-    // Verificar se o token está na blacklist
+
     const tokenBlacklistRepo = AppDataSource.getRepository(TokenBlacklist);
     const blacklisted = await tokenBlacklistRepo.findOne({ where: { token } });
     
@@ -46,18 +38,16 @@ export async function authenticate(
     }
     
     logger.debug('[AUTH] Verificando validade do token...');
-    
-    // Verificar e decodificar o token
+
     const payload = TokenManager.verifyAccessToken(token);
     
-    logger.info('[AUTH] Token válido, usuário autenticado', { userId: payload.userId, role: payload.role });
-    
-    // Adicionar payload ao request
+    logger.info('[AUTH] Token válido, usuário autenticado', { userId: payload.sub, role: payload.role });
+
     req.user = payload;
     
     next();
   } catch (error) {
-    // Extrair informações do erro para logging adequado
+    
     const errorInfo = error instanceof Error 
       ? {
           message: error.message,
@@ -97,9 +87,6 @@ export async function authenticate(
   }
 }
 
-/**
- * Middleware para verificar se o usuário tem um papel específico
- */
 export function requireRole(...roles: UserRole[]) {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
@@ -121,21 +108,10 @@ export function requireRole(...roles: UserRole[]) {
   };
 }
 
-/**
- * Middleware para verificar se o usuário é professor
- */
 export const requireProfessor = requireRole(UserRole.PROFESSOR);
 
-/**
- * Middleware para verificar se o usuário é professor ou assistente
- */
 export const requireTeacher = requireRole(UserRole.PROFESSOR, UserRole.ASSISTANT);
 
-/**
- * Middleware para verificar se um estudante está acessando apenas seus próprios recursos
- * ou se é um professor/assistente (que pode acessar recursos de qualquer estudante)
- * @param resourceIdParam Nome do parâmetro da rota que contém o ID do recurso (padrão: 'studentId')
- */
 export function requireOwnResourceOrTeacher(resourceIdParam: string = 'studentId') {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
@@ -143,16 +119,14 @@ export function requireOwnResourceOrTeacher(resourceIdParam: string = 'studentId
       return;
     }
 
-    // Professores e assistentes podem acessar recursos de qualquer estudante
     if (req.user.role === UserRole.PROFESSOR || req.user.role === UserRole.ASSISTANT) {
       next();
       return;
     }
 
-    // Estudantes só podem acessar seus próprios recursos
     if (req.user.role === UserRole.STUDENT) {
       const resourceId = req.params[resourceIdParam];
-      if (req.user.userId !== resourceId) {
+      if (req.user.sub !== resourceId) {
         errorResponse(
           res,
           'Sem permissão para acessar este recurso',

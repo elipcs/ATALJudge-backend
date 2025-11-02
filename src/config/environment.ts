@@ -1,18 +1,13 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-// Carregar variáveis de ambiente
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-/**
- * Configurações da aplicação
- */
 export const config = {
-  // Servidor
+  
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '5000', 10),
-  
-  // Banco de dados
+
   database: {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432', 10),
@@ -21,16 +16,14 @@ export const config = {
     database: process.env.DB_DATABASE || 'ataljudge',
     url: process.env.DATABASE_URL
   },
-  
-  // Segurança
+
   secretKey: process.env.SECRET_KEY || (() => {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('CRÍTICO: SECRET_KEY não definido em produção!');
     }
     return 'dev-secret-key-not-for-production';
   })(),
-  
-  // JWT
+
   jwt: {
     secret: process.env.JWT_SECRET || (() => {
       if (process.env.NODE_ENV === 'production') {
@@ -38,11 +31,10 @@ export const config = {
       }
       return 'dev-jwt-secret-not-for-production';
     })(),
-    accessExpires: parseInt(process.env.JWT_ACCESS_EXPIRES || '3600', 10), // 1 hora
-    refreshExpires: parseInt(process.env.JWT_REFRESH_EXPIRES || '2592000', 10) // 30 dias
+    accessExpires: parseInt(process.env.JWT_ACCESS_EXPIRES || '3600', 10), 
+    refreshExpires: parseInt(process.env.JWT_REFRESH_EXPIRES || '2592000', 10) 
   },
-  
-  // Email
+
   email: {
     host: process.env.MAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.MAIL_PORT || '587', 10),
@@ -50,28 +42,23 @@ export const config = {
     password: process.env.MAIL_PASSWORD,
     from: process.env.MAIL_FROM || 'noreply@ataljudge.com'
   },
-  
-  // Frontend
+
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
-  
-  // CORS
+
   allowedOrigins: process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : [],
-  
-  // Judge0
+
   judge0: {
     url: process.env.JUDGE0_URL || 'http://localhost:2358',
     apiKey: process.env.JUDGE0_API_KEY,
     rapidApiKey: process.env.JUDGE0_RAPID_API_KEY
   },
-  
-  // Codeforces
+
   codeforces: {
     apiUrl: process.env.CODEFORCES_API_URL || 'https://codeforces.com/api'
   },
-  
-  // Limites
+
   limits: {
     maxCodeSizeKB: parseInt(process.env.MAX_CODE_SIZE_KB || '200', 10),
     maxInputSizeKB: parseInt(process.env.MAX_INPUT_SIZE_KB || '64', 10),
@@ -84,18 +71,13 @@ export const config = {
   }
 };
 
-/**
- * Valida as configurações obrigatórias
- */
 export function validateConfig(): void {
   const errors: string[] = [];
-  
-  // Validar banco de dados
+
   if (!config.database.url && !config.database.database) {
     errors.push('DATABASE_URL ou DB_DATABASE deve estar configurado');
   }
-  
-  // Validar chaves de segurança (OBRIGATÓRIO em produção)
+
   if (config.nodeEnv === 'production') {
     if (!process.env.SECRET_KEY) {
       errors.push('CRÍTICO: SECRET_KEY não definido em produção!');
@@ -109,7 +91,7 @@ export function validateConfig(): void {
     if (config.jwt.secret.includes('dev-') || config.jwt.secret.includes('default')) {
       errors.push('CRÍTICO: JWT_SECRET contém valor de desenvolvimento!');
     }
-    // Validar comprimento mínimo dos secrets
+    
     if (config.secretKey.length < 32) {
       errors.push('CRÍTICO: SECRET_KEY deve ter pelo menos 32 caracteres!');
     }
@@ -117,7 +99,7 @@ export function validateConfig(): void {
       errors.push('CRÍTICO: JWT_SECRET deve ter pelo menos 32 caracteres!');
     }
   } else {
-    // Avisos para desenvolvimento
+    
     if (!process.env.SECRET_KEY) {
       console.warn('AVISO: SECRET_KEY não definido, usando valor de desenvolvimento');
     }
@@ -125,8 +107,7 @@ export function validateConfig(): void {
       console.warn('AVISO: JWT_SECRET não definido, usando valor de desenvolvimento');
     }
   }
-  
-  // Validar Judge0
+
   if (!config.judge0.url) {
     errors.push('JUDGE0_URL não configurado');
   }
@@ -136,23 +117,14 @@ export function validateConfig(): void {
   }
 }
 
-/**
- * Verifica se está em modo de desenvolvimento
- */
 export function isDevelopment(): boolean {
   return config.nodeEnv === 'development';
 }
 
-/**
- * Verifica se está em modo de produção
- */
 export function isProduction(): boolean {
   return config.nodeEnv === 'production';
 }
 
-/**
- * Verifica se está em modo de teste
- */
 export function isTest(): boolean {
   return config.nodeEnv === 'test';
 }

@@ -2,25 +2,15 @@ import { BaseRepository } from './BaseRepository';
 import { Invite } from '../models/Invite';
 import { LessThan } from 'typeorm';
 
-/**
- * Repositório de convites
- */
 export class InviteRepository extends BaseRepository<Invite> {
   constructor() {
     super(Invite);
   }
 
-  /**
-   * Busca convite por token
-   */
   async findByToken(token: string): Promise<Invite | null> {
     return this.repository.findOne({ where: { token } });
   }
 
-
-  /**
-   * Busca convites criados por um usuário
-   */
   async findByCreator(createdById: string): Promise<Invite[]> {
     return this.repository.find({
       where: { createdById },
@@ -28,9 +18,6 @@ export class InviteRepository extends BaseRepository<Invite> {
     });
   }
 
-  /**
-   * Incrementa o uso de um convite
-   */
   async incrementUse(id: string): Promise<void> {
     const invite = await this.findById(id);
     if (invite) {
@@ -39,9 +26,6 @@ export class InviteRepository extends BaseRepository<Invite> {
     }
   }
 
-  /**
-   * Remove convites expirados
-   */
   async deleteExpired(): Promise<number> {
     const result = await this.repository.delete({
       expiresAt: LessThan(new Date()),

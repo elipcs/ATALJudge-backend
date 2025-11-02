@@ -4,9 +4,6 @@ import { CreateInviteDTO, InviteResponseDTO } from '../dtos';
 import * as crypto from 'crypto';
 import { NotFoundError, ValidationError } from '../utils';
 
-/**
- * Serviço de convites
- */
 export class InviteService {
   private inviteRepository: InviteRepository;
 
@@ -14,14 +11,10 @@ export class InviteService {
     this.inviteRepository = inviteRepository;
   }
 
-  /**
-   * Cria um novo convite
-   */
   async createInvite(dto: CreateInviteDTO): Promise<InviteResponseDTO> {
-    // Gerar token único
+    
     const token = this.generateToken();
 
-    // Criar convite
     const invite = new Invite();
     invite.role = dto.role;
     invite.token = token;
@@ -35,7 +28,6 @@ export class InviteService {
 
     const savedInvite = await this.inviteRepository.create(invite);
 
-    // Gerar link do convite
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const link = `${baseUrl}/cadastro?token=${savedInvite.token}`;
 
@@ -45,9 +37,6 @@ export class InviteService {
     });
   }
 
-  /**
-   * Lista todos os convites
-   */
   async getAllInvites(): Promise<InviteResponseDTO[]> {
     const invites = await this.inviteRepository.findAll();
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -58,9 +47,6 @@ export class InviteService {
     }));
   }
 
-  /**
-   * Lista convites criados por um usuário
-   */
   async getInvitesByCreator(createdById: string): Promise<InviteResponseDTO[]> {
     const invites = await this.inviteRepository.findByCreator(createdById);
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -71,9 +57,6 @@ export class InviteService {
     }));
   }
 
-  /**
-   * Valida um convite
-   */
   async validateInvite(token: string): Promise<InviteResponseDTO> {
     const invite = await this.inviteRepository.findByToken(token);
 
@@ -98,9 +81,6 @@ export class InviteService {
     });
   }
 
-  /**
-   * Usa um convite (incrementa contador)
-   */
   async useInvite(token: string): Promise<void> {
     const invite = await this.inviteRepository.findByToken(token);
 
@@ -116,9 +96,6 @@ export class InviteService {
     await this.inviteRepository.update(invite.id, invite);
   }
 
-  /**
-   * Deleta um convite permanentemente
-   */
   async deleteInvite(inviteId: string): Promise<void> {
     const deleted = await this.inviteRepository.delete(inviteId);
     
@@ -127,36 +104,25 @@ export class InviteService {
     }
   }
 
-  /**
-   * Revoga um convite (marca como usado sem deletar)
-   */
   async revokeInvite(inviteId: string): Promise<void> {
     const invite = await this.inviteRepository.findById(inviteId);
     
     if (!invite) {
       throw new NotFoundError('Convite não encontrado', 'INVITE_NOT_FOUND');
     }
-    
-    // Marcar como usado sem deletar (preserva histórico)
+
     invite.isUsed = true;
     invite.usedAt = new Date();
-    
-    // Marcar como esgotado também para que isValid() retorne false
+
     invite.currentUses = invite.maxUses;
     
     await this.inviteRepository.update(inviteId, invite);
   }
 
-  /**
-   * Remove convites expirados
-   */
   async cleanupExpiredInvites(): Promise<number> {
     return this.inviteRepository.deleteExpired();
   }
 
-  /**
-   * Gera um token único
-   */
   private generateToken(): string {
     return crypto.randomBytes(32).toString('hex');
   }

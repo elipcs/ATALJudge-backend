@@ -1,9 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { Question } from './Question';
 
-/**
- * Entidade TestCase - representa um caso de teste para uma questão
- */
 @Entity('test_cases')
 export class TestCase {
   @PrimaryGeneratedColumn('uuid')
@@ -27,7 +24,6 @@ export class TestCase {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 
-  // Relacionamentos
   @ManyToOne(() => Question, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'question_id' })
   question!: Question;

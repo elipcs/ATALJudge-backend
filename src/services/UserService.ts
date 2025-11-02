@@ -2,9 +2,6 @@ import { UserRepository } from '../repositories/UserRepository';
 import { UserResponseDTO, UpdateProfileDTO, ChangePasswordDTO } from '../dtos';
 import { NotFoundError, ConflictError, UnauthorizedError, InternalServerError } from '../utils';
 
-/**
- * Serviço de usuários
- */
 export class UserService {
   private userRepository: UserRepository;
 
@@ -12,9 +9,6 @@ export class UserService {
     this.userRepository = userRepository;
   }
 
-  /**
-   * Busca usuário por ID
-   */
   async getUserById(id: string): Promise<UserResponseDTO> {
     const user = await this.userRepository.findById(id);
     
@@ -25,25 +19,16 @@ export class UserService {
     return new UserResponseDTO(user);
   }
 
-  /**
-   * Busca todos os usuários
-   */
   async getAllUsers(): Promise<UserResponseDTO[]> {
     const users = await this.userRepository.findAll();
     return users.map(user => new UserResponseDTO(user));
   }
 
-  /**
-   * Busca usuários por papel
-   */
   async getUsersByRole(role: string): Promise<UserResponseDTO[]> {
     const users = await this.userRepository.findByRole(role);
     return users.map(user => new UserResponseDTO(user));
   }
 
-  /**
-   * Atualiza perfil do usuário
-   */
   async updateProfile(userId: string, dto: UpdateProfileDTO): Promise<UserResponseDTO> {
     const user = await this.userRepository.findById(userId);
     
@@ -51,7 +36,6 @@ export class UserService {
       throw new NotFoundError('Usuário não encontrado', 'USER_NOT_FOUND');
     }
 
-    // Verificar se novo email já está em uso
     if (dto.email && dto.email !== user.email) {
       const emailExists = await this.userRepository.emailExists(dto.email);
       if (emailExists) {
@@ -59,7 +43,6 @@ export class UserService {
       }
     }
 
-    // Atualizar dados
     if (dto.name) user.name = dto.name;
     if (dto.email) user.email = dto.email.toLowerCase();
 
@@ -72,9 +55,6 @@ export class UserService {
     return new UserResponseDTO(updatedUser);
   }
 
-  /**
-   * Altera senha do usuário
-   */
   async changePassword(userId: string, dto: ChangePasswordDTO): Promise<void> {
     const user = await this.userRepository.findById(userId);
     
@@ -82,20 +62,15 @@ export class UserService {
       throw new NotFoundError('Usuário não encontrado', 'USER_NOT_FOUND');
     }
 
-    // Verificar senha atual
     const isPasswordValid = await user.checkPassword(dto.currentPassword);
     if (!isPasswordValid) {
       throw new UnauthorizedError('Senha atual incorreta', 'INVALID_PASSWORD');
     }
 
-    // Definir nova senha
     await user.setPassword(dto.newPassword);
     await this.userRepository.update(userId, user);
   }
 
-  /**
-   * Deleta usuário
-   */
   async deleteUser(userId: string): Promise<void> {
     const deleted = await this.userRepository.delete(userId);
     

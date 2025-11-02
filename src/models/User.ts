@@ -5,9 +5,6 @@ import { Submission } from './Submission';
 import { ValidationError } from '../utils';
 import { Class } from './Class';
 
-/**
- * Entidade User - representa um usuário do sistema (classe base)
- */
 @Entity('users')
 @TableInheritance({ column: { type: 'enum', name: 'role', enum: UserRole } })
 export class User {
@@ -39,22 +36,17 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
 
-  // Relacionamentos
   @OneToMany(() => Submission, submission => submission.user)
   submissions!: Submission[];
 
   @OneToMany(() => Class, classEntity => classEntity.professor)
   classesTaught!: Class[];
 
-  /**
-   * Define a senha do usuário (hash bcrypt)
-   */
   async setPassword(password: string): Promise<void> {
     if (!password || password.length < 12) {
       throw new Error('Senha deve ter pelo menos 12 caracteres');
     }
-    
-    // Validar complexidade da senha
+
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
@@ -116,7 +108,6 @@ export class User {
       throw new ValidationError('Email deve ter um formato válido', 'INVALID_EMAIL_FORMAT');
     }
 
-    // Normalizar email
     this.email = this.email.toLowerCase().trim();
   }
 

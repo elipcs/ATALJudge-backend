@@ -2,7 +2,7 @@ import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex } f
 
 export class CreateQuestionLists1730000000002 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Criar tabela question_lists
+    
     await queryRunner.createTable(new Table({
       name: 'question_lists',
       columns: [
@@ -79,7 +79,6 @@ export class CreateQuestionLists1730000000002 implements MigrationInterface {
       ]
     }), true);
 
-    // Adicionar foreign key para author_id
     await queryRunner.createForeignKey('question_lists', new TableForeignKey({
       columnNames: ['author_id'],
       referencedColumnNames: ['id'],
@@ -87,7 +86,6 @@ export class CreateQuestionLists1730000000002 implements MigrationInterface {
       onDelete: 'SET NULL'
     }));
 
-    // Criar tabela de relacionamento question_list_questions
     await queryRunner.createTable(new Table({
       name: 'question_list_questions',
       columns: [
@@ -104,7 +102,6 @@ export class CreateQuestionLists1730000000002 implements MigrationInterface {
       ]
     }), true);
 
-    // Adicionar foreign keys
     await queryRunner.createForeignKey('question_list_questions', new TableForeignKey({
       columnNames: ['list_id'],
       referencedColumnNames: ['id'],
@@ -119,7 +116,6 @@ export class CreateQuestionLists1730000000002 implements MigrationInterface {
       onDelete: 'CASCADE'
     }));
 
-    // Criar tabela de relacionamento question_list_classes
     await queryRunner.createTable(new Table({
       name: 'question_list_classes',
       columns: [
@@ -136,7 +132,6 @@ export class CreateQuestionLists1730000000002 implements MigrationInterface {
       ]
     }), true);
 
-    // Adicionar foreign keys
     await queryRunner.createForeignKey('question_list_classes', new TableForeignKey({
       columnNames: ['list_id'],
       referencedColumnNames: ['id'],
@@ -151,7 +146,6 @@ export class CreateQuestionLists1730000000002 implements MigrationInterface {
       onDelete: 'CASCADE'
     }));
 
-    // Criar índices para performance
     await queryRunner.createIndex('question_lists', new TableIndex({
       name: 'idx_question_lists_author',
       columnNames: ['author_id']
@@ -189,13 +183,11 @@ export class CreateQuestionLists1730000000002 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Remover tabelas de relacionamento
+    
     await queryRunner.dropTable('question_list_classes', true);
     await queryRunner.dropTable('question_list_questions', true);
-    
-    // Remover tabela principal
+
     await queryRunner.dropTable('question_lists', true);
   }
 }
-
 

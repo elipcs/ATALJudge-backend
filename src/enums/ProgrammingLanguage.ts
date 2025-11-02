@@ -1,6 +1,5 @@
-/**
- * Enum de linguagens de programação suportadas
- */
+
+
 export enum ProgrammingLanguage {
   PYTHON = 'python',
   JAVA = 'java',
@@ -10,9 +9,6 @@ export enum ProgrammingLanguage {
   TYPESCRIPT = 'typescript'
 }
 
-/**
- * Mapeia linguagens para IDs do Judge0
- */
 export const JUDGE0_LANGUAGE_IDS: Record<ProgrammingLanguage, number> = {
   [ProgrammingLanguage.PYTHON]: 71,
   [ProgrammingLanguage.JAVA]: 62,

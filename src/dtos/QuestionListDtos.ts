@@ -1,9 +1,6 @@
 import { IsString, IsOptional, IsArray, IsEnum, IsInt, Min, ValidateNested, IsBoolean, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 
-/**
- * DTO para grupo de questões
- */
 export class QuestionGroupDTO {
   @IsString()
   id!: string;
@@ -25,10 +22,6 @@ export class QuestionGroupDTO {
   percentage?: number;
 }
 
-/**
- * DTO para criação de lista de questões
- * Questões e grupos são configurados depois da criação
- */
 export class CreateQuestionListDTO {
   @IsString()
   title!: string;
@@ -75,9 +68,6 @@ export class CreateQuestionListDTO {
   questionGroups?: QuestionGroupDTO[];
 }
 
-/**
- * DTO para atualização de lista de questões
- */
 export class UpdateQuestionListDTO {
   @IsOptional()
   @IsString()
@@ -125,9 +115,6 @@ export class UpdateQuestionListDTO {
   isRestricted?: boolean;
 }
 
-/**
- * DTO de resposta de lista de questões
- */
 export class QuestionListResponseDTO {
   id!: string;
   title!: string;
@@ -150,5 +137,4 @@ export class QuestionListResponseDTO {
     Object.assign(this, partial);
   }
 }
-
 

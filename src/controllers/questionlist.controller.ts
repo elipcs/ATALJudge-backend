@@ -8,10 +8,6 @@ import { ValidationError } from '../utils';
 function createQuestionListController(listService: QuestionListService): Router {
   const router = Router();
 
-/**
- * GET /api/lists
- * Lista todas as listas com filtros
- */
 router.get(
   '/',
   authenticate,
@@ -32,10 +28,6 @@ router.get(
   }
 );
 
-/**
- * GET /api/lists/:id
- * Busca lista por ID
- */
 router.get(
   '/:id',
   authenticate,
@@ -50,10 +42,6 @@ router.get(
   }
 );
 
-/**
- * POST /api/lists
- * Cria uma nova lista (apenas professores/assistentes)
- */
 router.post(
   '/',
   authenticate,
@@ -83,10 +71,6 @@ router.post(
   }
 );
 
-/**
- * PUT /api/lists/:id
- * Atualiza uma lista (apenas professores/assistentes)
- */
 router.put(
   '/:id',
   authenticate,
@@ -116,10 +100,6 @@ router.put(
   }
 );
 
-/**
- * DELETE /api/lists/:id
- * Deleta uma lista (apenas professores/assistentes)
- */
 router.delete(
   '/:id',
   authenticate,
@@ -135,10 +115,6 @@ router.delete(
   }
 );
 
-/**
- * POST /api/lists/:id/publish
- * Publica uma lista
- */
 router.post(
   '/:id/publish',
   authenticate,
@@ -154,10 +130,6 @@ router.post(
   }
 );
 
-/**
- * POST /api/lists/:id/unpublish
- * Despublica uma lista
- */
 router.post(
   '/:id/unpublish',
   authenticate,
@@ -173,10 +145,6 @@ router.post(
   }
 );
 
-/**
- * POST /api/lists/:id/questions
- * Adiciona questão à lista
- */
 router.post(
   '/:id/questions',
   authenticate,
@@ -198,10 +166,6 @@ router.post(
   }
 );
 
-/**
- * DELETE /api/lists/:id/questions/:questionId
- * Remove questão da lista
- */
 router.delete(
   '/:id/questions/:questionId',
   authenticate,
@@ -221,5 +185,4 @@ router.delete(
 }
 
 export default createQuestionListController;
-
 
