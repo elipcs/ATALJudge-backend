@@ -49,10 +49,6 @@ router.post(
   validateBody(CreateQuestionListDTO),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      // Apenas dados básicos da lista: não incluir aqui configurações de pontuação
-      // (scoringMode, maxScore, minQuestionsForMaxScore e questionGroups são
-      // gerenciados por endpoints/fluxos separados e não devem ser atualizados
-      // via PUT de listas básicas)
       const data = {
         title: req.body.title,
         description: req.body.description,

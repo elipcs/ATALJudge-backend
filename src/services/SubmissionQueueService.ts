@@ -107,7 +107,7 @@ export class SubmissionQueueService {
       },
       {
         connection: this.connection,
-        concurrency: parseInt(process.env.QUEUE_CONCURRENCY || '5'), // Processa até 5 submissões simultaneamente
+        concurrency: parseInt(process.env.QUEUE_CONCURRENCY || '5'),
         limiter: {
           max: 10,
           duration: 1000,

@@ -3,8 +3,6 @@
 function createGradeController(): Router {
   const router = Router();
 
-  // Rotas de grade a serem implementadas futuramente
-
   return router;
 }
 

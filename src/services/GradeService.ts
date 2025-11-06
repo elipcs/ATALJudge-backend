@@ -94,7 +94,6 @@ export class GradeService {
   async calculateGradeForList(studentId: string, listId: string): Promise<number> {
     logger.info('Calculando nota do aluno', { studentId, listId });
 
-    // Buscar lista com questões
     const list = await this.listRepository.findByIdWithRelations(listId, true, false, false);
     if (!list) {
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
@@ -107,14 +106,12 @@ export class GradeService {
 
     const questionIds = list.questions.map(q => q.id);
     
-    // Buscar todas as submissões do aluno para as questões da lista
     const allSubmissions = await Promise.all(
       questionIds.map(questionId => 
         this.submissionRepository.findByUserAndQuestion(studentId, questionId)
       )
     );
 
-    // Obter melhor score por questão
     const bestScoresByQuestion = new Map<string, number>();
     
     allSubmissions.flat().forEach(submission => {
@@ -133,7 +130,6 @@ export class GradeService {
     let finalScore = 0;
 
     if (list.scoringMode === 'simple') {
-      // Modo Simple: pegar as N maiores submissões
       const n = list.minQuestionsForMaxScore || list.questions.length;
       const scores = Array.from(bestScoresByQuestion.values()).sort((a, b) => b - a);
       const topNScores = scores.slice(0, n);
@@ -154,7 +150,6 @@ export class GradeService {
       });
 
     } else if (list.scoringMode === 'groups') {
-      // Modo Groups: pegar a maior submissão de cada grupo
       if (!list.questionGroups || list.questionGroups.length === 0) {
         logger.warn('Lista em modo groups mas sem grupos definidos', { listId });
         return 0;
@@ -282,12 +277,10 @@ export class GradeService {
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    // Calcular nota baseado no modo de pontuação
     const calculatedScore = await this.calculateGradeForList(studentId, listId);
 
     logger.info('Nota recalculada', { studentId, listId, calculatedScore });
 
-    // Usar upsertGrade para atualizar ou criar
     return this.upsertGrade({
       studentId,
       listId,

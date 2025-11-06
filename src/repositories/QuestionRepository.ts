@@ -1,13 +1,9 @@
 import { BaseRepository } from './BaseRepository';
 import { Question } from '../models/Question';
-import { AppDataSource } from '../config/database';
 
 export class QuestionRepository extends BaseRepository<Question> {
   constructor() {
-    
-    super(Question as any);
-    
-    this.repository = AppDataSource.getRepository(Question);
+    super(Question);
   }
 
   async findAll(): Promise<Question[]> {

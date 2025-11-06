@@ -17,7 +17,6 @@ router.get(
       const page = req.query.page ? parseInt(req.query.page as string) : 1;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       
-      // Se for aluno, força o filtro para retornar apenas suas submissões
       let userId = req.query.userId as string;
       if (req.user?.role === UserRole.STUDENT) {
         userId = req.user.sub;

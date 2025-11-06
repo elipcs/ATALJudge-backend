@@ -21,7 +21,6 @@ export class UserService {
 
     const userResponse = new UserResponseDTO(user);
 
-    // Se for aluno, buscar as notas
     if (user.role === UserRole.STUDENT) {
       const grades = await this.gradeRepository.findByStudent(id);
       userResponse.grades = grades.map(grade => ({
@@ -62,7 +61,7 @@ export class UserService {
     }
 
     if (dto.name) user.name = dto.name;
-    if (dto.email) user.email = dto.email.toLowerCase();
+    if (dto.email) user.email = dto.email;
     
     if (dto.studentRegistration !== undefined && 'studentRegistration' in user) {
       (user as any).studentRegistration = dto.studentRegistration;

@@ -1,6 +1,5 @@
 import { CreateQuestionListDTO, UpdateQuestionListDTO, QuestionListResponseDTO } from '../dtos/QuestionListDtos';
-import { In } from 'typeorm';
- import { NotFoundError, logger } from '../utils';
+import { NotFoundError, logger } from '../utils';
 import { QuestionListRepository, QuestionRepository, ClassRepository, GradeRepository } from '../repositories';
 import { GradeService } from './GradeService';
 
@@ -30,10 +29,7 @@ export class QuestionListService {
     classId?: string;
     status?: 'draft' | 'published';
   }): Promise<QuestionListResponseDTO[]> {
-    logger.debug('[QUESTION_LIST SERVICE] getAllLists chamado', { filters });
-
     const queryBuilder = this.listRepository
-      .getRepository()
       .createQueryBuilder('list')
       .leftJoinAndSelect('list.questions', 'questions')
       .leftJoinAndSelect('list.classes', 'classes')
@@ -51,47 +47,21 @@ export class QuestionListService {
     }
 
     const lists = await queryBuilder.getMany();
-    const response = lists.map(list => this.toResponseDTO(list));
-
-    logger.info('[QUESTION_LIST SERVICE] getAllLists retornando', {
-      totalLists: response.length,
-      lists: response.map(l => ({ id: l.id, title: l.title, questionsCount: l.questions?.length || 0 }))
-    });
-
-    return response;
+    return lists.map(list => this.toResponseDTO(list));
   }
 
   async getListById(id: string): Promise<QuestionListResponseDTO> {
-    logger.debug('[QUESTION_LIST SERVICE] getListById chamado', { listId: id });
-
     const list = await this.listRepository.findByIdWithRelations(id, true, true, true);
 
     if (!list) {
-      logger.warn('[QUESTION_LIST SERVICE] Lista não encontrada', { listId: id });
+      logger.warn('Lista não encontrada', { listId: id });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    const response = this.toResponseDTO(list);
-    
-    logger.info('[QUESTION_LIST SERVICE] getListById retornando', {
-      listId: id,
-      title: response.title,
-      questionsCount: response.questions?.length || 0,
-      classesCount: response.classIds?.length || 0,
-      fullResponse: response
-    });
-
-    return response;
+    return this.toResponseDTO(list);
   }
 
   async createList(data: CreateQuestionListDTO, authorId?: string): Promise<QuestionListResponseDTO> {
-    logger.debug('[QUESTION_LIST SERVICE] createList chamado', {
-      title: data.title,
-      authorId,
-      classIdsCount: data.classIds?.length || 0,
-      inputData: data
-    });
-
     const normalizedGroups = (data.questionGroups || []).map((g: any) => ({
       id: g.id,
       name: g.name,
@@ -113,70 +83,25 @@ export class QuestionListService {
       isRestricted: data.isRestricted || false
     });
 
-    logger.debug('[QUESTION_LIST SERVICE] Lista criada em memória', {
-      listId: list.id,
-      title: list.title,
-      authorId: list.authorId
-    });
-
     if (data.classIds && data.classIds.length > 0) {
-      const classes = await this.classRepository.getRepository().findBy({
-        id: In(data.classIds)
-      });
-      
-      logger.debug('[QUESTION_LIST SERVICE] Classes encontradas', {
-        requestedClassIds: data.classIds,
-        foundClassesCount: classes.length,
-        foundClasses: classes.map(c => c.id)
-      });
-
-      const listWithClasses = await this.listRepository.getRepository().save({
-        ...list,
-        classes
-      });
-
-      const response = this.toResponseDTO(listWithClasses);
-      
-      logger.info('[QUESTION_LIST SERVICE] createList retornando com classes', {
-        listId: listWithClasses.id,
-        title: listWithClasses.title,
-        classesCount: classes.length,
-        fullResponse: response
-      });
-
-      return response;
+      const classes = await this.classRepository.findByIds(data.classIds);
+      list.classes = classes;
+      const listWithClasses = await this.listRepository.save(list);
+      logger.info('Lista criada com turmas', { listId: listWithClasses.id, classesCount: classes.length });
+      return this.toResponseDTO(listWithClasses);
     }
 
-    const response = this.toResponseDTO(list);
-    
-    logger.info('[QUESTION_LIST SERVICE] createList retornando sem classes', {
-      listId: list.id,
-      title: list.title,
-      fullResponse: response
-    });
-
-    return response;
+    logger.info('Lista criada', { listId: list.id });
+    return this.toResponseDTO(list);
   }
 
   async updateList(id: string, data: UpdateQuestionListDTO): Promise<QuestionListResponseDTO> {
-    logger.debug('[QUESTION_LIST SERVICE] updateList chamado', {
-      listId: id,
-      inputData: data,
-      classIdsCount: data.classIds?.length || 0
-    });
-
     const list = await this.listRepository.findByIdWithRelations(id, true, true);
 
     if (!list) {
-      logger.warn('[QUESTION_LIST SERVICE] Lista não encontrada para atualização', { listId: id });
+      logger.warn('Lista não encontrada para atualização', { listId: id });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
-
-    logger.debug('[QUESTION_LIST SERVICE] Lista encontrada, começando atualização', {
-      listId: id,
-      currentTitle: list.title,
-      newTitle: data.title
-    });
 
     if (data.title) list.title = data.title;
     if (data.description !== undefined) list.description = data.description;
@@ -185,35 +110,14 @@ export class QuestionListService {
     if (data.isRestricted !== undefined) list.isRestricted = data.isRestricted;
 
     if (data.classIds) {
-      const classes = await this.classRepository.getRepository().findBy({
-        id: In(data.classIds)
-      });
-      
-      logger.debug('[QUESTION_LIST SERVICE] Classes atualizadas', {
-        requestedClassIds: data.classIds,
-        foundClassesCount: classes.length
-      });
-
+      const classes = await this.classRepository.findByIds(data.classIds);
       list.classes = classes;
     }
 
-    logger.debug('[QUESTION_LIST SERVICE] Salvando lista no banco', {
-      listId: id,
-      title: list.title
-    });
-
     await this.listRepository.save(list);
+    logger.info('Lista atualizada', { listId: id });
 
-    const response = this.toResponseDTO(list);
-    
-    logger.info('[QUESTION_LIST SERVICE] updateList retornando', {
-      listId: id,
-      title: response.title,
-      classesCount: response.classIds?.length || 0,
-      fullResponse: response
-    });
-
-    return response;
+    return this.toResponseDTO(list);
   }
 
   async deleteList(id: string): Promise<void> {
@@ -251,59 +155,36 @@ export class QuestionListService {
   }
 
   async addQuestionToList(listId: string, questionId: string): Promise<void> {
-    logger.debug('[QUESTION_LIST SERVICE] addQuestionToList chamado', { listId, questionId });
-
     const list = await this.listRepository.findByIdWithRelations(listId, true);
 
     if (!list) {
-      logger.warn('[QUESTION_LIST SERVICE] Lista não encontrada ao adicionar questão', { listId, questionId });
+      logger.warn('Lista não encontrada ao adicionar questão', { listId, questionId });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
     const question = await this.questionRepository.findById(questionId);
 
     if (!question) {
-      logger.warn('[QUESTION_LIST SERVICE] Questão não encontrada ao adicionar', { listId, questionId });
+      logger.warn('Questão não encontrada ao adicionar', { listId, questionId });
       throw new NotFoundError('Questão não encontrada', 'QUESTION_NOT_FOUND');
     }
 
     const alreadyAdded = list.questions.some(q => q.id === questionId);
-    
-    logger.debug('[QUESTION_LIST SERVICE] Verificando se questão já existe na lista', {
-      listId,
-      questionId,
-      alreadyAdded,
-      currentQuestionsCount: list.questions.length
-    });
 
     if (!alreadyAdded) {
       list.questions.push(question);
-      
-      logger.debug('[QUESTION_LIST SERVICE] Questão adicionada em memória, salvando', {
-        listId,
-        questionId,
-        questionsCountAfter: list.questions.length
-      });
-
       await this.listRepository.save(list);
-
-      logger.info('[QUESTION_LIST SERVICE] Questão adicionada com sucesso', {
-        listId,
-        questionId,
-        questionsCountAfter: list.questions.length
-      });
+      logger.info('Questão adicionada à lista', { listId, questionId });
     } else {
-      logger.warn('[QUESTION_LIST SERVICE] Questão já estava na lista, não adicionando', { listId, questionId });
+      logger.warn('Questão já estava na lista', { listId, questionId });
     }
   }
 
   async removeQuestionFromList(listId: string, questionId: string): Promise<void> {
-    logger.debug('[QUESTION_LIST SERVICE] removeQuestionFromList chamado', { listId, questionId });
-
     const list = await this.listRepository.findByIdWithRelations(listId, true);
 
     if (!list) {
-      logger.warn('[QUESTION_LIST SERVICE] Lista não encontrada ao remover questão', { listId, questionId });
+      logger.warn('Lista não encontrada ao remover questão', { listId, questionId });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
@@ -312,22 +193,10 @@ export class QuestionListService {
     const countAfter = list.questions.length;
 
     if (countBefore === countAfter) {
-      logger.warn('[QUESTION_LIST SERVICE] Questão não estava na lista', { listId, questionId });
+      logger.warn('Questão não estava na lista', { listId, questionId });
     } else {
-      logger.debug('[QUESTION_LIST SERVICE] Questão removida em memória, salvando', {
-        listId,
-        questionId,
-        questionsCountBefore: countBefore,
-        questionsCountAfter: countAfter
-      });
-
       await this.listRepository.save(list);
-
-      logger.info('[QUESTION_LIST SERVICE] Questão removida com sucesso', {
-        listId,
-        questionId,
-        questionsCountAfter: countAfter
-      });
+      logger.info('Questão removida da lista', { listId, questionId });
     }
   }
 
@@ -387,35 +256,16 @@ export class QuestionListService {
       calculatedStatus: list.getCalculatedStatus()
     });
 
-    logger.debug('[QUESTION_LIST SERVICE] toResponseDTO convertendo lista', {
-      listId: list.id,
-      title: list.title,
-      classIds: classIds.length,
-      questionsCount: response.questions?.length || 0,
-      response
-    });
-
     return response;
   }
 
   async updateListScoring(id: string, data: any): Promise<QuestionListResponseDTO> {
-    logger.debug('[QUESTION_LIST SERVICE] updateListScoring chamado', {
-      listId: id,
-      inputData: data
-    });
-
     const list = await this.listRepository.findByIdWithRelations(id, true, true);
 
     if (!list) {
-      logger.warn('[QUESTION_LIST SERVICE] Lista não encontrada para atualizar scoring', { listId: id });
+      logger.warn('Lista não encontrada para atualizar scoring', { listId: id });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
-
-    logger.debug('[QUESTION_LIST SERVICE] Lista encontrada, atualizando configuração de pontuação', {
-      listId: id,
-      currentScoringMode: list.scoringMode,
-      newScoringMode: data.scoringMode
-    });
 
     if (data.scoringMode !== undefined) list.scoringMode = data.scoringMode;
     if (data.maxScore !== undefined) list.maxScore = data.maxScore;
@@ -430,63 +280,36 @@ export class QuestionListService {
       }));
     }
 
-    logger.debug('[QUESTION_LIST SERVICE] Salvando configuração de pontuação', {
-      listId: id,
-      scoringMode: list.scoringMode,
-      maxScore: list.maxScore
-    });
-
     await this.listRepository.save(list);
 
-    // Recalcular notas de todos os estudantes após mudança nas configurações de pontuação
     try {
-      logger.info('[QUESTION_LIST SERVICE] Recalculando notas dos estudantes após alteração de configuração', {
-        listId: id
-      });
-
       const grades = await this.gradeRepository.findByList(id);
-      logger.debug('[QUESTION_LIST SERVICE] Notas encontradas para recalcular', {
-        listId: id,
-        gradesCount: grades.length
-      });
 
       for (const grade of grades) {
         try {
           await this.gradeService.recalculateAndUpsertGrade(grade.studentId, id);
-          logger.debug('[QUESTION_LIST SERVICE] Nota recalculada com sucesso', {
-            listId: id,
-            studentId: grade.studentId
-          });
         } catch (gradeError) {
-          logger.error('[QUESTION_LIST SERVICE] Erro ao recalcular nota individual', {
+          logger.error('Erro ao recalcular nota individual', {
             listId: id,
             studentId: grade.studentId,
             error: gradeError instanceof Error ? gradeError.message : 'Erro desconhecido'
           });
-          // Continua para os próximos estudantes mesmo se um falhar
         }
       }
 
-      logger.info('[QUESTION_LIST SERVICE] Recálculo de notas concluído', {
+      logger.info('Notas recalculadas após atualização de configuração', {
         listId: id,
         totalGrades: grades.length
       });
     } catch (recalcError) {
-      logger.error('[QUESTION_LIST SERVICE] Erro ao recalcular notas após atualização de configuração', {
+      logger.error('Erro ao recalcular notas após atualização de configuração', {
         listId: id,
         error: recalcError instanceof Error ? recalcError.message : 'Erro desconhecido'
       });
-      // Não interrompe o retorno da atualização de configuração
     }
 
     const response = this.toResponseDTO(list);
     
-    logger.info('[QUESTION_LIST SERVICE] updateListScoring retornando', {
-      listId: id,
-      scoringMode: response.scoringMode,
-      maxScore: response.maxScore
-    });
-
     return response;
   }
 }

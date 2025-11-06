@@ -529,7 +529,6 @@ export class Judge0Service {
         percentage
       });
 
-      // Chama o callback de progresso
       await onProgress({
         completed,
         pending,

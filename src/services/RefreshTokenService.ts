@@ -1,6 +1,5 @@
 import { TokenManager } from '../utils/TokenManager';
 import { RefreshTokenRepository } from '../repositories';
-import { LessThan } from 'typeorm';
 import { RefreshToken } from '../models/RefreshToken';
 import { NotFoundError, UnauthorizedError } from '../utils';
 
@@ -66,9 +65,7 @@ export class RefreshTokenService {
   }
 
   async revokeTokenFamily(familyId: string): Promise<void> {
-    const tokens = await this.tokenRepository.getRepository().find({
-      where: { familyId } as any
-    });
+    const tokens = await this.tokenRepository.findByFamilyId(familyId);
     for (const token of tokens) {
       token.isRevoked = true;
       await this.tokenRepository.save(token);
@@ -100,23 +97,13 @@ export class RefreshTokenService {
   }
 
   async cleanupExpiredTokens(): Promise<number> {
-    const result = await this.tokenRepository.getRepository().delete({
-      expiresAt: LessThan(new Date())
-    });
-
-    return result.affected || 0;
+    return this.tokenRepository.deleteExpiredTokens();
   }
 
   async cleanupRevokedTokens(daysOld: number = 30): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
-
-    const result = await this.tokenRepository.getRepository().delete({
-      isRevoked: true,
-      createdAt: LessThan(cutoffDate)
-    });
-
-    return result.affected || 0;
+    return this.tokenRepository.deleteRevokedTokens(cutoffDate);
   }
 
   async getTokenStats(userId: string): Promise<{

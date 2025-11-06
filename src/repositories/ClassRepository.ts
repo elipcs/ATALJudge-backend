@@ -1,3 +1,4 @@
+import { In } from 'typeorm';
 import { BaseRepository } from './BaseRepository';
 import { Class } from '../models/Class';
 import { User } from '../models/User';
@@ -43,6 +44,10 @@ export class ClassRepository extends BaseRepository<Class> {
     return queryBuilder.getMany();
   }
 
+  async findByIds(classIds: string[]): Promise<Class[]> {
+    return this.repository.findBy({ id: In(classIds) });
+  }
+
   async findByProfessor(professorId: string): Promise<Class[]> {
     return this.repository.find({
       where: { professorId },
@@ -61,14 +66,16 @@ export class ClassRepository extends BaseRepository<Class> {
       .getMany();
   }
 
+  createQueryBuilder(alias: string) {
+    return this.repository.createQueryBuilder(alias);
+  }
+
   async addStudent(classId: string, studentId: string): Promise<void> {
-    // Verificar se a turma existe
     const classEntity = await this.repository.findOne({ where: { id: classId } });
     if (!classEntity) {
       throw new Error('Turma não encontrada');
     }
 
-    // Atualizar o estudante com o classId usando raw query
     const connection = this.repository.manager.connection;
     await connection.query(
       'UPDATE users SET class_id = $1 WHERE id = $2',
@@ -77,13 +84,11 @@ export class ClassRepository extends BaseRepository<Class> {
   }
 
   async removeStudent(classId: string, studentId: string): Promise<void> {
-    // Verificar se a turma existe
     const classEntity = await this.repository.findOne({ where: { id: classId } });
     if (!classEntity) {
       throw new Error('Turma não encontrada');
     }
 
-    // Remover o classId do estudante
     const userRepository = this.repository.manager.getRepository('User');
     await userRepository.update(
       { id: studentId, classId: classId },

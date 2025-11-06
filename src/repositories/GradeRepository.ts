@@ -1,12 +1,9 @@
-import { AppDataSource } from '../config/database';
+import { BaseRepository } from './BaseRepository';
 import { Grade } from '../models';
-import { Repository } from 'typeorm';
 
-export class GradeRepository {
-  private repository: Repository<Grade>;
-
+export class GradeRepository extends BaseRepository<Grade> {
   constructor() {
-    this.repository = AppDataSource.getRepository(Grade);
+    super(Grade);
   }
 
   async findById(id: string): Promise<Grade | null> {
@@ -49,16 +46,14 @@ export class GradeRepository {
     return this.findById(id);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+  async deleteByStudent(studentId: string): Promise<number> {
+    const result = await this.repository.delete({ studentId });
+    return result.affected || 0;
   }
 
-  async deleteByStudent(studentId: string): Promise<void> {
-    await this.repository.delete({ studentId });
-  }
-
-  async deleteByList(listId: string): Promise<void> {
-    await this.repository.delete({ listId });
+  async deleteByList(listId: string): Promise<number> {
+    const result = await this.repository.delete({ listId });
+    return result.affected || 0;
   }
 }
 

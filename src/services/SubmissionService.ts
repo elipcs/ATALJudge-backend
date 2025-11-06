@@ -36,6 +36,35 @@ export class SubmissionService {
     this.queueService = queueService;
   }
 
+  /**
+   * Método privado para enfileirar ou processar submissão de forma consistente
+   */
+  private async enqueueOrProcessSubmission(submissionId: string): Promise<SubmissionStatus> {
+    if (this.queueService) {
+      logger.info('Adicionando submissão à fila', { submissionId });
+      
+      await this.submissionRepository.update(submissionId, {
+        status: SubmissionStatus.IN_QUEUE
+      });
+
+      await this.queueService.addSubmissionToQueue(submissionId);
+      
+      logger.info('Submissão adicionada à fila', { submissionId });
+      return SubmissionStatus.IN_QUEUE;
+    } else {
+      logger.warn('Sistema de fila não disponível, processando diretamente', { submissionId });
+      
+      this.processSubmission(submissionId).catch(error => {
+        logger.error('Erro ao processar submissão em background', { 
+          submissionId, 
+          error: error instanceof Error ? error.message : String(error) 
+        });
+      });
+      
+      return SubmissionStatus.PENDING;
+    }
+  }
+
   async getSubmissions(filters: {
     questionId?: string;
     userId?: string;
@@ -52,8 +81,6 @@ export class SubmissionService {
       totalPages: number;
     };
   }> {
-    logger.info('Buscando submissões com filtros', { filters });
-    
     const { submissions, total } = await this.submissionRepository.findByFilters({
       questionId: filters.questionId,
       userId: filters.userId,
@@ -66,8 +93,6 @@ export class SubmissionService {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const totalPages = Math.ceil(total / limit);
-    
-    logger.info('Submissões encontradas', { count: submissions.length, total, page, totalPages });
     
     const submissionsDTO = submissions.map(sub => new SubmissionResponseDTO({
       id: sub.id,
@@ -85,13 +110,10 @@ export class SubmissionService {
       errorMessage: sub.errorMessage,
       createdAt: sub.createdAt,
       updatedAt: sub.updatedAt,
-      // Dados do autor
       userName: sub.user?.name,
       userEmail: sub.user?.email,
       studentRegistration: (sub.user as any)?.studentRegistration,
-      // Dados da questão
       questionName: sub.question?.title,
-      // Dados da lista
       listId: (sub as any).listId,
       listName: (sub as any).listTitle
     }));
@@ -108,8 +130,6 @@ export class SubmissionService {
   }
 
   async getSubmissionById(id: string, requestUserId?: string): Promise<SubmissionResponseDTO> {
-    logger.info('Buscando submissão por ID', { submissionId: id, requestUserId });
-    
     const submission = await this.submissionRepository.findById(id);
     
     if (!submission) {
@@ -117,17 +137,13 @@ export class SubmissionService {
       throw new NotFoundError('Submissão não encontrada', 'SUBMISSION_NOT_FOUND');
     }
     
-    // Se requestUserId for fornecido (aluno), verificar se a submissão pertence a ele
     if (requestUserId && submission.userId !== requestUserId) {
-      logger.warn('Usuário tentou acessar submissão de outro usuário', { 
+      logger.warn('Acesso negado a submissão de outro usuário', { 
         submissionId: id, 
-        submissionUserId: submission.userId,
         requestUserId 
       });
       throw new NotFoundError('Submissão não encontrada', 'SUBMISSION_NOT_FOUND');
     }
-    
-    logger.info('Submissão recuperada', { submissionId: id, status: submission.status });
     
     return new SubmissionResponseDTO({
       id: submission.id,
@@ -149,8 +165,6 @@ export class SubmissionService {
   }
 
   async createSubmission(data: CreateSubmissionDTO, userId: string): Promise<SubmissionResponseDTO> {
-    logger.info('Criando nova submissão', { userId, questionId: data.questionId, language: data.language });
-    
     const submission = await this.submissionRepository.create({
       userId,
       questionId: data.questionId,
@@ -162,28 +176,9 @@ export class SubmissionService {
       passedTests: 0
     });
 
-    logger.info('Submissão criada com sucesso', { submissionId: submission.id, status: submission.status });
+    logger.info('Submissão criada', { submissionId: submission.id, userId, questionId: data.questionId });
 
-    if (this.queueService) {
-      logger.info('Adicionando submissão à fila', { submissionId: submission.id });
-      
-      await this.submissionRepository.update(submission.id, {
-        status: SubmissionStatus.IN_QUEUE
-      });
-
-      await this.queueService.addSubmissionToQueue(submission.id);
-      
-      logger.info('Submissão adicionada à fila', { submissionId: submission.id });
-    } else {
-      logger.warn('Sistema de fila não disponível, processando diretamente', { submissionId: submission.id });
-      
-      this.processSubmission(submission.id).catch(error => {
-        logger.error('Erro ao processar submissão em background', { 
-          submissionId: submission.id, 
-          error: error instanceof Error ? error.message : String(error) 
-        });
-      });
-    }
+    const finalStatus = await this.enqueueOrProcessSubmission(submission.id);
     
     return new SubmissionResponseDTO({
       id: submission.id,
@@ -191,7 +186,7 @@ export class SubmissionService {
       questionId: submission.questionId,
       code: submission.code,
       language: submission.language,
-      status: this.queueService ? SubmissionStatus.IN_QUEUE : submission.status,
+      status: finalStatus,
       score: submission.score,
       totalTests: submission.totalTests,
       passedTests: submission.passedTests,
@@ -235,24 +230,8 @@ export class SubmissionService {
 
     logger.info('Submissão registrada no banco de dados', { submissionId: submission.id });
 
-    // Disparar processamento como em createSubmission
-    if (this.queueService) {
-      logger.info('Adicionando submissão à fila (via /submit)', { submissionId: submission.id });
-      await this.submissionRepository.update(submission.id, {
-        status: SubmissionStatus.IN_QUEUE
-      });
-      await this.queueService.addSubmissionToQueue(submission.id);
-      logger.info('Submissão adicionada à fila (via /submit)', { submissionId: submission.id });
-      submission.status = SubmissionStatus.IN_QUEUE;
-    } else {
-      logger.warn('Sistema de fila não disponível, processando diretamente (via /submit)', { submissionId: submission.id });
-      this.processSubmission(submission.id).catch(error => {
-        logger.error('Erro ao processar submissão em background (via /submit)', { 
-          submissionId: submission.id, 
-          error: error instanceof Error ? error.message : String(error) 
-        });
-      });
-    }
+    const finalStatus = await this.enqueueOrProcessSubmission(submission.id);
+    submission.status = finalStatus;
 
     return {
       submissionId: submission.id,
@@ -288,34 +267,19 @@ export class SubmissionService {
 
       const submission = await this.submissionRepository.findById(submissionId);
       if (!submission) {
-        logger.error('Submissão não encontrada no banco', { submissionId });
+        logger.error('Submissão não encontrada', { submissionId });
         throw new Error('Submissão não encontrada');
       }
 
-      logger.info('Submissão recuperada', { 
-        submissionId, 
-        userId: submission.userId, 
-        questionId: submission.questionId,
-        language: submission.language 
-      });
-
-      logger.debug('Atualizando status para PROCESSING', { submissionId });
       await this.submissionRepository.update(submissionId, {
         status: SubmissionStatus.PROCESSING
       });
 
-      logger.info('Buscando questão associada', { submissionId, questionId: submission.questionId });
       const question = await this.questionRepository.findWithTestCases(submission.questionId);
       if (!question) {
         logger.error('Questão não encontrada', { submissionId, questionId: submission.questionId });
         throw new NotFoundError('Questão não encontrada', 'QUESTION_NOT_FOUND');
       }
-
-      logger.info('Questão encontrada', { 
-        submissionId, 
-        questionId: question.id,
-        submissionType: question.submissionType 
-      });
 
       if (question.submissionType !== 'local') {
         logger.warn('Tipo de questão não suportado', { submissionId, submissionType: question.submissionType });
@@ -341,11 +305,6 @@ export class SubmissionService {
         wallTimeLimit: question.getWallTimeLimitSeconds()
       };
 
-      logger.info('Limites de execução definidos', { 
-        submissionId, 
-        limits 
-      });
-
       const batchSubmissions = testCases.map(testCase => ({
         sourceCode: submission.code,
         language: submission.language,
@@ -353,10 +312,9 @@ export class SubmissionService {
         expectedOutput: testCase.expectedOutput
       }));
 
-      logger.info('Enviando lote para Judge0', { 
+      logger.info('Enviando submissão para Judge0', { 
         submissionId, 
-        batchSize: batchSubmissions.length,
-        language: submission.language
+        testCases: batchSubmissions.length
       });
 
       const tokens = await this.judge0Service.createBatchSubmissions(
@@ -364,27 +322,13 @@ export class SubmissionService {
         limits
       );
 
-      logger.info('Tokens recebidos do Judge0, atualizando status para RUNNING', { 
-        submissionId,
-        tokenCount: tokens.length
-      });
-
       await this.submissionRepository.update(submissionId, {
         status: SubmissionStatus.RUNNING
       });
 
       const results = await this.judge0Service.waitForBatchSubmissionsWithCallback(
         tokens,
-        async (progress) => {
-          logger.debug('Progresso da execução no Judge0', {
-            submissionId,
-            completed: progress.completed,
-            pending: progress.pending,
-            percentage: progress.percentage
-          });
-
-          // Pode atualizar informações adicionais no banco se necessário
-          // Por exemplo, um campo de progresso ou logs
+        async (_progress) => {
         }
       );
 
@@ -409,8 +353,6 @@ export class SubmissionService {
       let hasCompilationError = false;
       let compilationError = '';
 
-      logger.debug('Processando resultados individuais dos casos de teste', { submissionId });
-
       for (let i = 0; i < results.length; i++) {
         const judge0Result = results[i];
         const testCase = testCases[i];
@@ -418,16 +360,6 @@ export class SubmissionService {
           judge0Result,
           testCase.expectedOutput
         );
-
-        logger.debug('Resultado de caso de teste processado', {
-          submissionId,
-          testCaseIndex: i,
-          testCaseId: testCase.id,
-          verdict: processedResult.verdict,
-          passed: processedResult.passed,
-          executionTimeMs: processedResult.executionTimeMs,
-          memoryUsedKb: processedResult.memoryUsedKb
-        });
 
         if (processedResult.verdict === JudgeVerdict.COMPILATION_ERROR) {
           hasCompilationError = true;
@@ -471,9 +403,7 @@ export class SubmissionService {
         hasCompilationError
       });
 
-      logger.debug('Salvando resultados no banco de dados', { submissionId });
       await this.submissionResultRepository.createMany(submissionResults);
-      logger.debug('Resultados salvos com sucesso', { submissionId });
 
       const totalWeight = testCases.reduce((sum, tc) => sum + tc.weight, 0);
       const earnedWeight = testCases.reduce((sum, tc, index) => {
@@ -482,30 +412,20 @@ export class SubmissionService {
 
       const score = totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0;
 
-      logger.info('Pontuação calculada', {
-        submissionId,
-        totalWeight,
-        earnedWeight,
-        finalScore: score
-      });
-
       let finalVerdict = '';
       let finalStatus = SubmissionStatus.COMPLETED;
 
       if (hasCompilationError) {
         finalVerdict = JudgeVerdict.COMPILATION_ERROR;
         finalStatus = SubmissionStatus.COMPLETED;
-        logger.warn('Submissão com erro de compilação', { submissionId, verdict: finalVerdict });
+        logger.warn('Erro de compilação', { submissionId });
       } else if (passedTests === testCases.length) {
         finalVerdict = JudgeVerdict.ACCEPTED;
-        logger.info('Todos os testes passaram', { submissionId, verdict: finalVerdict });
       } else {
         const failedResult = submissionResults.find(r => !r.passed);
         finalVerdict = failedResult?.verdict || JudgeVerdict.WRONG_ANSWER;
-        logger.info('Submissão com falhas em testes', { submissionId, verdict: finalVerdict, failedCount: testCases.length - passedTests });
       }
 
-      logger.debug('Atualizando submissão no banco com resultados finais', { submissionId });
       await this.submissionRepository.update(submissionId, {
         status: finalStatus,
         score,
@@ -517,10 +437,7 @@ export class SubmissionService {
         errorMessage: hasCompilationError ? compilationError : undefined
       });
 
-      // Atualizar nota do aluno após conclusão bem-sucedida da submissão
       try {
-        logger.debug('Atualizando nota do aluno', { submissionId, studentId: submission.userId });
-        
         const questionList = await this.questionListRepository.findByQuestionId(submission.questionId);
         if (questionList) {
           await this.gradeService.recalculateAndUpsertGrade(
@@ -528,42 +445,37 @@ export class SubmissionService {
             questionList.id
           );
           
-          logger.info('Nota do aluno recalculada e atualizada com sucesso', {
+          logger.info('Nota atualizada', {
             submissionId,
             studentId: submission.userId,
             listId: questionList.id
           });
         } else {
-          logger.warn('Questão não está associada a nenhuma lista de questões', { 
+          logger.warn('Questão não associada a lista', { 
             submissionId, 
             questionId: submission.questionId 
           });
         }
       } catch (gradeError) {
-        logger.error('Erro ao atualizar nota do aluno', {
+        logger.error('Erro ao atualizar nota', {
           submissionId,
           studentId: submission.userId,
-          errorMessage: gradeError instanceof Error ? gradeError.message : String(gradeError)
+          error: gradeError instanceof Error ? gradeError.message : String(gradeError)
         });
-        // Não lançar erro para não interromper o processamento da submissão
       }
 
-      logger.info('=== PROCESSAMENTO DE SUBMISSÃO CONCLUÍDO COM SUCESSO ===', {
+      logger.info('Submissão processada', {
         submissionId,
-        status: finalStatus,
-        score,
-        totalTests: testCases.length,
-        passedTests,
         verdict: finalVerdict,
-        executionTimeMs: totalExecutionTime,
-        memoryUsedKb: maxMemory
+        score,
+        passedTests,
+        totalTests: testCases.length
       });
 
     } catch (error) {
-      logger.error('=== ERRO DURANTE PROCESSAMENTO DE SUBMISSÃO ===', { 
+      logger.error('Erro ao processar submissão', { 
         submissionId, 
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined
+        error: error instanceof Error ? error.message : String(error)
       });
 
       try {
@@ -592,7 +504,6 @@ export class SubmissionService {
       throw new NotFoundError('Submissão não encontrada', 'SUBMISSION_NOT_FOUND');
     }
 
-    // Se requestUserId for fornecido (aluno), verificar se a submissão pertence a ele
     if (requestUserId && submission.userId !== requestUserId) {
       logger.warn('Usuário tentou acessar resultados de submissão de outro usuário', { 
         submissionId, 
@@ -616,7 +527,6 @@ export class SubmissionService {
       passed: result.passed,
       executionTimeMs: result.executionTimeMs,
       memoryUsedKb: result.memoryUsedKb,
-      // Não enviamos input nem expectedOutput para proteger os testes
       actualOutput: result.output,
       errorMessage: result.errorMessage
     }));

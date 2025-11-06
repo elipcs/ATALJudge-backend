@@ -8,10 +8,6 @@ export class BaseRepository<T extends { id: string }> {
     this.repository = AppDataSource.getRepository(entity);
   }
 
-  getRepository(): Repository<T> {
-    return this.repository;
-  }
-
   async save(entity: DeepPartial<T>): Promise<T> {
     return this.repository.save(entity as any);
   }

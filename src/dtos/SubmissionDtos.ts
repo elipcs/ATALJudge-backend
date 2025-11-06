@@ -29,16 +29,10 @@ export class SubmissionResponseDTO {
   errorMessage?: string;
   createdAt!: Date;
   updatedAt!: Date;
-  
-  // Dados do autor
   userName?: string;
   userEmail?: string;
   studentRegistration?: string;
-  
-  // Dados da questão
   questionName?: string;
-  
-  // Dados da lista
   listId?: string;
   listName?: string;
 

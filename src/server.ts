@@ -48,7 +48,6 @@ async function startServer() {
       server.close(async () => {
         logger.info('Servidor HTTP encerrado');
         
-        // Fecha o sistema de fila se estiver ativo
         const container = DIContainer.getInstance();
         const queueService = container.submissionQueueService;
         if (queueService) {

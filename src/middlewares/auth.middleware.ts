@@ -2,13 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import { TokenManager, JwtPayload } from '../utils/TokenManager';
 import { errorResponse } from '../utils/responses';
 import { logger } from '../utils';
-import { AppDataSource } from '../config/database';
-import { TokenBlacklist } from '../models/TokenBlacklist';
+import { TokenBlacklistRepository } from '../repositories/TokenBlacklistRepository';
 import { UserRole } from '../enums';
 
 export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
+
+const tokenBlacklistRepo = new TokenBlacklistRepository();
 
 export async function authenticate(
   req: AuthRequest,
@@ -16,8 +17,6 @@ export async function authenticate(
   next: NextFunction
 ): Promise<void> {
   try {
-    logger.debug('[AUTH] Verificando autenticação...');
-
     const token = TokenManager.extractBearerToken(req.headers.authorization);
     
     if (!token) {
@@ -25,24 +24,16 @@ export async function authenticate(
       errorResponse(res, 'Token não fornecido', 'UNAUTHORIZED', 401);
       return;
     }
-    
-    logger.debug('[AUTH] Token encontrado, verificando blacklist...');
 
-    const tokenBlacklistRepo = AppDataSource.getRepository(TokenBlacklist);
-    const blacklisted = await tokenBlacklistRepo.findOne({ where: { token } });
+    const blacklisted = await tokenBlacklistRepo.findByToken(token);
     
     if (blacklisted) {
-      logger.warn('[AUTH] Token está na blacklist');
+      logger.warn('[AUTH] Token está na blacklist', { token: token.substring(0, 10) + '...' });
       errorResponse(res, 'Token revogado', 'TOKEN_REVOKED', 401);
       return;
     }
-    
-    logger.debug('[AUTH] Verificando validade do token...');
 
     const payload = TokenManager.verifyAccessToken(token);
-    
-    logger.info('[AUTH] Token válido, usuário autenticado', { userId: payload.sub, role: payload.role });
-
     req.user = payload;
     
     next();

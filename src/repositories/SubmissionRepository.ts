@@ -81,24 +81,20 @@ export class SubmissionRepository extends BaseRepository<Submission> {
       queryBuilder.andWhere('submission.status = :status', { status: filters.status });
     }
 
-    // Quando verdict for "failed", buscar todas as submissões que não são "Accepted"
     if (filters.verdict) {
       if (filters.verdict.toLowerCase() === 'failed') {
         queryBuilder.andWhere('(submission.verdict IS NULL OR submission.verdict != :accepted)', { accepted: 'Accepted' });
       } else if (filters.verdict.toLowerCase() === 'accepted') {
         queryBuilder.andWhere('submission.verdict = :verdict', { verdict: 'Accepted' });
       } else {
-        // Para outros valores de verdict, buscar exatamente
         queryBuilder.andWhere('submission.verdict = :verdict', { verdict: filters.verdict });
       }
     }
 
     queryBuilder.orderBy('submission.createdAt', 'DESC');
 
-    // Contar total de registros
     const total = await queryBuilder.getCount();
 
-    // Aplicar paginação
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -107,7 +103,6 @@ export class SubmissionRepository extends BaseRepository<Submission> {
 
     const result = await queryBuilder.getRawAndEntities();
     
-    // Combinar dados raw com entities
     const submissions = result.entities.map((entity, index) => {
       const raw = result.raw[index];
       return {

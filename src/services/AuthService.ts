@@ -51,19 +51,17 @@ export class AuthService {
     }
 
     let inviteData: InviteResponseDTO | null = null;
-    let targetClassId: string | undefined = dto.classId; // Usar classId do DTO como padrão
+    let targetClassId: string | undefined = dto.classId;
 
     if (dto.inviteToken) {
       inviteData = await this.inviteService.validateInvite(dto.inviteToken);
-      logger.info(`Convite validado: id=${inviteData.id}, classId=${inviteData.classId}`);
-      targetClassId = inviteData.classId; // Usar classId do convite se houver
+      targetClassId = inviteData.classId;
     }
 
     const userRole = dto.role || UserRole.STUDENT;
 
     let user: User;
     
-    // Criar a instância correta baseada no role
     if (userRole === UserRole.STUDENT) {
       const student = new Student();
       student.studentRegistration = dto.studentRegistration;
@@ -75,30 +73,23 @@ export class AuthService {
     }
 
     user.name = dto.name;
-    user.email = dto.email.toLowerCase();
+    user.email = dto.email;
     user.role = userRole;
     await user.setPassword(dto.password);
 
     const savedUser = await this.userRepository.create(user);
-    logger.info(`Usuário criado: id=${savedUser.id}, role=${savedUser.role}, email=${savedUser.email}`);
+    logger.info('[AUTH] Usuário registrado', { userId: savedUser.id, role: savedUser.role });
 
     if (dto.inviteToken) {
       await this.inviteService.useInvite(dto.inviteToken);
-      logger.info(`Convite incrementado: token=${dto.inviteToken}`);
     }
 
-    // Adicionar estudante à turma (do convite ou do DTO)
     if (userRole === UserRole.STUDENT && targetClassId) {
-      logger.info(`Adicionando estudante ${savedUser.id} à turma ${targetClassId}`);
       try {
         await this.classRepository.addStudent(targetClassId, savedUser.id);
-        logger.info(`Estudante adicionado com sucesso à turma ${targetClassId}`);
       } catch (error) {
-        logger.error(`Falha ao adicionar estudante à turma: ${error}`);
-        // Não relança - usuário já foi criado com sucesso
+        logger.error('[AUTH] Falha ao adicionar estudante à turma', { error, userId: savedUser.id, classId: targetClassId });
       }
-    } else {
-      logger.info(`Estudante NÃO adicionado à turma: role=${userRole}, classId=${targetClassId}`);
     }
 
     const payload: JwtPayload = {
@@ -153,12 +144,6 @@ export class AuthService {
     };
 
     const { accessToken, refreshToken } = TokenManager.generateTokenPair(payload);
-
-    logger.debug('[LOGIN] Tokens gerados', {
-      accessTokenLength: accessToken?.length,
-      refreshTokenLength: refreshToken?.length,
-      userId: user.id
-    });
 
     await this.refreshTokenService.saveRefreshToken(
       user.id,

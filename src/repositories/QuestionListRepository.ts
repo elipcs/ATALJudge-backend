@@ -1,3 +1,4 @@
+import { SelectQueryBuilder } from 'typeorm';
 import { BaseRepository } from './BaseRepository';
 import { QuestionList } from '../models/QuestionList';
 import { Question } from '../models/Question';
@@ -55,6 +56,14 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     }
 
     return queryBuilder.getMany();
+  }
+
+  createQueryBuilder(alias: string): SelectQueryBuilder<QuestionList> {
+    return this.repository.createQueryBuilder(alias);
+  }
+
+  async saveWithRelations(list: QuestionList): Promise<QuestionList> {
+    return this.repository.save(list);
   }
 
   async findByAuthor(authorId: string): Promise<QuestionList[]> {

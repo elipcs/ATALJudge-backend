@@ -80,12 +80,10 @@ export class UserResponseDTO {
       this.studentRegistration = partial.studentRegistration;
     }
     
-    // Se partial tem class (relação carregada), usar os dados da classe
     if ((partial as any).class) {
       this.classId = (partial as any).class.id;
       this.className = (partial as any).class.name;
     } else {
-      // Caso contrário, usar classId e className se fornecidos diretamente
       if (partial.classId) {
         this.classId = partial.classId;
       }
@@ -95,7 +93,6 @@ export class UserResponseDTO {
       }
     }
 
-    // Incluir grades se existirem
     if (partial.grades) {
       this.grades = partial.grades;
     }

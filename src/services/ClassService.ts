@@ -18,7 +18,6 @@ export class ClassService {
 
   async getAllClasses(includeRelations: boolean = false): Promise<ClassResponseDTO[]> {
     const queryBuilder = this.classRepository
-      .getRepository()
       .createQueryBuilder('class')
       .leftJoinAndSelect('class.professor', 'professor')
       .orderBy('class.createdAt', 'DESC');
@@ -36,7 +35,6 @@ export class ClassService {
 
   async getClassById(id: string, includeRelations: boolean = false): Promise<ClassResponseDTO> {
     const queryBuilder = this.classRepository
-      .getRepository()
       .createQueryBuilder('class')
       .leftJoinAndSelect('class.professor', 'professor')
       .where('class.id = :id', { id });
@@ -144,12 +142,10 @@ export class ClassService {
         createdAt: student.createdAt.toISOString()
       };
 
-      // Incluir studentRegistration se existir
       if ('studentRegistration' in student) {
         studentData.studentRegistration = (student as any).studentRegistration;
       }
 
-      // Incluir grades se existirem
       if ('grades' in student && Array.isArray((student as any).grades)) {
         studentData.grades = (student as any).grades.map((grade: any) => ({
           id: grade.id,
@@ -208,7 +204,6 @@ export class ClassService {
       updatedAt: classEntity.updatedAt
     };
 
-    // Sempre incluir o nome do professor se estiver carregado
     if (classEntity.professor) {
       dto.professorName = classEntity.professor.name;
     }
@@ -242,7 +237,6 @@ export class ClassService {
             studentData.studentRegistration = (student as { studentRegistration?: string }).studentRegistration;
           }
 
-          // Incluir grades se existirem
           if ('grades' in student && Array.isArray((student as any).grades)) {
             studentData.grades = (student as any).grades.map((grade: any) => ({
               id: grade.id,

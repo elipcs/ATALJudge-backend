@@ -1,3 +1,4 @@
+import { LessThan } from 'typeorm';
 import { BaseRepository } from './BaseRepository';
 import { RefreshToken } from '../models/RefreshToken';
 
@@ -17,6 +18,12 @@ export class RefreshTokenRepository extends BaseRepository<RefreshToken> {
     });
   }
 
+  async findByFamilyId(familyId: string): Promise<RefreshToken[]> {
+    return this.repository.find({
+      where: { familyId }
+    });
+  }
+
   async deleteByUserId(userId: string): Promise<void> {
     await this.repository.delete({ userId });
   }
@@ -30,6 +37,21 @@ export class RefreshTokenRepository extends BaseRepository<RefreshToken> {
       .where('expiresAt < :now', { now })
       .execute();
 
+    return result.affected || 0;
+  }
+
+  async deleteExpiredTokens(): Promise<number> {
+    const result = await this.repository.delete({
+      expiresAt: LessThan(new Date())
+    });
+    return result.affected || 0;
+  }
+
+  async deleteRevokedTokens(cutoffDate: Date): Promise<number> {
+    const result = await this.repository.delete({
+      isRevoked: true,
+      createdAt: LessThan(cutoffDate)
+    });
     return result.affected || 0;
   }
 }
