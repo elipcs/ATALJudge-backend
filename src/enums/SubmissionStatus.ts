@@ -5,6 +5,7 @@ export enum SubmissionStatus {
   PENDING = 'pending',
   IN_QUEUE = 'in_queue',
   PROCESSING = 'processing',
+  RUNNING = 'running',
 
   ACCEPTED = 'accepted',
   WRONG_ANSWER = 'wrong_answer',

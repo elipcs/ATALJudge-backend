@@ -158,5 +158,12 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     const list = await this.findByIdWithRelations(listId, false, true);
     return list?.classes || [];
   }
+
+  async findByQuestionId(questionId: string): Promise<QuestionList | null> {
+    return this.repository
+      .createQueryBuilder('list')
+      .innerJoin('list.questions', 'question', 'question.id = :questionId', { questionId })
+      .getOne();
+  }
 }
 

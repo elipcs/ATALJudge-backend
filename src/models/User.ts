@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, BeforeInsert, BeforeUpdate, TableInheritance } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, BeforeInsert, BeforeUpdate, TableInheritance, ManyToOne, JoinColumn } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserRole } from '../enums';
 import { Submission } from './Submission';
@@ -41,6 +41,10 @@ export class User {
 
   @OneToMany(() => Class, classEntity => classEntity.professor)
   classesTaught!: Class[];
+
+  @ManyToOne(() => Class, classEntity => classEntity.students, { nullable: true })
+  @JoinColumn({ name: 'class_id' })
+  class?: Class;
 
   async setPassword(password: string): Promise<void> {
     if (!password || password.length < 12) {

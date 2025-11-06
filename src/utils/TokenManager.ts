@@ -4,19 +4,14 @@ import { config } from '../config';
 import { TokenError } from './errors';
 
 export interface JwtPayload {
-  // Metadados de segurança (padrão RFC 7519)
-  sub: string;       // Subject - ID do usuário
-  jti?: string;      // JWT ID - Identificador único do token
-  tokenType?: 'access' | 'refresh';  // Tipo do token
-  
-  // Informações do usuário
+  sub: string;
+  jti?: string;
+  tokenType?: 'access' | 'refresh';
   email: string;
   role: string;
-  
-  // Timestamps (adicionados automaticamente pelo jwt.sign, removidos ao verificar)
-  iat?: number;      // Issued At
-  exp?: number;      // Expiration Time
-  nbf?: number;      // Not Before
+  iat?: number; 
+  exp?: number;
+  nbf?: number;
 }
 
 export class TokenManager {
@@ -26,10 +21,10 @@ export class TokenManager {
     
     return jwt.sign(
       {
-        sub: payload.sub,         // Subject - ID do usuário
+        sub: payload.sub, 
         email: payload.email,
         role: payload.role,
-        jti: tokenId,             // JWT ID único
+        jti: tokenId,
         tokenType: 'access' as const
       },
       config.jwt.secret,
@@ -46,10 +41,10 @@ export class TokenManager {
     
     const token = jwt.sign(
       {
-        sub: payload.sub,         // Subject - ID do usuário
+        sub: payload.sub,
         email: payload.email,
         role: payload.role,
-        jti: tokenId,             // JWT ID único
+        jti: tokenId,
         tokenType: 'refresh' as const
       },
       config.jwt.secret, 
@@ -84,12 +79,14 @@ export class TokenManager {
         audience: 'ataljudge-api'
       }) as JwtPayload;
 
-      // Validação adicional: verificar tipo de token
       if (decoded.tokenType && decoded.tokenType !== 'access') {
         throw new TokenError('Tipo de token inválido para access token', 'INVALID_TOKEN_TYPE');
       }
 
-      // Remove propriedades de timing e metadados para evitar conflitos ao gerar novo token
+      if (!decoded.sub || typeof decoded.sub !== 'string') {
+        throw new TokenError('Access token inválido: subject ausente', 'INVALID_TOKEN_PAYLOAD');
+      }
+
       return {
         sub: decoded.sub,
         email: decoded.email,
@@ -116,12 +113,14 @@ export class TokenManager {
         audience: 'ataljudge-api'
       }) as JwtPayload;
 
-      // Validação adicional: verificar tipo de token
       if (decoded.tokenType && decoded.tokenType !== 'refresh') {
         throw new TokenError('Tipo de token inválido para refresh token', 'INVALID_TOKEN_TYPE');
       }
 
-      // Remove propriedades de timing e metadados para evitar conflitos ao gerar novo token
+      if (!decoded.sub || typeof decoded.sub !== 'string') {
+        throw new TokenError('Refresh token inválido: subject ausente', 'INVALID_TOKEN_PAYLOAD');
+      }
+
       return {
         sub: decoded.sub,
         email: decoded.email,

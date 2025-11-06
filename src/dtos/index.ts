@@ -3,6 +3,7 @@ export {
   UserRegisterDTO,
   UserLoginDTO,
   UserResponseDTO,
+  UserGrade,
   UpdateProfileDTO,
   ChangePasswordDTO,
   CreateUserDTO,
@@ -19,20 +20,9 @@ export {
 } from './QuestionDtos';
 
 export {
-  CreateLocalQuestionDTO,
-  UpdateLocalQuestionDTO
-} from './LocalQuestionDtos';
-
-export {
-  CreateCodeforcesQuestionDTO,
-  UpdateCodeforcesQuestionDTO
-} from './CodeforcesQuestionDtos';
-
-export {
   CreateSubmissionDTO,
   SubmissionResponseDTO,
   TestCaseResultDTO,
-  HiddenTestsSummaryDTO,
   SubmissionDetailDTO
 } from './SubmissionDtos';
 
@@ -56,6 +46,7 @@ export {
   QuestionGroupDTO,
   CreateQuestionListDTO,
   UpdateQuestionListDTO,
+  UpdateQuestionListScoringDTO,
   QuestionListResponseDTO
 } from './QuestionListDtos';
 

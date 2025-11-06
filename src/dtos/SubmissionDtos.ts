@@ -29,6 +29,18 @@ export class SubmissionResponseDTO {
   errorMessage?: string;
   createdAt!: Date;
   updatedAt!: Date;
+  
+  // Dados do autor
+  userName?: string;
+  userEmail?: string;
+  studentRegistration?: string;
+  
+  // Dados da questão
+  questionName?: string;
+  
+  // Dados da lista
+  listId?: string;
+  listName?: string;
 
   constructor(partial: Partial<SubmissionResponseDTO>) {
     Object.assign(this, partial);
@@ -37,27 +49,14 @@ export class SubmissionResponseDTO {
 
 export class TestCaseResultDTO {
   testCaseId!: string;
-  isSample!: boolean;
   verdict!: JudgeVerdict;
   passed!: boolean;
   executionTimeMs?: number;
   memoryUsedKb?: number;
-  input?: string;
-  expectedOutput?: string;
   actualOutput?: string;
   errorMessage?: string;
 
   constructor(partial: Partial<TestCaseResultDTO>) {
-    Object.assign(this, partial);
-  }
-}
-
-export class HiddenTestsSummaryDTO {
-  total!: number;
-  passed!: number;
-  failed!: number;
-
-  constructor(partial: Partial<HiddenTestsSummaryDTO>) {
     Object.assign(this, partial);
   }
 }
@@ -79,8 +78,7 @@ export class SubmissionDetailDTO {
   createdAt!: Date;
   updatedAt!: Date;
 
-  sampleTestResults!: TestCaseResultDTO[];
-  hiddenTestsSummary!: HiddenTestsSummaryDTO;
+  testResults!: TestCaseResultDTO[];
 
   constructor(partial: Partial<SubmissionDetailDTO>) {
     Object.assign(this, partial);

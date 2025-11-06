@@ -20,6 +20,7 @@ import { InviteService } from '../services/InviteService';
 import { QuestionService } from '../services/QuestionService';
 import { ClassService } from '../services/ClassService';
 import { SubmissionService } from '../services/SubmissionService';
+import { SubmissionQueueService } from '../services/SubmissionQueueService';
 import { TestCaseService } from '../services/TestCaseService';
 import { QuestionListService } from '../services/QuestionListService';
 import { RefreshTokenService } from '../services/RefreshTokenService';
@@ -61,6 +62,7 @@ class DIContainer {
 
   private _emailService?: EmailService;
   private _judge0Service?: Judge0Service;
+  private _submissionQueueService?: SubmissionQueueService;
   private _passwordResetService?: PasswordResetService;
   private _refreshTokenService?: RefreshTokenService;
   private _authService?: AuthService;
@@ -200,6 +202,19 @@ class DIContainer {
     return this._judge0Service;
   }
 
+  get submissionQueueService(): SubmissionQueueService | undefined {
+    const redisEnabled = process.env.REDIS_ENABLED === 'true';
+    
+    if (!redisEnabled) {
+      return undefined;
+    }
+
+    if (!this._submissionQueueService) {
+      this._submissionQueueService = new SubmissionQueueService();
+    }
+    return this._submissionQueueService;
+  }
+
   get passwordResetService(): PasswordResetService {
     if (!this._passwordResetService) {
       this._passwordResetService = new PasswordResetService(this.passwordResetTokenRepository);
@@ -221,7 +236,9 @@ class DIContainer {
         this.refreshTokenService,
         this.passwordResetService,
         this.emailService,
-        this.tokenBlacklistRepository
+        this.tokenBlacklistRepository,
+        this.inviteService,
+        this.classRepository
       );
     }
     return this._authService;
@@ -229,7 +246,7 @@ class DIContainer {
 
   get userService(): UserService {
     if (!this._userService) {
-      this._userService = new UserService(this.userRepository);
+      this._userService = new UserService(this.userRepository, this.gradeRepository);
     }
     return this._userService;
   }
@@ -265,7 +282,10 @@ class DIContainer {
         this.submissionResultRepository,
         this.questionRepository,
         this.testCaseRepository,
-        this.judge0Service
+        this.judge0Service,
+        this.gradeService,
+        this.questionListRepository,
+        this.submissionQueueService
       );
     }
     return this._submissionService;
@@ -283,7 +303,9 @@ class DIContainer {
       this._questionListService = new QuestionListService(
         this.questionListRepository,
         this.questionRepository,
-        this.classRepository
+        this.classRepository,
+        this.gradeRepository,
+        this.gradeService
       );
     }
     return this._questionListService;
@@ -294,7 +316,8 @@ class DIContainer {
       this._gradeService = new GradeService(
         this.gradeRepository,
         this.userRepository,
-        this.questionListRepository
+        this.questionListRepository,
+        this.submissionRepository
       );
     }
     return this._gradeService;
@@ -378,7 +401,7 @@ class DIContainer {
 
   get gradeController(): Router {
     if (!this._gradeController) {
-      this._gradeController = createGradeController(this.gradeService);
+      this._gradeController = createGradeController();
     }
     return this._gradeController;
   }
@@ -394,5 +417,6 @@ class DIContainer {
   }
 }
 
+export { DIContainer };
 export const container = DIContainer.getInstance();
 

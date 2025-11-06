@@ -22,7 +22,7 @@ export class InviteRepository extends BaseRepository<Invite> {
     const invite = await this.findById(id);
     if (invite) {
       invite.incrementUses();
-      await this.update(id, invite);
+      await this.save(invite);
     }
   }
 

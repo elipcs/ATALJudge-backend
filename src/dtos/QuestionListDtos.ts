@@ -12,9 +12,10 @@ export class QuestionGroupDTO {
   @IsString({ each: true })
   questionIds!: string[];
 
+  @IsOptional()
   @IsInt()
   @Min(0)
-  weight!: number;
+  weight?: number;
 
   @IsOptional()
   @IsInt()
@@ -91,6 +92,12 @@ export class UpdateQuestionListDTO {
   classIds?: string[];
 
   @IsOptional()
+  @IsBoolean()
+  isRestricted?: boolean;
+}
+
+export class UpdateQuestionListScoringDTO {
+  @IsOptional()
   @IsEnum(['simple', 'groups'])
   scoringMode?: 'simple' | 'groups';
 
@@ -109,10 +116,6 @@ export class UpdateQuestionListDTO {
   @ValidateNested({ each: true })
   @Type(() => QuestionGroupDTO)
   questionGroups?: QuestionGroupDTO[];
-
-  @IsOptional()
-  @IsBoolean()
-  isRestricted?: boolean;
 }
 
 export class QuestionListResponseDTO {
@@ -129,6 +132,7 @@ export class QuestionListResponseDTO {
   isRestricted!: boolean;
   classIds?: string[];
   questions?: any[];
+  questionCount?: number;
   createdAt!: Date;
   updatedAt!: Date;
   calculatedStatus?: 'next' | 'open' | 'closed';

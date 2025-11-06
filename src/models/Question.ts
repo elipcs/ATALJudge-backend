@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, BeforeInsert, BeforeUpdate, TableInheritance } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { User } from './User';
 import { Submission } from './Submission';
+import { TestCase } from './TestCase';
 import { ValidationError } from '../utils';
 
 export interface QuestionExample {
@@ -8,9 +9,10 @@ export interface QuestionExample {
   output: string;
 }
 
+export type SubmissionType = 'local' | 'codeforces';
+
 @Entity('questions')
-@TableInheritance({ column: { type: 'varchar', name: 'type', default: 'local' } })
-export abstract class Question {
+export class Question {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
@@ -50,6 +52,18 @@ export abstract class Question {
   @Column({ type: 'jsonb', default: [] })
   examples!: QuestionExample[];
 
+  @Column({ name: 'submission_type', type: 'varchar', length: 20, default: 'local' })
+  submissionType!: SubmissionType;
+
+  @Column({ name: 'contest_id', type: 'varchar', length: 50, nullable: true })
+  contestId?: string;
+
+  @Column({ name: 'problem_index', type: 'varchar', length: 10, nullable: true })
+  problemIndex?: string;
+
+  @Column({ name: 'codeforces_link', type: 'varchar', length: 500, nullable: true })
+  codeforcesLink?: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 
@@ -59,6 +73,9 @@ export abstract class Question {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'author_id' })
   author?: User;
+
+  @OneToMany(() => TestCase, testCase => testCase.question, { cascade: true })
+  testCases!: TestCase[];
 
   @OneToMany(() => Submission, submission => submission.question)
   submissions!: Submission[];
@@ -97,6 +114,20 @@ export abstract class Question {
 
   getWallTimeLimitSeconds(): number | undefined {
     return this.wallTimeLimitSeconds;
+  }
+
+  isLocal(): boolean {
+    return this.submissionType === 'local';
+  }
+
+  isCodeforces(): boolean {
+    return this.submissionType === 'codeforces';
+  }
+
+  generateCodeforcesLink(): void {
+    if (this.isCodeforces() && this.contestId && this.problemIndex) {
+      this.codeforcesLink = `https://codeforces.com/contest/${this.contestId}/problem/${this.problemIndex}`;
+    }
   }
 }
 

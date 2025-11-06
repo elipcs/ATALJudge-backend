@@ -50,7 +50,7 @@ export const config = {
     : [],
 
   judge0: {
-    url: process.env.JUDGE0_URL || 'http://localhost:2358',
+    url: process.env.JUDGE0_URL || 'https://judge0-ce.p.rapidapi.com',
     apiKey: process.env.JUDGE0_API_KEY,
     rapidApiKey: process.env.JUDGE0_RAPID_API_KEY
   },

@@ -25,6 +25,10 @@ export class UserRegisterDTO {
   @IsOptional()
   @IsString()
   classId?: string;
+
+  @IsOptional()
+  @IsString()
+  inviteToken?: string;
 }
 
 export class UserLoginDTO {
@@ -42,6 +46,15 @@ export class RefreshTokenDTO {
   refreshToken!: string;
 }
 
+export interface UserGrade {
+  id: string;
+  listId: string;
+  listTitle?: string;
+  score: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class UserResponseDTO {
   id!: string;
   name!: string;
@@ -51,6 +64,9 @@ export class UserResponseDTO {
   lastLogin?: Date;
 
   studentRegistration?: string;
+  classId?: string;
+  className?: string;
+  grades?: UserGrade[];
 
   constructor(partial: Partial<UserResponseDTO>) {
     this.id = partial.id!;
@@ -62,6 +78,26 @@ export class UserResponseDTO {
 
     if (partial.studentRegistration) {
       this.studentRegistration = partial.studentRegistration;
+    }
+    
+    // Se partial tem class (relação carregada), usar os dados da classe
+    if ((partial as any).class) {
+      this.classId = (partial as any).class.id;
+      this.className = (partial as any).class.name;
+    } else {
+      // Caso contrário, usar classId e className se fornecidos diretamente
+      if (partial.classId) {
+        this.classId = partial.classId;
+      }
+      
+      if (partial.className) {
+        this.className = partial.className;
+      }
+    }
+
+    // Incluir grades se existirem
+    if (partial.grades) {
+      this.grades = partial.grades;
     }
   }
 }
@@ -75,6 +111,10 @@ export class UpdateProfileDTO {
   @IsOptional()
   @IsEmail()
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  studentRegistration?: string;
 }
 
 export class ChangePasswordDTO {

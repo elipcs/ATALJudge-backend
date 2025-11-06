@@ -1,9 +1,9 @@
 import { Router, Response } from 'express';
 import { QuestionListService } from '../services/QuestionListService';
-import { CreateQuestionListDTO, UpdateQuestionListDTO } from '../dtos/QuestionListDtos';
+import { CreateQuestionListDTO, UpdateQuestionListDTO, UpdateQuestionListScoringDTO } from '../dtos/QuestionListDtos';
 import { validateBody, authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
-import { ValidationError } from '../utils';
+import { ValidationError, logger } from '../utils';
 
 function createQuestionListController(listService: QuestionListService): Router {
   const router = Router();
@@ -49,20 +49,20 @@ router.post(
   validateBody(CreateQuestionListDTO),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+      // Apenas dados básicos da lista: não incluir aqui configurações de pontuação
+      // (scoringMode, maxScore, minQuestionsForMaxScore e questionGroups são
+      // gerenciados por endpoints/fluxos separados e não devem ser atualizados
+      // via PUT de listas básicas)
       const data = {
         title: req.body.title,
         description: req.body.description,
         startDate: req.body.startDate,
         endDate: req.body.endDate,
         classIds: req.body.classIds,
-        scoringMode: req.body.scoringMode || 'simple',
-        maxScore: req.body.maxScore || 10,
-        minQuestionsForMaxScore: req.body.minQuestionsForMaxScore || undefined,
-        questionGroups: req.body.questionGroups || [],
         isRestricted: req.body.isRestricted || false
       };
       
-      const list = await listService.createList(data, req.user?.userId);
+  const list = await listService.createList(data, req.user?.sub);
       
       successResponse(res, list, 'Lista criada com sucesso', 201);
     } catch (error) {
@@ -75,9 +75,34 @@ router.put(
   '/:id',
   authenticate,
   requireTeacher,
+  (req: AuthRequest, _res: Response, next) => {
+    logger.debug('[QUESTION_LIST PUT] Body recebido do frontend', {
+      listId: req.params.id,
+      bodyKeys: Object.keys(req.body || {}),
+      contentType: req.headers['content-type'],
+      rawBody: JSON.stringify(req.body),
+      title: req.body?.title,
+      description: req.body?.description,
+      startDate: req.body?.startDate,
+      endDate: req.body?.endDate,
+      classIds: req.body?.classIds,
+      scoringMode: req.body?.scoringMode,
+      maxScore: req.body?.maxScore,
+      minQuestionsForMaxScore: req.body?.minQuestionsForMaxScore,
+      questionGroups: req.body?.questionGroups,
+      isRestricted: req.body?.isRestricted,
+      userId: req.user?.sub
+    });
+    next();
+  },
   validateBody(UpdateQuestionListDTO),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+      logger.debug('[QUESTION_LIST PUT] Validação passou, processando atualização', {
+        listId: req.params.id,
+        userId: req.user?.sub
+      });
+
       const data = {
         title: req.body.title,
         description: req.body.description,
@@ -91,10 +116,67 @@ router.put(
         isRestricted: req.body.isRestricted || false
       };
       
+      logger.debug('[QUESTION_LIST PUT] Dados transformados para service', {
+        listId: req.params.id,
+        data
+      });
+      
       const list = await listService.updateList(req.params.id, data);
       
+      logger.info('[QUESTION_LIST PUT] Lista atualizada com sucesso', {
+        listId: req.params.id,
+        updatedList: list
+      });
+
       successResponse(res, list, 'Lista atualizada com sucesso');
     } catch (error) {
+      logger.error('[QUESTION_LIST PUT] Erro ao atualizar lista', {
+        listId: req.params.id,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      throw error;
+    }
+  }
+);
+
+router.patch(
+  '/:id/scoring',
+  authenticate,
+  requireTeacher,
+  validateBody(UpdateQuestionListScoringDTO),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      logger.debug('[QUESTION_LIST PATCH SCORING] Atualização de pontuação recebida', {
+        listId: req.params.id,
+        scoringMode: req.body.scoringMode,
+        maxScore: req.body.maxScore,
+        minQuestionsForMaxScore: req.body.minQuestionsForMaxScore,
+        userId: req.user?.sub
+      });
+
+      const data = {
+        scoringMode: req.body.scoringMode,
+        maxScore: req.body.maxScore,
+        minQuestionsForMaxScore: req.body.minQuestionsForMaxScore,
+        questionGroups: req.body.questionGroups || []
+      };
+      
+      const list = await listService.updateListScoring(req.params.id, data);
+      
+      logger.info('[QUESTION_LIST PATCH SCORING] Pontuação atualizada com sucesso', {
+        listId: req.params.id,
+        scoringMode: list.scoringMode,
+        maxScore: list.maxScore
+      });
+
+      successResponse(res, list, 'Configuração de pontuação atualizada com sucesso');
+    } catch (error) {
+      logger.error('[QUESTION_LIST PATCH SCORING] Erro ao atualizar pontuação', {
+        listId: req.params.id,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       throw error;
     }
   }
@@ -149,18 +231,56 @@ router.post(
   '/:id/questions',
   authenticate,
   requireTeacher,
+  (req: AuthRequest, _res: Response, next) => {
+    logger.debug('[QUESTION_LIST ADD QUESTION] Request recebido', {
+      listId: req.params.id,
+      bodyKeys: Object.keys(req.body || {}),
+      questionId: req.body?.questionId,
+      fullBody: JSON.stringify(req.body),
+      userId: req.user?.sub
+    });
+    next();
+  },
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const questionId = req.body.questionId;
       
+      logger.debug('[QUESTION_LIST ADD QUESTION] Validando questionId', {
+        listId: req.params.id,
+        questionId,
+        hasQuestionId: !!questionId
+      });
+
       if (!questionId) {
+        logger.warn('[QUESTION_LIST ADD QUESTION] questionId não fornecido', {
+          listId: req.params.id,
+          body: req.body
+        });
         throw new ValidationError('ID da questão é obrigatório', 'QUESTION_ID_REQUIRED');
       }
       
+      logger.debug('[QUESTION_LIST ADD QUESTION] Chamando service.addQuestionToList', {
+        listId: req.params.id,
+        questionId,
+        userId: req.user?.sub
+      });
+
       await listService.addQuestionToList(req.params.id, questionId);
       
+      logger.info('[QUESTION_LIST ADD QUESTION] Questão adicionada com sucesso', {
+        listId: req.params.id,
+        questionId,
+        userId: req.user?.sub
+      });
+
       successResponse(res, null, 'Questão adicionada à lista');
     } catch (error) {
+      logger.error('[QUESTION_LIST ADD QUESTION] Erro ao adicionar questão', {
+        listId: req.params.id,
+        questionId: req.body?.questionId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       throw error;
     }
   }
@@ -170,12 +290,38 @@ router.delete(
   '/:id/questions/:questionId',
   authenticate,
   requireTeacher,
+  (req: AuthRequest, _res: Response, next) => {
+    logger.debug('[QUESTION_LIST REMOVE QUESTION] Request recebido', {
+      listId: req.params.id,
+      questionId: req.params.questionId,
+      userId: req.user?.sub
+    });
+    next();
+  },
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+      logger.debug('[QUESTION_LIST REMOVE QUESTION] Chamando service.removeQuestionFromList', {
+        listId: req.params.id,
+        questionId: req.params.questionId,
+        userId: req.user?.sub
+      });
+
       await listService.removeQuestionFromList(req.params.id, req.params.questionId);
       
+      logger.info('[QUESTION_LIST REMOVE QUESTION] Questão removida com sucesso', {
+        listId: req.params.id,
+        questionId: req.params.questionId,
+        userId: req.user?.sub
+      });
+
       successResponse(res, null, 'Questão removida da lista');
     } catch (error) {
+      logger.error('[QUESTION_LIST REMOVE QUESTION] Erro ao remover questão', {
+        listId: req.params.id,
+        questionId: req.params.questionId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       throw error;
     }
   }

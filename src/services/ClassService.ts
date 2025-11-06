@@ -20,12 +20,13 @@ export class ClassService {
     const queryBuilder = this.classRepository
       .getRepository()
       .createQueryBuilder('class')
+      .leftJoinAndSelect('class.professor', 'professor')
       .orderBy('class.createdAt', 'DESC');
 
     if (includeRelations) {
       queryBuilder
-        .leftJoinAndSelect('class.professor', 'professor')
-        .leftJoinAndSelect('class.students', 'students');
+        .leftJoinAndSelect('class.students', 'students')
+        .leftJoinAndSelect('students.grades', 'grades');
     }
 
     const classes = await queryBuilder.getMany();
@@ -37,12 +38,13 @@ export class ClassService {
     const queryBuilder = this.classRepository
       .getRepository()
       .createQueryBuilder('class')
+      .leftJoinAndSelect('class.professor', 'professor')
       .where('class.id = :id', { id });
 
     if (includeRelations) {
       queryBuilder
-        .leftJoinAndSelect('class.professor', 'professor')
-        .leftJoinAndSelect('class.students', 'students');
+        .leftJoinAndSelect('class.students', 'students')
+        .leftJoinAndSelect('students.grades', 'grades');
     }
 
     const classEntity = await queryBuilder.getOne();
@@ -133,13 +135,33 @@ export class ClassService {
   async getClassStudents(classId: string): Promise<any[]> {
     const students = await this.classRepository.findStudents(classId);
 
-    return students.map(student => ({
-      id: student.id,
-      name: student.name,
-      email: student.email,
-      role: student.role,
-      createdAt: student.createdAt.toISOString()
-    }));
+    return students.map(student => {
+      const studentData: any = {
+        id: student.id,
+        name: student.name,
+        email: student.email,
+        role: student.role,
+        createdAt: student.createdAt.toISOString()
+      };
+
+      // Incluir studentRegistration se existir
+      if ('studentRegistration' in student) {
+        studentData.studentRegistration = (student as any).studentRegistration;
+      }
+
+      // Incluir grades se existirem
+      if ('grades' in student && Array.isArray((student as any).grades)) {
+        studentData.grades = (student as any).grades.map((grade: any) => ({
+          id: grade.id,
+          listId: grade.listId,
+          score: grade.score,
+          createdAt: grade.createdAt.toISOString(),
+          updatedAt: grade.updatedAt.toISOString()
+        }));
+      }
+
+      return studentData;
+    });
   }
 
   async addStudentToClass(classId: string, studentId: string): Promise<void> {
@@ -164,7 +186,7 @@ export class ClassService {
       throw new ValidationError('Estudante já está matriculado nesta turma', 'ALREADY_ENROLLED');
     }
 
-    await this.classRepository.addStudent(classId, student);
+    await this.classRepository.addStudent(classId, studentId);
   }
 
   async removeStudentFromClass(classId: string, studentId: string): Promise<void> {
@@ -185,6 +207,11 @@ export class ClassService {
       createdAt: classEntity.createdAt,
       updatedAt: classEntity.updatedAt
     };
+
+    // Sempre incluir o nome do professor se estiver carregado
+    if (classEntity.professor) {
+      dto.professorName = classEntity.professor.name;
+    }
 
     if (classEntity.students) {
       dto.studentIds = classEntity.students.map(s => s.id);
@@ -213,6 +240,17 @@ export class ClassService {
 
           if ('studentRegistration' in student) {
             studentData.studentRegistration = (student as { studentRegistration?: string }).studentRegistration;
+          }
+
+          // Incluir grades se existirem
+          if ('grades' in student && Array.isArray((student as any).grades)) {
+            studentData.grades = (student as any).grades.map((grade: any) => ({
+              id: grade.id,
+              listId: grade.listId,
+              score: grade.score,
+              createdAt: grade.createdAt.toISOString(),
+              updatedAt: grade.updatedAt.toISOString()
+            }));
           }
           
           return studentData;

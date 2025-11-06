@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { createApp } from './app';
-import { config, validateConfig, initializeDatabase, closeDatabase } from './config';
+import { config, validateConfig, initializeDatabase, closeDatabase, DIContainer } from './config';
 import { logger } from './utils';
 
 async function startServer() {
@@ -20,6 +20,19 @@ async function startServer() {
     const app = createApp();
     logger.info('Aplicação criada\n');
 
+    const container = DIContainer.getInstance();
+    const queueService = container.submissionQueueService;
+    
+    if (queueService) {
+      logger.info('Inicializando sistema de fila de submissões...');
+      const submissionService = container.submissionService;
+      queueService.initializeWorker(submissionService);
+      logger.info('Sistema de fila inicializado\n');
+    } else {
+      logger.warn('Sistema de fila desabilitado (REDIS_ENABLED não está configurado como true)');
+      logger.warn('Submissões serão processadas diretamente em background\n');
+    }
+
     const port = config.port;
     const server = app.listen(port, () => {
       logger.info('================================');
@@ -34,6 +47,15 @@ async function startServer() {
       
       server.close(async () => {
         logger.info('Servidor HTTP encerrado');
+        
+        // Fecha o sistema de fila se estiver ativo
+        const container = DIContainer.getInstance();
+        const queueService = container.submissionQueueService;
+        if (queueService) {
+          logger.info('Fechando sistema de fila...');
+          await queueService.close();
+          logger.info('Sistema de fila fechado');
+        }
         
         await closeDatabase();
         

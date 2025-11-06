@@ -17,7 +17,9 @@ export class ClassRepository extends BaseRepository<Class> {
     }
 
     if (includeStudents) {
-      queryBuilder.leftJoinAndSelect('class.students', 'students');
+      queryBuilder
+        .leftJoinAndSelect('class.students', 'students')
+        .leftJoinAndSelect('students.grades', 'grades');
     }
 
     return queryBuilder.getOne();
@@ -33,7 +35,9 @@ export class ClassRepository extends BaseRepository<Class> {
     }
 
     if (includeStudents) {
-      queryBuilder.leftJoinAndSelect('class.students', 'students');
+      queryBuilder
+        .leftJoinAndSelect('class.students', 'students')
+        .leftJoinAndSelect('students.grades', 'grades');
     }
 
     return queryBuilder.getMany();
@@ -42,6 +46,7 @@ export class ClassRepository extends BaseRepository<Class> {
   async findByProfessor(professorId: string): Promise<Class[]> {
     return this.repository.find({
       where: { professorId },
+      relations: ['students', 'students.grades'],
       order: { createdAt: 'DESC' }
     });
   }
@@ -50,52 +55,59 @@ export class ClassRepository extends BaseRepository<Class> {
     return this.repository
       .createQueryBuilder('class')
       .innerJoin('class.students', 'student', 'student.id = :studentId', { studentId })
+      .leftJoinAndSelect('class.students', 'students')
+      .leftJoinAndSelect('students.grades', 'grades')
       .orderBy('class.createdAt', 'DESC')
       .getMany();
   }
 
-  async addStudent(classId: string, student: User): Promise<void> {
-    const classEntity = await this.findByIdWithRelations(classId, true);
+  async addStudent(classId: string, studentId: string): Promise<void> {
+    // Verificar se a turma existe
+    const classEntity = await this.repository.findOne({ where: { id: classId } });
     if (!classEntity) {
       throw new Error('Turma não encontrada');
     }
 
-    if (!classEntity.students) {
-      classEntity.students = [];
-    }
-
-    const isAlreadyEnrolled = classEntity.students.some(s => s.id === student.id);
-    if (!isAlreadyEnrolled) {
-      classEntity.students.push(student);
-      await this.repository.save(classEntity);
-    }
+    // Atualizar o estudante com o classId usando raw query
+    const connection = this.repository.manager.connection;
+    await connection.query(
+      'UPDATE users SET class_id = $1 WHERE id = $2',
+      [classId, studentId]
+    );
   }
 
   async removeStudent(classId: string, studentId: string): Promise<void> {
-    const classEntity = await this.findByIdWithRelations(classId, true);
+    // Verificar se a turma existe
+    const classEntity = await this.repository.findOne({ where: { id: classId } });
     if (!classEntity) {
       throw new Error('Turma não encontrada');
     }
 
-    if (classEntity.students) {
-      classEntity.students = classEntity.students.filter(s => s.id !== studentId);
-      await this.repository.save(classEntity);
-    }
+    // Remover o classId do estudante
+    const userRepository = this.repository.manager.getRepository('User');
+    await userRepository.update(
+      { id: studentId, classId: classId },
+      { classId: null }
+    );
   }
 
   async findStudents(classId: string): Promise<User[]> {
-    const classEntity = await this.findByIdWithRelations(classId, true);
-    return classEntity?.students || [];
+    const userRepository = this.repository.manager.getRepository<User>('User');
+    return userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.grades', 'grades')
+      .where('user.class_id = :classId', { classId })
+      .getMany();
   }
 
   async isStudentEnrolled(classId: string, studentId: string): Promise<boolean> {
-    const result = await this.repository
-      .createQueryBuilder('class')
-      .innerJoin('class.students', 'student', 'student.id = :studentId', { studentId })
-      .where('class.id = :classId', { classId })
-      .getCount();
-
-    return result > 0;
+    const userRepository = this.repository.manager.getRepository<User>('User');
+    const student = await userRepository
+      .createQueryBuilder('user')
+      .where('user.id = :studentId', { studentId })
+      .andWhere('user.class_id = :classId', { classId })
+      .getOne();
+    return !!student;
   }
 }
 

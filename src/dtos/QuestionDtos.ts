@@ -57,8 +57,17 @@ export abstract class CreateQuestionDTO {
   @Type(() => QuestionExampleDTO)
   examples?: QuestionExampleDTO[];
 
+  @IsOptional()
   @IsEnum(JudgeType)
-  judgeType!: JudgeType;
+  judgeType?: JudgeType;
+
+  @IsOptional()
+  @IsString()
+  submissionType?: 'local' | 'codeforces';
+
+  @IsOptional()
+  @IsString()
+  listId?: string;
 }
 
 export abstract class UpdateQuestionDTO {
@@ -106,6 +115,12 @@ export abstract class UpdateQuestionDTO {
   memoryLimitKb?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(60)
+  wallTimeLimitSeconds?: number;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuestionExampleDTO)
@@ -149,6 +164,7 @@ export class QuestionResponseDTO {
   memoryLimitKb!: number;
   examples!: QuestionExample[];
   judgeType!: JudgeType;
+  submissionType?: 'local' | 'codeforces';
   codeforcesContestId?: string;
   codeforcesProblemIndex?: string;
   codeforcesLink?: string;

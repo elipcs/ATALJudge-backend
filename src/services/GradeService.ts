@@ -1,20 +1,23 @@
-import { GradeRepository, UserRepository, QuestionListRepository } from '../repositories';
+import { GradeRepository, UserRepository, QuestionListRepository, SubmissionRepository } from '../repositories';
 import { CreateGradeDTO, UpdateGradeDTO, GradeResponseDTO } from '../dtos';
-import { NotFoundError, InternalServerError } from '../utils';
+import { NotFoundError, InternalServerError, logger } from '../utils';
 
 export class GradeService {
   private gradeRepository: GradeRepository;
   private userRepository: UserRepository;
   private listRepository: QuestionListRepository;
+  private submissionRepository: SubmissionRepository;
 
   constructor(
     gradeRepository: GradeRepository,
     userRepository: UserRepository,
-    listRepository: QuestionListRepository
+    listRepository: QuestionListRepository,
+    submissionRepository: SubmissionRepository
   ) {
     this.gradeRepository = gradeRepository;
     this.userRepository = userRepository;
     this.listRepository = listRepository;
+    this.submissionRepository = submissionRepository;
   }
 
   async getGradeById(id: string): Promise<GradeResponseDTO> {
@@ -83,6 +86,129 @@ export class GradeService {
     }));
   }
 
+  /**
+   * Calcula a nota do aluno em uma lista de questões baseado no modo de pontuação
+   * - Simple: pega as N maiores submissões (onde N = minQuestionsForMaxScore)
+   * - Groups: pega a maior submissão de cada grupo
+   */
+  async calculateGradeForList(studentId: string, listId: string): Promise<number> {
+    logger.info('Calculando nota do aluno', { studentId, listId });
+
+    // Buscar lista com questões
+    const list = await this.listRepository.findByIdWithRelations(listId, true, false, false);
+    if (!list) {
+      throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
+    }
+
+    if (!list.questions || list.questions.length === 0) {
+      logger.warn('Lista sem questões', { listId });
+      return 0;
+    }
+
+    const questionIds = list.questions.map(q => q.id);
+    
+    // Buscar todas as submissões do aluno para as questões da lista
+    const allSubmissions = await Promise.all(
+      questionIds.map(questionId => 
+        this.submissionRepository.findByUserAndQuestion(studentId, questionId)
+      )
+    );
+
+    // Obter melhor score por questão
+    const bestScoresByQuestion = new Map<string, number>();
+    
+    allSubmissions.flat().forEach(submission => {
+      const currentBest = bestScoresByQuestion.get(submission.questionId) || 0;
+      if (submission.score > currentBest) {
+        bestScoresByQuestion.set(submission.questionId, submission.score);
+      }
+    });
+
+    logger.debug('Melhores scores por questão', { 
+      studentId, 
+      listId, 
+      bestScores: Array.from(bestScoresByQuestion.entries()) 
+    });
+
+    let finalScore = 0;
+
+    if (list.scoringMode === 'simple') {
+      // Modo Simple: pegar as N maiores submissões
+      const n = list.minQuestionsForMaxScore || list.questions.length;
+      const scores = Array.from(bestScoresByQuestion.values()).sort((a, b) => b - a);
+      const topNScores = scores.slice(0, n);
+      
+      if (topNScores.length > 0) {
+        const averageScore = topNScores.reduce((sum, score) => sum + score, 0) / topNScores.length;
+        finalScore = Math.round((averageScore / 100) * list.maxScore);
+      }
+
+      logger.info('Nota calculada (modo simple)', {
+        studentId,
+        listId,
+        n,
+        topNScores,
+        averageScore: topNScores.length > 0 ? topNScores.reduce((sum, score) => sum + score, 0) / topNScores.length : 0,
+        finalScore,
+        maxScore: list.maxScore
+      });
+
+    } else if (list.scoringMode === 'groups') {
+      // Modo Groups: pegar a maior submissão de cada grupo
+      if (!list.questionGroups || list.questionGroups.length === 0) {
+        logger.warn('Lista em modo groups mas sem grupos definidos', { listId });
+        return 0;
+      }
+
+      let totalWeightedScore = 0;
+      let totalWeight = 0;
+
+      list.questionGroups.forEach(group => {
+        const groupQuestionIds = group.questionIds || [];
+        const groupScores: number[] = [];
+
+        groupQuestionIds.forEach(questionId => {
+          const score = bestScoresByQuestion.get(questionId);
+          if (score !== undefined) {
+            groupScores.push(score);
+          }
+        });
+
+        if (groupScores.length > 0) {
+          const bestGroupScore = Math.max(...groupScores);
+          const groupWeight = group.weight || 1;
+          totalWeightedScore += bestGroupScore * groupWeight;
+          totalWeight += groupWeight;
+
+          logger.debug('Score do grupo', {
+            studentId,
+            listId,
+            groupName: group.name,
+            groupScores,
+            bestGroupScore,
+            groupWeight
+          });
+        }
+      });
+
+      if (totalWeight > 0) {
+        const averageScore = totalWeightedScore / totalWeight;
+        finalScore = Math.round((averageScore / 100) * list.maxScore);
+      }
+
+      logger.info('Nota calculada (modo groups)', {
+        studentId,
+        listId,
+        totalWeightedScore,
+        totalWeight,
+        finalScore,
+        maxScore: list.maxScore
+      });
+    }
+
+    return finalScore;
+  }
+
   async upsertGrade(data: CreateGradeDTO): Promise<GradeResponseDTO> {
     
     const student = await this.userRepository.findById(data.studentId);
@@ -136,6 +262,36 @@ export class GradeService {
       updatedAt: grade.updatedAt,
       studentName: student.name,
       listTitle: list.title
+    });
+  }
+
+  /**
+   * Recalcula e atualiza a nota do aluno baseado em todas as submissões da lista
+   * Usa o modo de pontuação configurado na lista (simple ou groups)
+   */
+  async recalculateAndUpsertGrade(studentId: string, listId: string): Promise<GradeResponseDTO> {
+    logger.info('Recalculando nota do aluno', { studentId, listId });
+
+    const student = await this.userRepository.findById(studentId);
+    if (!student) {
+      throw new NotFoundError('Estudante não encontrado', 'STUDENT_NOT_FOUND');
+    }
+
+    const list = await this.listRepository.findById(listId);
+    if (!list) {
+      throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
+    }
+
+    // Calcular nota baseado no modo de pontuação
+    const calculatedScore = await this.calculateGradeForList(studentId, listId);
+
+    logger.info('Nota recalculada', { studentId, listId, calculatedScore });
+
+    // Usar upsertGrade para atualizar ou criar
+    return this.upsertGrade({
+      studentId,
+      listId,
+      score: calculatedScore
     });
   }
 

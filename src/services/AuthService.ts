@@ -1,13 +1,16 @@
-import { UserRepository, TokenBlacklistRepository } from '../repositories';
+import { UserRepository, TokenBlacklistRepository, ClassRepository } from '../repositories';
 import { TokenManager, JwtPayload } from '../utils/TokenManager';
-import { UserRegisterDTO, UserLoginDTO, UserResponseDTO, RequestPasswordResetDTO, ResetPasswordDTO } from '../dtos';
+import { UserRegisterDTO, UserLoginDTO, UserResponseDTO, RequestPasswordResetDTO, ResetPasswordDTO, InviteResponseDTO } from '../dtos';
 import { RefreshTokenService } from './RefreshTokenService';
 import { PasswordResetService } from './PasswordResetService';
 import { EmailService } from './EmailService';
+import { InviteService } from './InviteService';
 import { config } from '../config';
 import { UserRole } from '../enums/UserRole';
 import { logger, ConflictError, UnauthorizedError, TokenError, InternalServerError } from '../utils';
 import { User } from '../models/User';
+import { Student } from '../models/Student';
+import { Professor } from '../models/Professor';
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -15,19 +18,25 @@ export class AuthService {
   private passwordResetService: PasswordResetService;
   private emailService: EmailService;
   private tokenBlacklistRepository: TokenBlacklistRepository;
+  private inviteService: InviteService;
+  private classRepository: ClassRepository;
 
   constructor(
     userRepository: UserRepository,
     refreshTokenService: RefreshTokenService,
     passwordResetService: PasswordResetService,
     emailService: EmailService,
-    tokenBlacklistRepository: TokenBlacklistRepository
+    tokenBlacklistRepository: TokenBlacklistRepository,
+    inviteService: InviteService,
+    classRepository: ClassRepository
   ) {
     this.userRepository = userRepository;
     this.refreshTokenService = refreshTokenService;
     this.passwordResetService = passwordResetService;
     this.emailService = emailService;
     this.tokenBlacklistRepository = tokenBlacklistRepository;
+    this.inviteService = inviteService;
+    this.classRepository = classRepository;
   }
 
   async registerWithInvite(dto: UserRegisterDTO): Promise<{
@@ -41,15 +50,56 @@ export class AuthService {
       throw new ConflictError('Email já está em uso', 'EMAIL_IN_USE');
     }
 
+    let inviteData: InviteResponseDTO | null = null;
+    let targetClassId: string | undefined = dto.classId; // Usar classId do DTO como padrão
+
+    if (dto.inviteToken) {
+      inviteData = await this.inviteService.validateInvite(dto.inviteToken);
+      logger.info(`Convite validado: id=${inviteData.id}, classId=${inviteData.classId}`);
+      targetClassId = inviteData.classId; // Usar classId do convite se houver
+    }
+
     const userRole = dto.role || UserRole.STUDENT;
 
-    const user = new User();
+    let user: User;
+    
+    // Criar a instância correta baseada no role
+    if (userRole === UserRole.STUDENT) {
+      const student = new Student();
+      student.studentRegistration = dto.studentRegistration;
+      user = student;
+    } else if (userRole === UserRole.PROFESSOR) {
+      user = new Professor();
+    } else {
+      user = new User();
+    }
+
     user.name = dto.name;
     user.email = dto.email.toLowerCase();
     user.role = userRole;
     await user.setPassword(dto.password);
 
     const savedUser = await this.userRepository.create(user);
+    logger.info(`Usuário criado: id=${savedUser.id}, role=${savedUser.role}, email=${savedUser.email}`);
+
+    if (dto.inviteToken) {
+      await this.inviteService.useInvite(dto.inviteToken);
+      logger.info(`Convite incrementado: token=${dto.inviteToken}`);
+    }
+
+    // Adicionar estudante à turma (do convite ou do DTO)
+    if (userRole === UserRole.STUDENT && targetClassId) {
+      logger.info(`Adicionando estudante ${savedUser.id} à turma ${targetClassId}`);
+      try {
+        await this.classRepository.addStudent(targetClassId, savedUser.id);
+        logger.info(`Estudante adicionado com sucesso à turma ${targetClassId}`);
+      } catch (error) {
+        logger.error(`Falha ao adicionar estudante à turma: ${error}`);
+        // Não relança - usuário já foi criado com sucesso
+      }
+    } else {
+      logger.info(`Estudante NÃO adicionado à turma: role=${userRole}, classId=${targetClassId}`);
+    }
 
     const payload: JwtPayload = {
       sub: savedUser.id,
@@ -137,6 +187,10 @@ export class AuthService {
     }
 
     const payload = TokenManager.verifyRefreshToken(oldRefreshToken);
+
+    if (!payload || !payload.sub || typeof payload.sub !== 'string') {
+      throw new TokenError('Refresh token inválido: payload incompleto', 'INVALID_TOKEN_PAYLOAD');
+    }
 
     const storedToken = await this.refreshTokenService.validateAndUseToken(oldRefreshToken);
 

@@ -3,7 +3,7 @@ import { SubmissionService } from '../services/SubmissionService';
 import { CreateSubmissionDTO } from '../dtos';
 import { validateBody, authenticate, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
-import { SubmissionStatus } from '../enums';
+import { SubmissionStatus, UserRole } from '../enums';
 import { UnauthorizedError, ValidationError } from '../utils';
 
 function createSubmissionController(submissionService: SubmissionService): Router {
@@ -14,16 +14,27 @@ router.get(
   authenticate,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      // Se for aluno, força o filtro para retornar apenas suas submissões
+      let userId = req.query.userId as string;
+      if (req.user?.role === UserRole.STUDENT) {
+        userId = req.user.sub;
+      }
+      
       const filters: any = {
         questionId: req.query.questionId as string,
-        userId: req.query.userId as string,
+        userId: userId,
         status: req.query.status as SubmissionStatus,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : 100
+        verdict: req.query.verdict as string,
+        page,
+        limit
       };
       
-      const submissions = await submissionService.getSubmissions(filters);
+      const result = await submissionService.getSubmissions(filters);
       
-      successResponse(res, { submissions }, 'Lista de submissões');
+      successResponse(res, result, 'Lista de submissões');
     } catch (error) {
       throw error;
     }
@@ -35,7 +46,10 @@ router.get(
   authenticate,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const submission = await submissionService.getSubmissionById(req.params.id);
+      const submission = await submissionService.getSubmissionById(
+        req.params.id,
+        req.user?.role === UserRole.STUDENT ? req.user.sub : undefined
+      );
       
       successResponse(res, submission, 'Submissão encontrada');
     } catch (error) {
@@ -100,7 +114,10 @@ router.get(
   authenticate,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const submissionDetail = await submissionService.getSubmissionWithResults(req.params.id);
+      const submissionDetail = await submissionService.getSubmissionWithResults(
+        req.params.id,
+        req.user?.role === UserRole.STUDENT ? req.user.sub : undefined
+      );
       
       successResponse(res, submissionDetail, 'Resultados da submissão');
     } catch (error) {

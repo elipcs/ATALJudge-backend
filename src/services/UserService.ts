@@ -1,12 +1,15 @@
-import { UserRepository } from '../repositories/UserRepository';
+import { UserRepository, GradeRepository } from '../repositories';
 import { UserResponseDTO, UpdateProfileDTO, ChangePasswordDTO } from '../dtos';
 import { NotFoundError, ConflictError, UnauthorizedError, InternalServerError } from '../utils';
+import { UserRole } from '../enums';
 
 export class UserService {
   private userRepository: UserRepository;
+  private gradeRepository: GradeRepository;
 
-  constructor(userRepository: UserRepository) {
+  constructor(userRepository: UserRepository, gradeRepository: GradeRepository) {
     this.userRepository = userRepository;
+    this.gradeRepository = gradeRepository;
   }
 
   async getUserById(id: string): Promise<UserResponseDTO> {
@@ -16,7 +19,22 @@ export class UserService {
       throw new NotFoundError('Usuário não encontrado', 'USER_NOT_FOUND');
     }
 
-    return new UserResponseDTO(user);
+    const userResponse = new UserResponseDTO(user);
+
+    // Se for aluno, buscar as notas
+    if (user.role === UserRole.STUDENT) {
+      const grades = await this.gradeRepository.findByStudent(id);
+      userResponse.grades = grades.map(grade => ({
+        id: grade.id,
+        listId: grade.listId,
+        listTitle: grade.list?.title,
+        score: grade.score,
+        createdAt: grade.createdAt,
+        updatedAt: grade.updatedAt
+      }));
+    }
+
+    return userResponse;
   }
 
   async getAllUsers(): Promise<UserResponseDTO[]> {
@@ -45,8 +63,12 @@ export class UserService {
 
     if (dto.name) user.name = dto.name;
     if (dto.email) user.email = dto.email.toLowerCase();
+    
+    if (dto.studentRegistration !== undefined && 'studentRegistration' in user) {
+      (user as any).studentRegistration = dto.studentRegistration;
+    }
 
-    const updatedUser = await this.userRepository.update(userId, user);
+    const updatedUser = await this.userRepository.save(user);
     
     if (!updatedUser) {
       throw new InternalServerError('Erro ao atualizar perfil', 'UPDATE_ERROR');

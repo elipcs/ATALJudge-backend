@@ -93,7 +93,7 @@ export class InviteService {
     }
 
     invite.incrementUses();
-    await this.inviteRepository.update(invite.id, invite);
+    await this.inviteRepository.save(invite);
   }
 
   async deleteInvite(inviteId: string): Promise<void> {
@@ -113,10 +113,9 @@ export class InviteService {
 
     invite.isUsed = true;
     invite.usedAt = new Date();
-
     invite.currentUses = invite.maxUses;
     
-    await this.inviteRepository.update(inviteId, invite);
+    await this.inviteRepository.save(invite);
   }
 
   async cleanupExpiredInvites(): Promise<number> {

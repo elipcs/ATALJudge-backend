@@ -4,6 +4,7 @@ export { InviteService } from './InviteService';
 export { QuestionService } from './QuestionService';
 export { ClassService } from './ClassService';
 export { SubmissionService } from './SubmissionService';
+export { SubmissionQueueService } from './SubmissionQueueService';
 export { TestCaseService } from './TestCaseService';
 export { QuestionListService } from './QuestionListService';
 export { RefreshTokenService } from './RefreshTokenService';

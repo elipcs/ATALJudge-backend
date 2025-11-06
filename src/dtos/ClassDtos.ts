@@ -13,12 +13,21 @@ export interface ProfessorInfo {
   role: string;
 }
 
+export interface StudentGrade {
+  id: string;
+  listId: string;
+  score: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface StudentInfo {
   id: string;
   name: string;
   email: string;
   role: string;
   studentRegistration?: string;
+  grades?: StudentGrade[];
   createdAt: string;
 }
 
@@ -27,6 +36,7 @@ export class ClassResponseDTO {
   name!: string;
 
   professorId!: string;
+  professorName?: string;
   studentIds?: string[];
 
   professor?: ProfessorInfo;

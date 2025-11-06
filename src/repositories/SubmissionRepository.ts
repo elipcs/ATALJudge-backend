@@ -57,9 +57,17 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     questionId?: string;
     userId?: string;
     status?: SubmissionStatus;
+    verdict?: string;
+    page?: number;
     limit?: number;
-  }): Promise<Submission[]> {
-    const queryBuilder = this.repository.createQueryBuilder('submission');
+  }): Promise<{ submissions: any[]; total: number }> {
+    const queryBuilder = this.repository.createQueryBuilder('submission')
+      .leftJoinAndSelect('submission.user', 'user')
+      .leftJoinAndSelect('submission.question', 'question')
+      .leftJoin('question_list_questions', 'qlq', 'qlq.question_id = question.id')
+      .leftJoin('question_lists', 'list', 'list.id = qlq.list_id')
+      .addSelect('list.id', 'list_id')
+      .addSelect('list.title', 'list_title');
 
     if (filters.questionId) {
       queryBuilder.andWhere('submission.questionId = :questionId', { questionId: filters.questionId });
@@ -73,13 +81,43 @@ export class SubmissionRepository extends BaseRepository<Submission> {
       queryBuilder.andWhere('submission.status = :status', { status: filters.status });
     }
 
-    queryBuilder.orderBy('submission.createdAt', 'DESC');
-
-    if (filters.limit) {
-      queryBuilder.take(filters.limit);
+    // Quando verdict for "failed", buscar todas as submissões que não são "Accepted"
+    if (filters.verdict) {
+      if (filters.verdict.toLowerCase() === 'failed') {
+        queryBuilder.andWhere('(submission.verdict IS NULL OR submission.verdict != :accepted)', { accepted: 'Accepted' });
+      } else if (filters.verdict.toLowerCase() === 'accepted') {
+        queryBuilder.andWhere('submission.verdict = :verdict', { verdict: 'Accepted' });
+      } else {
+        // Para outros valores de verdict, buscar exatamente
+        queryBuilder.andWhere('submission.verdict = :verdict', { verdict: filters.verdict });
+      }
     }
 
-    return queryBuilder.getMany();
+    queryBuilder.orderBy('submission.createdAt', 'DESC');
+
+    // Contar total de registros
+    const total = await queryBuilder.getCount();
+
+    // Aplicar paginação
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    const skip = (page - 1) * limit;
+
+    queryBuilder.skip(skip).take(limit);
+
+    const result = await queryBuilder.getRawAndEntities();
+    
+    // Combinar dados raw com entities
+    const submissions = result.entities.map((entity, index) => {
+      const raw = result.raw[index];
+      return {
+        ...entity,
+        listId: raw.list_id,
+        listTitle: raw.list_title
+      };
+    });
+
+    return { submissions, total };
   }
 }
 

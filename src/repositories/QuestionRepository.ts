@@ -12,7 +12,10 @@ export class QuestionRepository extends BaseRepository<Question> {
 
   async findAll(): Promise<Question[]> {
     return this.repository.find({
-      relations: ['author']
+      relations: ['author'],
+      order: {
+        createdAt: 'DESC'
+      }
     });
   }
 

@@ -15,7 +15,21 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   async findByRole(role: string): Promise<User[]> {
-    return this.repository.find({ where: { role } as any });
+    return this.repository.find({ 
+      where: { role } as any,
+      relations: ['class']
+    });
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.repository.find({ relations: ['class'] });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return this.repository.findOne({ 
+      where: { id } as any,
+      relations: ['class']
+    });
   }
 
   async updateLastLogin(userId: string): Promise<void> {

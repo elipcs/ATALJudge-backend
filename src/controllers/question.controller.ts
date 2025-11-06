@@ -16,7 +16,7 @@ router.post(
     try {
       const question = await questionService.createQuestion(
         req.body,
-        req.user?.userId
+        req.user?.sub
       );
       
       successResponse(res, question, 'Questão criada com sucesso', 201);
