@@ -1,7 +1,9 @@
+import { injectable } from 'tsyringe';
 import { BaseRepository } from './BaseRepository';
 import { Submission } from '../models/Submission';
 import { SubmissionStatus } from '../enums';
 
+@injectable()
 export class SubmissionRepository extends BaseRepository<Submission> {
   constructor() {
     super(Submission);

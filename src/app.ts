@@ -2,10 +2,33 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { config } from './config';
+import { config, container } from './config';
 import { logger } from './utils';
 import { errorHandler, notFoundHandler } from './middlewares';
-import { container } from './config/di';
+
+// Import controller factories
+import createAuthController from './controllers/auth.controller';
+import createUserController from './controllers/user.controller';
+import createInviteController from './controllers/invite.controller';
+import createQuestionController from './controllers/question.controller';
+import createClassController from './controllers/class.controller';
+import createSubmissionController from './controllers/submission.controller';
+import createTestCaseController from './controllers/testcase.controller';
+import createQuestionListController from './controllers/questionlist.controller';
+import createGradeController from './controllers/grade.controller';
+import createConfigController from './controllers/config.controller';
+
+// Import services
+import { AuthService } from './services/AuthService';
+import { UserService } from './services/UserService';
+import { InviteService } from './services/InviteService';
+import { QuestionService } from './services/QuestionService';
+import { ClassService } from './services/ClassService';
+import { SubmissionService } from './services/SubmissionService';
+import { TestCaseService } from './services/TestCaseService';
+import { QuestionListService } from './services/QuestionListService';
+import { AllowedIPService } from './services/AllowedIPService';
+import { SystemResetService } from './services/SystemResetService';
 
 export function createApp(): Application {
   const app = express();
@@ -98,16 +121,29 @@ export function createApp(): Application {
     });
   });
 
-  app.use('/api/auth', container.authController);
-  app.use('/api/users', container.userController);
-  app.use('/api/invites', container.inviteController);
-  app.use('/api/questions', container.questionController);
-  app.use('/api/classes', container.classController);
-  app.use('/api/submissions', container.submissionController);
-  app.use('/api/lists', container.questionListController);
-  app.use('/api/grades', container.gradeController);
-  app.use('/api/config', container.configController);
-  app.use('/api', container.testCaseController); 
+  // Resolver services do container e criar controllers
+  const authService = container.resolve(AuthService);
+  const userService = container.resolve(UserService);
+  const inviteService = container.resolve(InviteService);
+  const questionService = container.resolve(QuestionService);
+  const classService = container.resolve(ClassService);
+  const submissionService = container.resolve(SubmissionService);
+  const testCaseService = container.resolve(TestCaseService);
+  const questionListService = container.resolve(QuestionListService);
+  const allowedIPService = container.resolve(AllowedIPService);
+  const systemResetService = container.resolve(SystemResetService);
+
+  // Criar routers com factory functions
+  app.use('/api/auth', createAuthController(authService));
+  app.use('/api/users', createUserController(userService));
+  app.use('/api/invites', createInviteController(inviteService));
+  app.use('/api/questions', createQuestionController(questionService));
+  app.use('/api/classes', createClassController(classService));
+  app.use('/api/submissions', createSubmissionController(submissionService));
+  app.use('/api/lists', createQuestionListController(questionListService));
+  app.use('/api/grades', createGradeController());
+  app.use('/api/config', createConfigController(allowedIPService, systemResetService));
+  app.use('/api', createTestCaseController(testCaseService));
 
   app.use(notFoundHandler);
 

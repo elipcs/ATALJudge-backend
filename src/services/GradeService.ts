@@ -1,24 +1,16 @@
+import { injectable, inject } from 'tsyringe';
 import { GradeRepository, UserRepository, QuestionListRepository, SubmissionRepository } from '../repositories';
 import { CreateGradeDTO, UpdateGradeDTO, GradeResponseDTO } from '../dtos';
 import { NotFoundError, InternalServerError, logger } from '../utils';
 
+@injectable()
 export class GradeService {
-  private gradeRepository: GradeRepository;
-  private userRepository: UserRepository;
-  private listRepository: QuestionListRepository;
-  private submissionRepository: SubmissionRepository;
-
   constructor(
-    gradeRepository: GradeRepository,
-    userRepository: UserRepository,
-    listRepository: QuestionListRepository,
-    submissionRepository: SubmissionRepository
-  ) {
-    this.gradeRepository = gradeRepository;
-    this.userRepository = userRepository;
-    this.listRepository = listRepository;
-    this.submissionRepository = submissionRepository;
-  }
+    @inject(GradeRepository) private gradeRepository: GradeRepository,
+    @inject(UserRepository) private userRepository: UserRepository,
+    @inject(QuestionListRepository) private listRepository: QuestionListRepository,
+    @inject(SubmissionRepository) private submissionRepository: SubmissionRepository
+  ) {}
 
   async getGradeById(id: string): Promise<GradeResponseDTO> {
     const grade = await this.gradeRepository.findById(id);

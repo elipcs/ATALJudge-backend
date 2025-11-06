@@ -1,3 +1,4 @@
+import { injectable, inject } from 'tsyringe';
 import { UserRepository, TokenBlacklistRepository, ClassRepository } from '../repositories';
 import { TokenManager, JwtPayload } from '../utils/TokenManager';
 import { UserRegisterDTO, UserLoginDTO, UserResponseDTO, RequestPasswordResetDTO, ResetPasswordDTO, InviteResponseDTO } from '../dtos';
@@ -12,32 +13,17 @@ import { User } from '../models/User';
 import { Student } from '../models/Student';
 import { Professor } from '../models/Professor';
 
+@injectable()
 export class AuthService {
-  private userRepository: UserRepository;
-  private refreshTokenService: RefreshTokenService;
-  private passwordResetService: PasswordResetService;
-  private emailService: EmailService;
-  private tokenBlacklistRepository: TokenBlacklistRepository;
-  private inviteService: InviteService;
-  private classRepository: ClassRepository;
-
   constructor(
-    userRepository: UserRepository,
-    refreshTokenService: RefreshTokenService,
-    passwordResetService: PasswordResetService,
-    emailService: EmailService,
-    tokenBlacklistRepository: TokenBlacklistRepository,
-    inviteService: InviteService,
-    classRepository: ClassRepository
-  ) {
-    this.userRepository = userRepository;
-    this.refreshTokenService = refreshTokenService;
-    this.passwordResetService = passwordResetService;
-    this.emailService = emailService;
-    this.tokenBlacklistRepository = tokenBlacklistRepository;
-    this.inviteService = inviteService;
-    this.classRepository = classRepository;
-  }
+    @inject(UserRepository) private userRepository: UserRepository,
+    @inject(RefreshTokenService) private refreshTokenService: RefreshTokenService,
+    @inject(PasswordResetService) private passwordResetService: PasswordResetService,
+    @inject(EmailService) private emailService: EmailService,
+    @inject(TokenBlacklistRepository) private tokenBlacklistRepository: TokenBlacklistRepository,
+    @inject(InviteService) private inviteService: InviteService,
+    @inject(ClassRepository) private classRepository: ClassRepository
+  ) {}
 
   async registerWithInvite(dto: UserRegisterDTO): Promise<{
     user: UserResponseDTO;

@@ -1,6 +1,8 @@
+import { injectable } from 'tsyringe';
 import { BaseRepository } from './BaseRepository';
 import { Question } from '../models/Question';
 
+@injectable()
 export class QuestionRepository extends BaseRepository<Question> {
   constructor() {
     super(Question);

@@ -1,3 +1,4 @@
+import { injectable, inject } from 'tsyringe';
 import { QuestionRepository } from '../repositories';
 import { CreateQuestionDTO, UpdateQuestionDTO, QuestionResponseDTO } from '../dtos';
 import { Question, SubmissionType } from '../models/Question';
@@ -6,12 +7,11 @@ import { AppDataSource } from '../config/database';
 import { NotFoundError, logger } from '../utils';
 import { JudgeType } from '../enums/JudgeType';
 
+@injectable()
 export class QuestionService {
-  private questionRepository: QuestionRepository;
-
-  constructor(questionRepository: QuestionRepository) {
-    this.questionRepository = questionRepository;
-  }
+  constructor(
+    @inject(QuestionRepository) private questionRepository: QuestionRepository
+  ) {}
 
   async getAllQuestions(): Promise<QuestionResponseDTO[]> {
     const questions = await this.questionRepository.findAll();

@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { Queue, Worker, Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import { logger } from '../utils';
@@ -7,6 +8,7 @@ export interface SubmissionJobData {
   submissionId: string;
 }
 
+@injectable()
 export class SubmissionQueueService {
   private queue: Queue<SubmissionJobData>;
   private worker: Worker<SubmissionJobData> | null = null;

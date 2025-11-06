@@ -1,6 +1,8 @@
+import { injectable } from 'tsyringe';
 import { BaseRepository } from './BaseRepository';
 import { TokenBlacklist } from '../models/TokenBlacklist';
 
+@injectable()
 export class TokenBlacklistRepository extends BaseRepository<TokenBlacklist> {
   constructor() {
     super(TokenBlacklist);

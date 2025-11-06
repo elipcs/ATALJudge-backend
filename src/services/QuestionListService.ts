@@ -1,28 +1,18 @@
+import { injectable, inject } from 'tsyringe';
 import { CreateQuestionListDTO, UpdateQuestionListDTO, QuestionListResponseDTO } from '../dtos/QuestionListDtos';
 import { NotFoundError, logger } from '../utils';
 import { QuestionListRepository, QuestionRepository, ClassRepository, GradeRepository } from '../repositories';
 import { GradeService } from './GradeService';
 
+@injectable()
 export class QuestionListService {
-  private listRepository: QuestionListRepository;
-  private questionRepository: QuestionRepository;
-  private classRepository: ClassRepository;
-  private gradeRepository: GradeRepository;
-  private gradeService: GradeService;
-
   constructor(
-    listRepository: QuestionListRepository,
-    questionRepository: QuestionRepository,
-    classRepository: ClassRepository,
-    gradeRepository: GradeRepository,
-    gradeService: GradeService
-  ) {
-    this.listRepository = listRepository;
-    this.questionRepository = questionRepository;
-    this.classRepository = classRepository;
-    this.gradeRepository = gradeRepository;
-    this.gradeService = gradeService;
-  }
+    @inject(QuestionListRepository) private listRepository: QuestionListRepository,
+    @inject(QuestionRepository) private questionRepository: QuestionRepository,
+    @inject(ClassRepository) private classRepository: ClassRepository,
+    @inject(GradeRepository) private gradeRepository: GradeRepository,
+    @inject(GradeService) private gradeService: GradeService
+  ) {}
 
   async getAllLists(filters?: {
     search?: string;

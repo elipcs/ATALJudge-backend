@@ -1,8 +1,10 @@
+import { injectable } from 'tsyringe';
 import { In } from 'typeorm';
 import { BaseRepository } from './BaseRepository';
 import { Class } from '../models/Class';
 import { User } from '../models/User';
 
+@injectable()
 export class ClassRepository extends BaseRepository<Class> {
   constructor() {
     super(Class);

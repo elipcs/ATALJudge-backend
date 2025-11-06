@@ -1,7 +1,9 @@
+import { injectable } from 'tsyringe';
 import * as nodemailer from 'nodemailer';
 import { config } from '../config';
 import { logger } from '../utils';
 
+@injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter;
 

@@ -1,6 +1,8 @@
+import { injectable } from 'tsyringe';
 import { BaseRepository } from './BaseRepository';
 import { AllowedIP } from '../models/AllowedIP';
 
+@injectable()
 export class AllowedIPRepository extends BaseRepository<AllowedIP> {
   constructor() {
     super(AllowedIP);

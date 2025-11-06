@@ -1,14 +1,14 @@
+import { injectable, inject } from 'tsyringe';
 import { TokenManager } from '../utils/TokenManager';
 import { RefreshTokenRepository } from '../repositories';
 import { RefreshToken } from '../models/RefreshToken';
 import { NotFoundError, UnauthorizedError } from '../utils';
 
+@injectable()
 export class RefreshTokenService {
-  private tokenRepository: RefreshTokenRepository;
-
-  constructor(tokenRepository: RefreshTokenRepository) {
-    this.tokenRepository = tokenRepository;
-  }
+  constructor(
+    @inject(RefreshTokenRepository) private tokenRepository: RefreshTokenRepository
+  ) {}
 
   async saveRefreshToken(
     userId: string,

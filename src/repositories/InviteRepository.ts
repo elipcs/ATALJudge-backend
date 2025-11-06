@@ -1,7 +1,9 @@
+import { injectable } from 'tsyringe';
 import { BaseRepository } from './BaseRepository';
 import { Invite } from '../models/Invite';
 import { LessThan } from 'typeorm';
 
+@injectable()
 export class InviteRepository extends BaseRepository<Invite> {
   constructor() {
     super(Invite);

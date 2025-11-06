@@ -1,9 +1,11 @@
+import { injectable } from 'tsyringe';
 import { SelectQueryBuilder } from 'typeorm';
 import { BaseRepository } from './BaseRepository';
 import { QuestionList } from '../models/QuestionList';
 import { Question } from '../models/Question';
 import { Class } from '../models/Class';
 
+@injectable()
 export class QuestionListRepository extends BaseRepository<QuestionList> {
   constructor() {
     super(QuestionList);

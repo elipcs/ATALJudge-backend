@@ -1,3 +1,4 @@
+import { injectable, inject } from 'tsyringe';
 import {
   SubmissionRepository,
   UserRepository,
@@ -6,13 +7,14 @@ import {
   InviteRepository,
 } from '../repositories';
 
+@injectable()
 export class SystemResetService {
   constructor(
-    private submissionRepository: SubmissionRepository,
-    private userRepository: UserRepository,
-    private classRepository: ClassRepository,
-    private questionListRepository: QuestionListRepository,
-    private inviteRepository: InviteRepository,
+    @inject(SubmissionRepository) private submissionRepository: SubmissionRepository,
+    @inject(UserRepository) private userRepository: UserRepository,
+    @inject(ClassRepository) private classRepository: ClassRepository,
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository,
+    @inject(InviteRepository) private inviteRepository: InviteRepository,
   ) {}
 
   async performSystemReset(

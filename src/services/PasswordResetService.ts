@@ -1,13 +1,13 @@
+import { injectable, inject } from 'tsyringe';
 import { PasswordResetTokenRepository } from '../repositories/PasswordResetTokenRepository';
 import { PasswordResetToken } from '../models/PasswordResetToken';
 import * as crypto from 'crypto';
 
+@injectable()
 export class PasswordResetService {
-  private tokenRepository: PasswordResetTokenRepository;
-
-  constructor(tokenRepository: PasswordResetTokenRepository) {
-    this.tokenRepository = tokenRepository;
-  }
+  constructor(
+    @inject(PasswordResetTokenRepository) private tokenRepository: PasswordResetTokenRepository
+  ) {}
 
   async createResetToken(userId: string, expirationHours: number = 1): Promise<string> {
     

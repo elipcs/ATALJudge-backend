@@ -1,20 +1,16 @@
+import { injectable, inject } from 'tsyringe';
 import { CreateClassDTO, ClassResponseDTO } from '../dtos';
 import { UserRole } from '../enums';
 import { logger, NotFoundError, ForbiddenError, ValidationError } from '../utils';
 import { ClassRepository, UserRepository } from '../repositories';
 import { Class } from '../models/Class';
 
+@injectable()
 export class ClassService {
-  private classRepository: ClassRepository;
-  private userRepository: UserRepository;
-
   constructor(
-    classRepository: ClassRepository,
-    userRepository: UserRepository
-  ) {
-    this.classRepository = classRepository;
-    this.userRepository = userRepository;
-  }
+    @inject(ClassRepository) private classRepository: ClassRepository,
+    @inject(UserRepository) private userRepository: UserRepository
+  ) {}
 
   async getAllClasses(includeRelations: boolean = false): Promise<ClassResponseDTO[]> {
     const queryBuilder = this.classRepository

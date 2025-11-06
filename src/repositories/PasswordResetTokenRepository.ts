@@ -1,6 +1,8 @@
+import { injectable } from 'tsyringe';
 import { BaseRepository } from './BaseRepository';
 import { PasswordResetToken } from '../models/PasswordResetToken';
 
+@injectable()
 export class PasswordResetTokenRepository extends BaseRepository<PasswordResetToken> {
   constructor() {
     super(PasswordResetToken);

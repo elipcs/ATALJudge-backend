@@ -1,15 +1,15 @@
+import { injectable, inject } from 'tsyringe';
 import { InviteRepository } from '../repositories';
 import { Invite } from '../models/Invite';
 import { CreateInviteDTO, InviteResponseDTO } from '../dtos';
 import * as crypto from 'crypto';
 import { NotFoundError, ValidationError } from '../utils';
 
+@injectable()
 export class InviteService {
-  private inviteRepository: InviteRepository;
-
-  constructor(inviteRepository: InviteRepository) {
-    this.inviteRepository = inviteRepository;
-  }
+  constructor(
+    @inject(InviteRepository) private inviteRepository: InviteRepository
+  ) {}
 
   async createInvite(dto: CreateInviteDTO): Promise<InviteResponseDTO> {
     

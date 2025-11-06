@@ -1,7 +1,9 @@
+import { injectable } from 'tsyringe';
 import { LessThan } from 'typeorm';
 import { BaseRepository } from './BaseRepository';
 import { RefreshToken } from '../models/RefreshToken';
 
+@injectable()
 export class RefreshTokenRepository extends BaseRepository<RefreshToken> {
   constructor() {
     super(RefreshToken);

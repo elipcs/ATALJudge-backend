@@ -1,3 +1,4 @@
+import { injectable, inject } from 'tsyringe';
 import { SubmissionRepository, SubmissionResultRepository, QuestionRepository, TestCaseRepository, QuestionListRepository } from '../repositories';
 import { CreateSubmissionDTO, SubmissionResponseDTO, SubmissionDetailDTO, TestCaseResultDTO } from '../dtos';
 import { SubmissionStatus, JudgeVerdict, ProgrammingLanguage } from '../enums';
@@ -6,35 +7,18 @@ import { SubmissionQueueService } from './SubmissionQueueService';
 import { GradeService } from './GradeService';
 import { logger, NotFoundError, ValidationError } from '../utils';
 
+@injectable()
 export class SubmissionService {
-  private submissionRepository: SubmissionRepository;
-  private submissionResultRepository: SubmissionResultRepository;
-  private questionRepository: QuestionRepository;
-  private testCaseRepository: TestCaseRepository;
-  private questionListRepository: QuestionListRepository;
-  private judge0Service: Judge0Service;
-  private gradeService: GradeService;
-  private queueService?: SubmissionQueueService;
-
   constructor(
-    submissionRepository: SubmissionRepository,
-    submissionResultRepository: SubmissionResultRepository,
-    questionRepository: QuestionRepository,
-    testCaseRepository: TestCaseRepository,
-    judge0Service: Judge0Service,
-    gradeService: GradeService,
-    questionListRepository: QuestionListRepository,
-    queueService?: SubmissionQueueService
-  ) {
-    this.submissionRepository = submissionRepository;
-    this.submissionResultRepository = submissionResultRepository;
-    this.questionRepository = questionRepository;
-    this.testCaseRepository = testCaseRepository;
-    this.judge0Service = judge0Service;
-    this.gradeService = gradeService;
-    this.questionListRepository = questionListRepository;
-    this.queueService = queueService;
-  }
+    @inject(SubmissionRepository) private submissionRepository: SubmissionRepository,
+    @inject(SubmissionResultRepository) private submissionResultRepository: SubmissionResultRepository,
+    @inject(QuestionRepository) private questionRepository: QuestionRepository,
+    @inject(TestCaseRepository) private testCaseRepository: TestCaseRepository,
+    @inject(Judge0Service) private judge0Service: Judge0Service,
+    @inject(GradeService) private gradeService: GradeService,
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository,
+    @inject('SubmissionQueueService') private queueService?: SubmissionQueueService
+  ) {}
 
   /**
    * Método privado para enfileirar ou processar submissão de forma consistente

@@ -1,13 +1,13 @@
+import { injectable, inject } from 'tsyringe';
 import { AllowedIPRepository } from '../repositories/AllowedIPRepository';
 import { AllowedIPDTO, CreateAllowedIPDTO, UpdateAllowedIPDTO } from '../dtos';
 import { NotFoundError, ConflictError, InternalServerError } from '../utils';
 
+@injectable()
 export class AllowedIPService {
-  private allowedIPRepository: AllowedIPRepository;
-
-  constructor(allowedIPRepository: AllowedIPRepository) {
-    this.allowedIPRepository = allowedIPRepository;
-  }
+  constructor(
+    @inject(AllowedIPRepository) private allowedIPRepository: AllowedIPRepository
+  ) {}
 
   async getAllowedIPs(): Promise<AllowedIPDTO[]> {
     const ips = await this.allowedIPRepository.findAll();

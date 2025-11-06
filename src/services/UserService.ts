@@ -1,16 +1,15 @@
+import { injectable, inject } from 'tsyringe';
 import { UserRepository, GradeRepository } from '../repositories';
 import { UserResponseDTO, UpdateProfileDTO, ChangePasswordDTO } from '../dtos';
 import { NotFoundError, ConflictError, UnauthorizedError, InternalServerError } from '../utils';
 import { UserRole } from '../enums';
 
+@injectable()
 export class UserService {
-  private userRepository: UserRepository;
-  private gradeRepository: GradeRepository;
-
-  constructor(userRepository: UserRepository, gradeRepository: GradeRepository) {
-    this.userRepository = userRepository;
-    this.gradeRepository = gradeRepository;
-  }
+  constructor(
+    @inject(UserRepository) private userRepository: UserRepository,
+    @inject(GradeRepository) private gradeRepository: GradeRepository
+  ) {}
 
   async getUserById(id: string): Promise<UserResponseDTO> {
     const user = await this.userRepository.findById(id);

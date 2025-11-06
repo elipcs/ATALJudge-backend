@@ -1,4 +1,4 @@
 export { config, validateConfig, isDevelopment, isProduction, isTest } from './environment';
 export { AppDataSource, initializeDatabase, closeDatabase, isDatabaseConnected } from './database';
-export { DIContainer } from './di';
+export { container, setupContainer } from './container';
 

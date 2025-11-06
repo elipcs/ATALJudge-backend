@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';
 import { JUDGE0_LANGUAGE_IDS, ProgrammingLanguage } from '../enums/ProgrammingLanguage';
@@ -49,6 +50,7 @@ export interface ProcessedSubmissionResult {
   errorMessage?: string;
 }
 
+@injectable()
 export class Judge0Service {
   private client: AxiosInstance;
   private useBase64: boolean;

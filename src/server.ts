@@ -1,7 +1,9 @@
 import 'reflect-metadata';
 import { createApp } from './app';
-import { config, validateConfig, initializeDatabase, closeDatabase, DIContainer } from './config';
+import { config, validateConfig, initializeDatabase, closeDatabase, setupContainer, container } from './config';
 import { logger } from './utils';
+import { SubmissionQueueService } from './services/SubmissionQueueService';
+import { SubmissionService } from './services/SubmissionService';
 
 async function startServer() {
   try {
@@ -16,16 +18,21 @@ async function startServer() {
     await initializeDatabase();
     logger.info('');
 
+    logger.info('Configurando container de injeção de dependências...');
+    setupContainer();
+    logger.info('Container configurado\n');
+
     logger.info('Criando aplicação Express...');
     const app = createApp();
     logger.info('Aplicação criada\n');
 
-    const container = DIContainer.getInstance();
-    const queueService = container.submissionQueueService;
+    const queueService = container.isRegistered('SubmissionQueueService') 
+      ? container.resolve<SubmissionQueueService | undefined>('SubmissionQueueService')
+      : undefined;
     
     if (queueService) {
       logger.info('Inicializando sistema de fila de submissões...');
-      const submissionService = container.submissionService;
+      const submissionService = container.resolve(SubmissionService);
       queueService.initializeWorker(submissionService);
       logger.info('Sistema de fila inicializado\n');
     } else {
@@ -48,8 +55,9 @@ async function startServer() {
       server.close(async () => {
         logger.info('Servidor HTTP encerrado');
         
-        const container = DIContainer.getInstance();
-        const queueService = container.submissionQueueService;
+        const queueService = container.isRegistered('SubmissionQueueService') 
+          ? container.resolve<SubmissionQueueService | undefined>('SubmissionQueueService')
+          : undefined;
         if (queueService) {
           logger.info('Fechando sistema de fila...');
           await queueService.close();
