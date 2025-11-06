@@ -1,12 +1,21 @@
 import { Router, Response } from 'express';
-import { AuthService } from '../services';
+import { AuthenticationService } from '../services/AuthenticationService';
+import { UserRegistrationService } from '../services/UserRegistrationService';
+import { PasswordManagementService } from '../services/PasswordManagementService';
+import { TokenManagementService } from '../services/TokenManagementService';
 import { UserRegisterDTO, UserLoginDTO, RequestPasswordResetDTO, ResetPasswordDTO, RefreshTokenDTO } from '../dtos';
 import { validateBody, authenticate, AuthRequest, convertUserRegisterPayload, authRateLimiter, registerRateLimiter } from '../middlewares';
 import { successResponse, errorResponse } from '../utils/responses';
 import { logger, sanitizeForLog } from '../utils';
 import { asyncHandler } from '../utils/asyncHandler';
 
-function createAuthController(authService: AuthService): Router {
+
+function createAuthController(
+  authenticationService: AuthenticationService,
+  userRegistrationService: UserRegistrationService,
+  passwordManagementService: PasswordManagementService,
+  tokenManagementService: TokenManagementService
+): Router {
   const router = Router();
 
 router.post(
@@ -21,53 +30,43 @@ router.post(
   },
   convertUserRegisterPayload,
   validateBody(UserRegisterDTO),
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      logger.info('[REGISTER] Validação passou, registrando usuário...');
-      const result = await authService.registerWithInvite(req.body);
-      
-      successResponse(
-        res,
-        result,
-        'Usuário registrado com sucesso',
-        201
-      );
-    } catch (error) {
-      
-      throw error;
-    }
-  }
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    logger.info('[REGISTER] Validação passou, registrando usuário...');
+    const result = await userRegistrationService.registerWithInvite(req.body);
+    
+    successResponse(
+      res,
+      result,
+      'Usuário registrado com sucesso',
+      201
+    );
+  })
 );
 
 router.post(
   '/login',
   authRateLimiter, 
   validateBody(UserLoginDTO),
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      const ipAddress = req.ip;
-      const userAgent = req.headers['user-agent'];
-      
-      const result = await authService.loginWithEmail(
-        req.body,
-        ipAddress,
-        userAgent
-      );
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    const ipAddress = req.ip;
+    const userAgent = req.headers['user-agent'];
+    
+    const result = await authenticationService.loginWithEmail(
+      req.body,
+      ipAddress,
+      userAgent
+    );
 
-      logger.debug('[LOGIN] Retornando resposta', {
-        hasUser: !!result.user,
-        hasAccessToken: !!result.accessToken,
-        hasRefreshToken: !!result.refreshToken,
-        accessTokenLength: result.accessToken?.length,
-        refreshTokenLength: result.refreshToken?.length
-      });
-      
-      successResponse(res, result, 'Login realizado com sucesso');
-    } catch (error) {
-      
-      throw error;
-    }
-  }
+    logger.debug('[LOGIN] Retornando resposta', {
+      hasUser: !!result.user,
+      hasAccessToken: !!result.accessToken,
+      hasRefreshToken: !!result.refreshToken,
+      accessTokenLength: result.accessToken?.length,
+      refreshTokenLength: result.refreshToken?.length
+    });
+    
+    successResponse(res, result, 'Login realizado com sucesso');
+  })
 );
 
 router.post(
@@ -88,7 +87,6 @@ router.post(
   },
   validateBody(RefreshTokenDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    
     const { refreshToken } = req.body;
     
     logger.debug('[REFRESH] Token validado, iniciando renovação', {
@@ -96,7 +94,7 @@ router.post(
       tokenStart: refreshToken?.substring(0, 20)
     });
     
-    const result = await authService.refreshToken(refreshToken);
+    const result = await tokenManagementService.refreshToken(refreshToken);
     
     logger.info('[REFRESH] Tokens renovados com sucesso');
     successResponse(res, result, 'Tokens renovados com sucesso');
@@ -106,66 +104,47 @@ router.post(
 router.post(
   '/logout',
   authenticate,
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      const accessToken = req.headers.authorization?.split(' ')[1];
-      const { refreshToken } = req.body;
-      
-      if (!accessToken) {
-        errorResponse(res, 'Token não fornecido', 'MISSING_TOKEN', 400);
-        return;
-      }
-      
-      await authService.logout(accessToken, refreshToken);
-      
-      successResponse(res, null, 'Logout realizado com sucesso');
-    } catch (error) {
-      
-      throw error;
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    const accessToken = req.headers.authorization?.split(' ')[1];
+    const { refreshToken } = req.body;
+    
+    if (!accessToken) {
+      errorResponse(res, 'Token não fornecido', 'MISSING_TOKEN', 400);
+      return;
     }
-  }
+    
+    await authenticationService.logout(accessToken, refreshToken);
+    
+    successResponse(res, null, 'Logout realizado com sucesso');
+  })
 );
 
 router.get(
   '/me',
   authenticate,
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      logger.debug('[ME] Buscando dados do usuário autenticado...');
-      logger.debug('[ME] User', { user: req.user ? { userId: req.user.sub, email: req.user.email } : 'não autenticado' });
-      
-      if (!req.user) {
-        logger.warn('[ME] Usuário não autenticado');
-        errorResponse(res, 'Usuário não autenticado', 'UNAUTHORIZED', 401);
-        return;
-      }
-      
-      logger.info('[ME] Dados do usuário encontrados');
-      successResponse(res, req.user, 'Dados do usuário');
-    } catch (error) {
-      logger.error('[ME] Erro ao buscar dados', { error });
-      
-      throw error;
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    logger.debug('[ME] Buscando dados do usuário autenticado...');
+    logger.debug('[ME] User', { user: req.user ? { userId: req.user.sub, email: req.user.email } : 'não autenticado' });
+    
+    if (!req.user) {
+      logger.warn('[ME] Usuário não autenticado');
+      errorResponse(res, 'Usuário não autenticado', 'UNAUTHORIZED', 401);
+      return;
     }
-  }
+    
+    logger.info('[ME] Dados do usuário encontrados');
+    successResponse(res, req.user, 'Dados do usuário');
+  })
 );
 
 router.post(
   '/forgot-password',
   authRateLimiter, 
   validateBody(RequestPasswordResetDTO),
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      const result = await authService.requestPasswordReset(req.body);
-      successResponse(res, result, result.message);
-    } catch (error) {
-      if (error instanceof Error) {
-        logger.error('[FORGOT-PASSWORD] Erro ao solicitar reset', { error: error.message });
-      }
-      
-      throw error;
-    }
-  }
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    const result = await passwordManagementService.requestPasswordReset(req.body);
+    successResponse(res, result, result.message);
+  })
 );
 
 router.post(
@@ -181,18 +160,10 @@ router.post(
     next();
   },
   validateBody(ResetPasswordDTO),
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      const result = await authService.resetPassword(req.body);
-      successResponse(res, result, result.message);
-    } catch (error) {
-      if (error instanceof Error) {
-        logger.error('[RESET-PASSWORD] Erro ao resetar senha', { error: error.message });
-      }
-      
-      throw error;
-    }
-  }
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    const result = await passwordManagementService.resetPassword(req.body);
+    successResponse(res, result, result.message);
+  })
 );
 
   return router;

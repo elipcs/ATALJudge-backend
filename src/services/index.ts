@@ -1,4 +1,3 @@
-export { AuthService } from './AuthService';
 export { UserService } from './UserService';
 export { InviteService } from './InviteService';
 export { QuestionService } from './QuestionService';

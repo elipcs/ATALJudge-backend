@@ -6,7 +6,6 @@ import { config, container } from './config';
 import { logger } from './utils';
 import { errorHandler, notFoundHandler } from './middlewares';
 
-// Import controller factories
 import createAuthController from './controllers/auth.controller';
 import createUserController from './controllers/user.controller';
 import createInviteController from './controllers/invite.controller';
@@ -18,8 +17,6 @@ import createQuestionListController from './controllers/questionlist.controller'
 import createGradeController from './controllers/grade.controller';
 import createConfigController from './controllers/config.controller';
 
-// Import services
-import { AuthService } from './services/AuthService';
 import { UserService } from './services/UserService';
 import { InviteService } from './services/InviteService';
 import { QuestionService } from './services/QuestionService';
@@ -29,6 +26,10 @@ import { TestCaseService } from './services/TestCaseService';
 import { QuestionListService } from './services/QuestionListService';
 import { AllowedIPService } from './services/AllowedIPService';
 import { SystemResetService } from './services/SystemResetService';
+import { AuthenticationService } from './services/AuthenticationService';
+import { UserRegistrationService } from './services/UserRegistrationService';
+import { PasswordManagementService } from './services/PasswordManagementService';
+import { TokenManagementService } from './services/TokenManagementService';
 
 export function createApp(): Application {
   const app = express();
@@ -121,8 +122,10 @@ export function createApp(): Application {
     });
   });
 
-  // Resolver services do container e criar controllers
-  const authService = container.resolve(AuthService);
+  const authenticationService = container.resolve(AuthenticationService);
+  const userRegistrationService = container.resolve(UserRegistrationService);
+  const passwordManagementService = container.resolve(PasswordManagementService);
+  const tokenManagementService = container.resolve(TokenManagementService);
   const userService = container.resolve(UserService);
   const inviteService = container.resolve(InviteService);
   const questionService = container.resolve(QuestionService);
@@ -133,8 +136,12 @@ export function createApp(): Application {
   const allowedIPService = container.resolve(AllowedIPService);
   const systemResetService = container.resolve(SystemResetService);
 
-  // Criar routers com factory functions
-  app.use('/api/auth', createAuthController(authService));
+  app.use('/api/auth', createAuthController(
+    authenticationService,
+    userRegistrationService,
+    passwordManagementService,
+    tokenManagementService
+  ));
   app.use('/api/users', createUserController(userService));
   app.use('/api/invites', createInviteController(inviteService));
   app.use('/api/questions', createQuestionController(questionService));

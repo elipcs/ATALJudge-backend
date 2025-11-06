@@ -96,9 +96,7 @@ export class IsStrongPasswordConstraint implements ValidatorConstraintInterface 
   }
 }
 
-/**
- * Decorator para validação de senha forte
- */
+
 export function IsStrongPassword(validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {
     registerDecorator({

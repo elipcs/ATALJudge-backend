@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 
-// Repositórios
 import { UserRepository } from '../repositories/UserRepository';
 import { QuestionRepository } from '../repositories/QuestionRepository';
 import { SubmissionRepository } from '../repositories/SubmissionRepository';
@@ -16,7 +15,6 @@ import { RefreshTokenRepository } from '../repositories/RefreshTokenRepository';
 import { PasswordResetTokenRepository } from '../repositories/PasswordResetTokenRepository';
 import { AllowedIPRepository } from '../repositories/AllowedIPRepository';
 
-// Services
 import { EmailService } from '../services/EmailService';
 import { Judge0Service } from '../services/Judge0Service';
 import { PasswordResetService } from '../services/PasswordResetService';
@@ -27,21 +25,17 @@ import { TestCaseService } from '../services/TestCaseService';
 import { QuestionService } from '../services/QuestionService';
 import { ClassService } from '../services/ClassService';
 import { GradeService } from '../services/GradeService';
-import { AuthService } from '../services/AuthService';
 import { QuestionListService } from '../services/QuestionListService';
 import { SubmissionService } from '../services/SubmissionService';
 import { AllowedIPService } from '../services/AllowedIPService';
 import { SystemResetService } from '../services/SystemResetService';
 import { SubmissionQueueService } from '../services/SubmissionQueueService';
+import { AuthenticationService } from '../services/AuthenticationService';
+import { UserRegistrationService } from '../services/UserRegistrationService';
+import { PasswordManagementService } from '../services/PasswordManagementService';
+import { TokenManagementService } from '../services/TokenManagementService';
 
-/**
- * Configura o container de injeção de dependências usando tsyringe
- * 
- * IMPORTANTE: A ordem de registro não importa para tsyringe, pois ele resolve
- * dependências automaticamente através dos decorators @injectable e @inject
- */
 export function setupContainer(): void {
-  // Registrar repositórios (singleton)
   container.registerSingleton(UserRepository);
   container.registerSingleton(QuestionRepository);
   container.registerSingleton(SubmissionRepository);
@@ -56,7 +50,6 @@ export function setupContainer(): void {
   container.registerSingleton(PasswordResetTokenRepository);
   container.registerSingleton(AllowedIPRepository);
 
-  // Registrar services básicos (singleton)
   container.registerSingleton(EmailService);
   container.registerSingleton(Judge0Service);
   container.registerSingleton(PasswordResetService);
@@ -67,21 +60,16 @@ export function setupContainer(): void {
   container.registerSingleton(QuestionService);
   container.registerSingleton(ClassService);
   container.registerSingleton(GradeService);
-  container.registerSingleton(AuthService);
   container.registerSingleton(QuestionListService);
   container.registerSingleton(AllowedIPService);
   container.registerSingleton(SystemResetService);
-
-  // Registrar SubmissionQueueService
-  // O serviço usa process.env diretamente para configuração do Redis
+  container.registerSingleton(AuthenticationService);
+  container.registerSingleton(UserRegistrationService);
+  container.registerSingleton(PasswordManagementService);
+  container.registerSingleton(TokenManagementService);
   container.registerSingleton(SubmissionQueueService);
   container.register('SubmissionQueueService', { useToken: SubmissionQueueService });
-
-  // Registrar SubmissionService (precisa do QueueService opcional)
   container.registerSingleton(SubmissionService);
 }
 
-/**
- * Obtém uma instância do container
- */
 export { container };

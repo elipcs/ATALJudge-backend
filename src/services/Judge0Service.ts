@@ -496,9 +496,7 @@ export class Judge0Service {
     throw new Error(`Timeout aguardando conclusão de ${tokens.length} submissões`);
   }
 
-  /**
-   * Aguarda conclusão de submissões em batch com callbacks de progresso
-   */
+
   async waitForBatchSubmissionsWithCallback(
     tokens: string[],
     onProgress: (progress: {

@@ -1,14 +1,14 @@
+import { injectable, inject } from 'tsyringe';
 import { TestCaseRepository } from '../repositories';
 import { CreateTestCaseDTO, UpdateTestCaseDTO, TestCaseResponseDTO } from '../dtos';
 import { NotFoundError, InternalServerError } from '../utils';
 import { DeepPartial } from 'typeorm';
 
+@injectable()
 export class TestCaseService {
-  private testCaseRepository: TestCaseRepository;
-
-  constructor(testCaseRepository: TestCaseRepository) {
-    this.testCaseRepository = testCaseRepository;
-  }
+  constructor(
+    @inject(TestCaseRepository) private testCaseRepository: TestCaseRepository
+  ) {}
 
   async getTestCasesByQuestion(questionId: string): Promise<TestCaseResponseDTO[]> {
     const testCases = await this.testCaseRepository.findByQuestion(questionId);

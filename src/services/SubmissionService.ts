@@ -20,9 +20,7 @@ export class SubmissionService {
     @inject('SubmissionQueueService') private queueService?: SubmissionQueueService
   ) {}
 
-  /**
-   * Método privado para enfileirar ou processar submissão de forma consistente
-   */
+
   private async enqueueOrProcessSubmission(submissionId: string): Promise<SubmissionStatus> {
     if (this.queueService) {
       logger.info('Adicionando submissão à fila', { submissionId });

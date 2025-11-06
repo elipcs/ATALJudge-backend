@@ -78,11 +78,7 @@ export class GradeService {
     }));
   }
 
-  /**
-   * Calcula a nota do aluno em uma lista de questões baseado no modo de pontuação
-   * - Simple: pega as N maiores submissões (onde N = minQuestionsForMaxScore)
-   * - Groups: pega a maior submissão de cada grupo
-   */
+
   async calculateGradeForList(studentId: string, listId: string): Promise<number> {
     logger.info('Calculando nota do aluno', { studentId, listId });
 
@@ -252,10 +248,7 @@ export class GradeService {
     });
   }
 
-  /**
-   * Recalcula e atualiza a nota do aluno baseado em todas as submissões da lista
-   * Usa o modo de pontuação configurado na lista (simple ou groups)
-   */
+
   async recalculateAndUpsertGrade(studentId: string, listId: string): Promise<GradeResponseDTO> {
     logger.info('Recalculando nota do aluno', { studentId, listId });
 

@@ -43,9 +43,7 @@ export class SubmissionQueueService {
     logger.info('SubmissionQueueService inicializado');
   }
 
-  /**
-   * Adiciona uma submissão à fila para processamento
-   */
+
   async addSubmissionToQueue(submissionId: string): Promise<Job<SubmissionJobData>> {
     logger.info('Adicionando submissão à fila', { submissionId });
 
@@ -65,9 +63,7 @@ export class SubmissionQueueService {
     return job;
   }
 
-  /**
-   * Inicializa o worker para processar a fila
-   */
+
   initializeWorker(submissionService: SubmissionService): void {
     if (this.worker) {
       logger.warn('Worker já inicializado, ignorando');
@@ -145,9 +141,7 @@ export class SubmissionQueueService {
     });
   }
 
-  /**
-   * Obtém estatísticas da fila
-   */
+
   async getQueueStats() {
     const [waiting, active, completed, failed, delayed] = await Promise.all([
       this.queue.getWaitingCount(),
@@ -167,9 +161,7 @@ export class SubmissionQueueService {
     };
   }
 
-  /**
-   * Obtém o status de um job específico
-   */
+
   async getJobStatus(submissionId: string) {
     const job = await this.queue.getJob(submissionId);
 
@@ -188,9 +180,7 @@ export class SubmissionQueueService {
     };
   }
 
-  /**
-   * Limpa jobs antigos
-   */
+
   async cleanOldJobs(gracePeriodMs: number = 86400000): Promise<void> {
     logger.info('Limpando jobs antigos', { gracePeriodMs });
 
@@ -200,9 +190,7 @@ export class SubmissionQueueService {
     logger.info('Jobs antigos limpos');
   }
 
-  /**
-   * Fecha a conexão com a fila e o worker
-   */
+
   async close(): Promise<void> {
     logger.info('Fechando SubmissionQueueService');
 

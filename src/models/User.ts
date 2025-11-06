@@ -63,9 +63,6 @@ export class User {
     this.passwordHash = await bcrypt.hash(password, 12);
   }
 
-  /**
-   * Verifica se a senha está correta
-   */
   async checkPassword(password: string): Promise<boolean> {
     if (!this.passwordHash) {
       return false;
@@ -73,30 +70,19 @@ export class User {
     return bcrypt.compare(password, this.passwordHash);
   }
 
-  /**
-   * Verifica se o usuário é estudante
-   */
   isStudent(): boolean {
     return this.role === UserRole.STUDENT;
   }
 
-  /**
-   * Verifica se o usuário é professor
-   */
   isProfessor(): boolean {
     return this.role === UserRole.PROFESSOR;
   }
 
-  /**
-   * Verifica se o usuário é assistente
-   */
   isAssistant(): boolean {
     return this.role === UserRole.ASSISTANT;
   }
 
-  /**
-   * Validações antes de inserir
-   */
+
   @BeforeInsert()
   @BeforeUpdate()
   validate(): void {
