@@ -1,4 +1,5 @@
-import { IsUUID, IsNumber, Min, Max, IsOptional } from 'class-validator';
+import { IsUUID, IsOptional } from 'class-validator';
+import { IsValidScore } from '../utils/validators';
 
 export class CreateGradeDTO {
   @IsUUID()
@@ -7,17 +8,13 @@ export class CreateGradeDTO {
   @IsUUID()
   listId!: string;
 
-  @IsNumber()
-  @Min(0)
-  @Max(999.99)
+  @IsValidScore()
   score!: number;
 }
 
 export class UpdateGradeDTO {
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(999.99)
+  @IsValidScore()
   score?: number;
 }
 

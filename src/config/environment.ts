@@ -75,45 +75,45 @@ export function validateConfig(): void {
   const errors: string[] = [];
 
   if (!config.database.url && !config.database.database) {
-    errors.push('DATABASE_URL ou DB_DATABASE deve estar configurado');
+    errors.push('DATABASE_URL or DB_DATABASE must be configured');
   }
 
   if (config.nodeEnv === 'production') {
     if (!process.env.SECRET_KEY) {
-      errors.push('CRÍTICO: SECRET_KEY não definido em produção!');
+      errors.push('CRITICAL: SECRET_KEY not defined in production!');
     }
     if (!process.env.JWT_SECRET) {
-      errors.push('CRÍTICO: JWT_SECRET não definido em produção!');
+      errors.push('CRITICAL: JWT_SECRET not defined in production!');
     }
     if (config.secretKey.includes('dev-') || config.secretKey.includes('default')) {
-      errors.push('CRÍTICO: SECRET_KEY contém valor de desenvolvimento!');
+      errors.push('CRITICAL: SECRET_KEY contains development value!');
     }
     if (config.jwt.secret.includes('dev-') || config.jwt.secret.includes('default')) {
-      errors.push('CRÍTICO: JWT_SECRET contém valor de desenvolvimento!');
+      errors.push('CRITICAL: JWT_SECRET contains development value!');
     }
     
     if (config.secretKey.length < 32) {
-      errors.push('CRÍTICO: SECRET_KEY deve ter pelo menos 32 caracteres!');
+      errors.push('CRITICAL: SECRET_KEY must be at least 32 characters!');
     }
     if (config.jwt.secret.length < 32) {
-      errors.push('CRÍTICO: JWT_SECRET deve ter pelo menos 32 caracteres!');
+      errors.push('CRITICAL: JWT_SECRET must be at least 32 characters!');
     }
   } else {
     
     if (!process.env.SECRET_KEY) {
-      console.warn('AVISO: SECRET_KEY não definido, usando valor de desenvolvimento');
+      console.warn('WARNING: SECRET_KEY not defined, using development value');
     }
     if (!process.env.JWT_SECRET) {
-      console.warn('AVISO: JWT_SECRET não definido, usando valor de desenvolvimento');
+      console.warn('WARNING: JWT_SECRET not defined, using development value');
     }
   }
 
   if (!config.judge0.url) {
-    errors.push('JUDGE0_URL não configurado');
+    errors.push('JUDGE0_URL not configured');
   }
   
   if (errors.length > 0) {
-    throw new Error(`Erros de configuração:\n${errors.map(e => `  - ${e}`).join('\n')}`);
+    throw new Error(`Configuration errors:\n${errors.map(e => `  - ${e}`).join('\n')}`);
   }
 }
 

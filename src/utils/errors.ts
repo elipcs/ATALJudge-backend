@@ -18,7 +18,7 @@ export class AppError extends Error {
 }
 
 export class NotFoundError extends AppError {
-  constructor(message: string = 'Recurso não encontrado', errorCode: string = 'NOT_FOUND') {
+  constructor(message: string = 'Resource not found', errorCode: string = 'NOT_FOUND') {
     super(message, 404, errorCode);
   }
 }
@@ -27,7 +27,7 @@ export class ValidationError extends AppError {
   public readonly errors?: Record<string, string[]>;
 
   constructor(
-    message: string = 'Dados inválidos',
+    message: string = 'Invalid data',
     errorCode: string = 'VALIDATION_ERROR',
     errors?: Record<string, string[]>
   ) {
@@ -37,19 +37,19 @@ export class ValidationError extends AppError {
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message: string = 'Não autenticado', errorCode: string = 'UNAUTHORIZED') {
+  constructor(message: string = 'Not authenticated', errorCode: string = 'UNAUTHORIZED') {
     super(message, 401, errorCode);
   }
 }
 
 export class ForbiddenError extends AppError {
-  constructor(message: string = 'Sem permissão para acessar este recurso', errorCode: string = 'FORBIDDEN') {
+  constructor(message: string = 'Permission denied to access this resource', errorCode: string = 'FORBIDDEN') {
     super(message, 403, errorCode);
   }
 }
 
 export class ConflictError extends AppError {
-  constructor(message: string = 'Conflito de dados', errorCode: string = 'CONFLICT') {
+  constructor(message: string = 'Data conflict', errorCode: string = 'CONFLICT') {
     super(message, 409, errorCode);
   }
 }
@@ -61,13 +61,13 @@ export class BusinessRuleError extends AppError {
 }
 
 export class RateLimitError extends AppError {
-  constructor(message: string = 'Muitas requisições, tente novamente mais tarde', errorCode: string = 'RATE_LIMIT') {
+  constructor(message: string = 'Too many requests, try again later', errorCode: string = 'RATE_LIMIT') {
     super(message, 429, errorCode);
   }
 }
 
 export class InternalServerError extends AppError {
-  constructor(message: string = 'Erro interno do servidor', errorCode: string = 'INTERNAL_ERROR') {
+  constructor(message: string = 'Internal server error', errorCode: string = 'INTERNAL_ERROR') {
     super(message, 500, errorCode);
   }
 }

@@ -40,7 +40,7 @@ export function errorHandler(
         method: req.method 
       });
     } else {
-      logger.warn('[ERROR] Erro operacional', { 
+      logger.warn('[ERROR] Operational error', { 
         ...errorInfo,
         statusCode: error.statusCode,
         errorCode: error.errorCode,
@@ -49,7 +49,7 @@ export function errorHandler(
       });
     }
   } else {
-    logger.error('[ERROR] Erro inesperado', { 
+    logger.error('[ERROR] Unexpected error', { 
       ...errorInfo,
       path: req.path, 
       method: req.method 
@@ -67,13 +67,13 @@ export function errorHandler(
   }
 
   if (error.name === 'QueryFailedError') {
-    errorResponse(res, 'Erro ao processar dados', 'DATABASE_ERROR', 400);
+    errorResponse(res, 'Error processing data', 'DATABASE_ERROR', 400);
     return;
   }
 
   errorResponse(
     res,
-    'Erro interno do servidor',
+    'Internal server error',
     'INTERNAL_ERROR',
     500
   );

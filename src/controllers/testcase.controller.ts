@@ -1,18 +1,30 @@
 import { Router, Response } from 'express';
-import { TestCaseService } from '../services/TestCaseService';
 import { CreateTestCaseDTO, UpdateTestCaseDTO } from '../dtos';
 import { validateBody, authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { asyncHandler } from '../utils/asyncHandler';
+import {
+  CreateTestCaseUseCase,
+  GetTestCasesByQuestionUseCase,
+  GetTestCaseByIdUseCase,
+  UpdateTestCaseUseCase,
+  DeleteTestCaseUseCase
+} from '../use-cases/testcase';
 
-function createTestCaseController(testCaseService: TestCaseService): Router {
+function createTestCaseController(
+  createTestCaseUseCase: CreateTestCaseUseCase,
+  getTestCasesByQuestionUseCase: GetTestCasesByQuestionUseCase,
+  getTestCaseByIdUseCase: GetTestCaseByIdUseCase,
+  updateTestCaseUseCase: UpdateTestCaseUseCase,
+  deleteTestCaseUseCase: DeleteTestCaseUseCase
+): Router {
   const router = Router();
 
 router.get(
   '/questions/:questionId/testcases',
   authenticate,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const testCases = await testCaseService.getTestCasesByQuestion(req.params.questionId);
+    const testCases = await getTestCasesByQuestionUseCase.execute(req.params.questionId);
     
     successResponse(res, testCases, 'Casos de teste');
   })
@@ -29,7 +41,7 @@ router.post(
       questionId: req.params.questionId
     };
     
-    const testCase = await testCaseService.createTestCase(data);
+    const testCase = await createTestCaseUseCase.execute(data);
     
     successResponse(res, testCase, 'Caso de teste criado com sucesso', 201);
   })
@@ -39,7 +51,7 @@ router.get(
   '/testcases/:id',
   authenticate,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const testCase = await testCaseService.getTestCaseById(req.params.id);
+    const testCase = await getTestCaseByIdUseCase.execute(req.params.id);
     
     successResponse(res, testCase, 'Caso de teste');
   })
@@ -51,7 +63,10 @@ router.put(
   requireTeacher,
   validateBody(UpdateTestCaseDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const testCase = await testCaseService.updateTestCase(req.params.id, req.body);
+    const testCase = await updateTestCaseUseCase.execute({
+      id: req.params.id,
+      data: req.body
+    });
     
     successResponse(res, testCase, 'Caso de teste atualizado com sucesso');
   })
@@ -62,7 +77,7 @@ router.delete(
   authenticate,
   requireTeacher,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    await testCaseService.deleteTestCase(req.params.id);
+    await deleteTestCaseUseCase.execute(req.params.id);
     
     successResponse(res, null, 'Caso de teste deletado com sucesso');
   })

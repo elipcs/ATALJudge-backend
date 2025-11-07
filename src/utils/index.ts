@@ -1,5 +1,5 @@
 export { TokenManager, JwtPayload } from './TokenManager';
-export { validateDto, ValidationException, IsStrongPassword } from './validators';
+export { validateDto, ValidationException, IsStrongPassword, IsValidEmail, IsValidScore, IsValidStudentRegistration } from './validators';
 export { successResponse, errorResponse, validationErrorResponse, ApiResponse } from './responses';
 export { default as logger } from './logger';
 export {

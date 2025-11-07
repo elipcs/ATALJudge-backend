@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { SubmissionService } from '../services/SubmissionService';
+import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase } from '../use-cases/submission';
 import { CreateSubmissionDTO } from '../dtos';
 import { validateBody, authenticate, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
@@ -7,7 +8,13 @@ import { SubmissionStatus, UserRole } from '../enums';
 import { UnauthorizedError, ValidationError } from '../utils';
 import { asyncHandler } from '../utils/asyncHandler';
 
-function createSubmissionController(submissionService: SubmissionService): Router {
+function createSubmissionController(
+  submissionService: SubmissionService,
+  createSubmissionUseCase: CreateSubmissionUseCase,
+  getSubmissionUseCase: GetSubmissionUseCase,
+  getAllSubmissionsUseCase: GetAllSubmissionsUseCase,
+  getSubmissionWithResultsUseCase: GetSubmissionWithResultsUseCase
+): Router {
   const router = Router();
 
 router.get(
@@ -22,7 +29,7 @@ router.get(
       userId = req.user.sub;
     }
     
-    const filters: any = {
+    const filters = {
       questionId: req.query.questionId as string,
       userId: userId,
       status: req.query.status as SubmissionStatus,
@@ -31,7 +38,7 @@ router.get(
       limit
     };
     
-    const result = await submissionService.getSubmissions(filters);
+    const result = await getAllSubmissionsUseCase.execute(filters);
     
     successResponse(res, result, 'Lista de submissões');
   })
@@ -41,10 +48,7 @@ router.get(
   '/:id',
   authenticate,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const submission = await submissionService.getSubmissionById(
-      req.params.id,
-      req.user?.role === UserRole.STUDENT ? req.user.sub : undefined
-    );
+    const submission = await getSubmissionUseCase.execute(req.params.id);
     
     successResponse(res, submission, 'Submissão encontrada');
   })
@@ -59,10 +63,10 @@ router.post(
       throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
     }
     
-    const submission = await submissionService.createSubmission(
-      req.body,
-      req.user.sub
-    );
+    const submission = await createSubmissionUseCase.execute({
+      dto: req.body,
+      userId: req.user.sub
+    });
     
     successResponse(res, submission, 'Submissão criada com sucesso', 201);
   })
@@ -97,10 +101,10 @@ router.get(
   '/:id/results',
   authenticate,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const submissionDetail = await submissionService.getSubmissionWithResults(
-      req.params.id,
-      req.user?.role === UserRole.STUDENT ? req.user.sub : undefined
-    );
+    const submissionDetail = await getSubmissionWithResultsUseCase.execute({
+      submissionId: req.params.id,
+      requestUserId: req.user?.role === UserRole.STUDENT ? req.user.sub : undefined
+    });
     
     successResponse(res, submissionDetail, 'Resultados da submissão');
   })

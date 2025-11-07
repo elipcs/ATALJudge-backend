@@ -1,12 +1,24 @@
 import { Router, Response } from 'express';
-import { InviteService } from '../services';
+import { 
+  CreateInviteUseCase, 
+  GetAllInvitesUseCase, 
+  ValidateInviteUseCase, 
+  DeleteInviteUseCase, 
+  RevokeInviteUseCase 
+} from '../use-cases/invite';
 import { CreateInviteDTO } from '../dtos';
 import { validateBody, authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { logger, sanitizeForLog, ValidationError } from '../utils';
 import { asyncHandler } from '../utils/asyncHandler';
 
-function createInviteController(inviteService: InviteService): Router {
+function createInviteController(
+  createInviteUseCase: CreateInviteUseCase,
+  getAllInvitesUseCase: GetAllInvitesUseCase,
+  validateInviteUseCase: ValidateInviteUseCase,
+  deleteInviteUseCase: DeleteInviteUseCase,
+  revokeInviteUseCase: RevokeInviteUseCase
+): Router {
   const router = Router();
 
 router.post(
@@ -15,7 +27,7 @@ router.post(
   requireTeacher,
   validateBody(CreateInviteDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const invite = await inviteService.createInvite(req.body);
+    const invite = await createInviteUseCase.execute(req.body);
     
     successResponse(res, { invite }, 'Convite criado com sucesso', 201);
   })
@@ -27,7 +39,7 @@ router.post(
   requireTeacher,
   validateBody(CreateInviteDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const invite = await inviteService.createInvite(req.body);
+    const invite = await createInviteUseCase.execute(req.body);
     
     successResponse(res, { invite }, 'Convite criado com sucesso', 201);
   })
@@ -38,7 +50,7 @@ router.get(
   authenticate,
   requireTeacher,
   asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
-    const invites = await inviteService.getAllInvites();
+    const invites = await getAllInvitesUseCase.execute();
     
     successResponse(res, invites, 'Lista de convites');
   })
@@ -63,7 +75,7 @@ router.post(
       throw new ValidationError('Token é obrigatório', 'TOKEN_REQUIRED');
     }
     
-    const invite = await inviteService.validateInvite(token);
+    const invite = await validateInviteUseCase.execute(token);
     
     logger.info('[INVITE] Convite válido', { 
       id: invite.id, 
@@ -95,7 +107,7 @@ router.delete(
   authenticate,
   requireTeacher,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    await inviteService.deleteInvite(req.params.id);
+    await deleteInviteUseCase.execute(req.params.id);
     
     successResponse(res, null, 'Convite deletado com sucesso');
   })
@@ -106,7 +118,7 @@ router.post(
   authenticate,
   requireTeacher,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    await inviteService.revokeInvite(req.params.id);
+    await revokeInviteUseCase.execute(req.params.id);
     
     successResponse(res, null, 'Convite revogado com sucesso');
   })

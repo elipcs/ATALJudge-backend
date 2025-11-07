@@ -46,7 +46,7 @@ export function validationErrorResponse(
 ): Response {
   return errorResponse(
     res,
-    'Dados inválidos',
+    'Invalid data',
     'VALIDATION_ERROR',
     400,
     errors

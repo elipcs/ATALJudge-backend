@@ -1,12 +1,16 @@
 import { Router, Response } from 'express';
-import { UserService } from '../services';
 import { UpdateProfileDTO, ChangePasswordDTO } from '../dtos';
 import { validateBody, authenticate, requireProfessor, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { UnauthorizedError } from '../utils';
 import { asyncHandler } from '../utils/asyncHandler';
+import { GetUserUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from '../use-cases';
 
-function createUserController(userService: UserService): Router {
+function createUserController(
+  getUserUseCase: GetUserUseCase,
+  updateProfileUseCase: UpdateProfileUseCase,
+  changePasswordUseCase: ChangePasswordUseCase
+): Router {
   const router = Router();
 
 router.get(
@@ -17,7 +21,7 @@ router.get(
       throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
     }
     
-    const user = await userService.getUserById(req.user.sub);
+    const user = await getUserUseCase.execute(req.user.sub);
     
     successResponse(res, user, 'Perfil do usuário');
   })
@@ -32,7 +36,10 @@ router.put(
       throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
     }
     
-    const user = await userService.updateProfile(req.user.sub, req.body);
+    const user = await updateProfileUseCase.execute({ 
+      userId: req.user.sub, 
+      dto: req.body 
+    });
     
     successResponse(res, user, 'Perfil atualizado com sucesso');
   })
@@ -47,20 +54,12 @@ router.post(
       throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
     }
     
-    await userService.changePassword(req.user.sub, req.body);
+    await changePasswordUseCase.execute({
+      userId: req.user.sub,
+      dto: req.body
+    });
     
     successResponse(res, null, 'Senha alterada com sucesso');
-  })
-);
-
-router.get(
-  '/',
-  authenticate,
-  requireProfessor,
-  asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
-    const users = await userService.getAllUsers();
-    
-    successResponse(res, users, 'Lista de usuários');
   })
 );
 
@@ -69,20 +68,9 @@ router.get(
   authenticate,
   requireProfessor,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const user = await userService.getUserById(req.params.id);
+    const user = await getUserUseCase.execute(req.params.id);
     
     successResponse(res, user, 'Dados do usuário');
-  })
-);
-
-router.get(
-  '/role/:role',
-  authenticate,
-  requireProfessor,
-  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const { role } = req.params;
-    const users = await userService.getUsersByRole(role);
-    successResponse(res, users, `Usuários com role: ${role}`);
   })
 );
 

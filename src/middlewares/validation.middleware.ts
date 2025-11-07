@@ -11,7 +11,7 @@ export function validateBody<T extends object>(dtoClass: new () => T) {
     } catch (error) {
       if (error instanceof ValidationException) {
         const formattedErrors = error.formatErrors();
-        logger.warn('[VALIDATION] Erros de validação', { 
+        logger.warn('[VALIDATION] Validation errors', { 
           path: req.path,
           method: req.method,
           errors: formattedErrors,
@@ -25,8 +25,8 @@ export function validateBody<T extends object>(dtoClass: new () => T) {
         return;
       }
       
-      logger.error('[VALIDATION] Erro desconhecido', { error, path: req.path });
-      validationErrorResponse(res, { general: ['Erro de validação'] });
+      logger.error('[VALIDATION] Unknown error', { error, path: req.path });
+      validationErrorResponse(res, { general: ['Validation error'] });
     }
   };
 }

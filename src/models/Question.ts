@@ -84,23 +84,23 @@ export class Question {
   @BeforeUpdate()
   validate(): void {
     if (!this.title || !this.title.trim()) {
-      throw new ValidationError('Título não pode estar vazio', 'TITLE_REQUIRED');
+      throw new ValidationError('Title cannot be empty', 'TITLE_REQUIRED');
     }
 
     if (!this.statement || !this.statement.trim()) {
-      throw new ValidationError('Enunciado não pode estar vazio', 'STATEMENT_REQUIRED');
+      throw new ValidationError('Statement cannot be empty', 'STATEMENT_REQUIRED');
     }
 
     if (this.timeLimitMs < 100 || this.timeLimitMs > 30000) {
-      throw new ValidationError('Limite de tempo deve estar entre 100ms e 30000ms', 'INVALID_TIME_LIMIT');
+      throw new ValidationError('Time limit must be between 100ms and 30000ms', 'INVALID_TIME_LIMIT');
     }
 
     if (this.memoryLimitKb < 1000 || this.memoryLimitKb > 512000) {
-      throw new ValidationError('Limite de memória deve estar entre 1MB e 512MB', 'INVALID_MEMORY_LIMIT');
+      throw new ValidationError('Memory limit must be between 1MB and 512MB', 'INVALID_MEMORY_LIMIT');
     }
 
     if (this.wallTimeLimitSeconds && (this.wallTimeLimitSeconds < 1 || this.wallTimeLimitSeconds > 60)) {
-      throw new ValidationError('Limite de wall time deve estar entre 1s e 60s', 'INVALID_WALL_TIME_LIMIT');
+      throw new ValidationError('Wall time limit must be between 1s and 60s', 'INVALID_WALL_TIME_LIMIT');
     }
   }
 
@@ -129,5 +129,81 @@ export class Question {
       this.codeforcesLink = `https://codeforces.com/contest/${this.contestId}/problem/${this.problemIndex}`;
     }
   }
-}
 
+  // ============================================================
+  // ADDITIONAL DOMAIN METHODS (Business Logic)
+  // ============================================================
+
+  /**
+   * Verifica se a questão possui casos de teste
+   */
+  hasTestCases(): boolean {
+    return this.testCases && this.testCases.length > 0;
+  }
+
+  /**
+   * Obtém o número de casos de teste
+   */
+  getTestCaseCount(): number {
+    return this.testCases ? this.testCases.length : 0;
+  }
+
+  /**
+   * Verifica se a questão pode ser editada
+   * Questões locais podem ser editadas, Codeforces não
+   */
+  canBeEdited(): boolean {
+    return this.isLocal();
+  }
+
+  /**
+   * Verifica se a questão pode ser deletada
+   * Não pode deletar se tiver submissões
+   */
+  canBeDeleted(): boolean {
+    return !this.submissions || this.submissions.length === 0;
+  }
+
+  /**
+   * Verifica se a questão está pronta para uso
+   * (tem todos os campos obrigatórios e pelo menos 1 test case)
+   */
+  isReady(): boolean {
+    return !!(
+      this.title?.trim() &&
+      this.statement?.trim() &&
+      this.hasTestCases()
+    );
+  }
+
+  /**
+   * Verifica se a questão tem exemplos
+   */
+  hasExamples(): boolean {
+    return this.examples && this.examples.length > 0;
+  }
+
+  /**
+   * Obtém os casos de teste públicos (is_sample = true)
+   */
+  getPublicTestCases(): TestCase[] {
+    if (!this.testCases) return [];
+    return this.testCases.filter(tc => tc.isSample);
+  }
+
+  /**
+   * Obtém os casos de teste privados (is_sample = false)
+   */
+  getPrivateTestCases(): TestCase[] {
+    if (!this.testCases) return [];
+    return this.testCases.filter(tc => !tc.isSample);
+  }
+
+  /**
+   * Valida se a configuração do Codeforces está completa
+   */
+  isCodeforcesConfigComplete(): boolean {
+    if (!this.isCodeforces()) return true;
+    return !!(this.contestId && this.problemIndex && this.codeforcesLink);
+  }
+}

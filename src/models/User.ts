@@ -1,9 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, BeforeInsert, BeforeUpdate, TableInheritance, ManyToOne, JoinColumn } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
 import { UserRole } from '../enums';
 import { Submission } from './Submission';
 import { ValidationError } from '../utils';
 import { Class } from './Class';
+import { Email, Password } from '../domain/value-objects';
 
 @Entity('users')
 @TableInheritance({ column: { type: 'enum', name: 'role', enum: UserRole } })
@@ -15,10 +15,24 @@ export class User {
   name!: string;
 
   @Column({ length: 255, nullable: false, unique: true })
-  email!: string;
+  private _email!: string;
 
   @Column({ name: 'password_hash', length: 255, nullable: true })
   passwordHash?: string;
+
+  // Getter e setter para Email Value Object
+  get email(): string {
+    return this._email;
+  }
+
+  set email(value: string) {
+    const emailVO = Email.tryCreate(value);
+    if (emailVO) {
+      this._email = emailVO.getValue();
+    } else {
+      this._email = value; // Permite temporariamente para validação posterior
+    }
+  }
 
   @Column({
     type: 'enum',
@@ -46,28 +60,23 @@ export class User {
   @JoinColumn({ name: 'class_id' })
   class?: Class;
 
+  /**
+   * Define a senha do usuário usando Password Value Object
+   */
   async setPassword(password: string): Promise<void> {
-    if (!password || password.length < 12) {
-      throw new Error('Senha deve ter pelo menos 12 caracteres');
-    }
-
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-    
-    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
-      throw new Error('Senha deve conter pelo menos: 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial');
-    }
-    
-    this.passwordHash = await bcrypt.hash(password, 12);
+    const passwordVO = await Password.create(password);
+    this.passwordHash = passwordVO.getHash();
   }
 
+  /**
+   * Verifica se a senha está correta usando Password Value Object
+   */
   async checkPassword(password: string): Promise<boolean> {
     if (!this.passwordHash) {
       return false;
     }
-    return bcrypt.compare(password, this.passwordHash);
+    const passwordVO = Password.fromHash(this.passwordHash);
+    return passwordVO.compare(password);
   }
 
   isStudent(): boolean {
@@ -82,23 +91,112 @@ export class User {
     return this.role === UserRole.ASSISTANT;
   }
 
+  // ============================================================
+  // ADDITIONAL DOMAIN METHODS (Business Logic)
+  // ============================================================
+
+  /**
+   * Verifica se o usuário possui uma role específica
+   */
+  hasRole(role: UserRole): boolean {
+    return this.role === role;
+  }
+
+  /**
+   * Verifica se o usuário pode gerenciar turmas
+   * (Professores e Assistentes podem)
+   */
+  canManageClasses(): boolean {
+    return this.isProfessor() || this.isAssistant();
+  }
+
+  /**
+   * Verifica se o usuário pode criar questões
+   * (Professores e Assistentes podem)
+   */
+  canCreateQuestions(): boolean {
+    return this.isProfessor() || this.isAssistant();
+  }
+
+  /**
+   * Verifica se o usuário pode submeter código
+   * (Apenas estudantes podem submeter)
+   */
+  canSubmitCode(): boolean {
+    return this.isStudent();
+  }
+
+  /**
+   * Verifica se o usuário pode avaliar submissões
+   * (Professores e Assistentes podem)
+   */
+  canGradeSubmissions(): boolean {
+    return this.isProfessor() || this.isAssistant();
+  }
+
+  /**
+   * Verifica se o usuário está ativo (possui último login nos últimos 90 dias)
+   */
+  isActive(): boolean {
+    if (!this.lastLogin) return false;
+    
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    
+    return this.lastLogin >= ninetyDaysAgo;
+  }
+
+  /**
+   * Verifica se o usuário é um novo usuário (criado há menos de 7 dias)
+   */
+  isNewUser(): boolean {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    return this.createdAt >= sevenDaysAgo;
+  }
+
+  /**
+   * Atualiza o último login do usuário
+   */
+  updateLastLogin(): void {
+    this.lastLogin = new Date();
+  }
+
+  /**
+   * Obtém o nome formatado (primeira letra maiúscula)
+   */
+  getFormattedName(): string {
+    return this.name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  /**
+   * Verifica se o usuário tem senha configurada
+   */
+  hasPassword(): boolean {
+    return !!this.passwordHash;
+  }
 
   @BeforeInsert()
   @BeforeUpdate()
   validate(): void {
     if (!this.name || !this.name.trim()) {
-      throw new ValidationError('Nome não pode estar vazio', 'NAME_REQUIRED');
+      throw new ValidationError('Name cannot be empty', 'NAME_REQUIRED');
     }
     
-    if (!this.email || !this.email.trim()) {
-      throw new ValidationError('Email não pode estar vazio', 'EMAIL_REQUIRED');
+    if (!this._email || !this._email.trim()) {
+      throw new ValidationError('Email cannot be empty', 'EMAIL_REQUIRED');
     }
     
-    if (!this.email.includes('@') || !this.email.split('@')[1].includes('.')) {
-      throw new ValidationError('Email deve ter um formato válido', 'INVALID_EMAIL_FORMAT');
+    // Validates and normalizes using Email Value Object
+    const emailVO = Email.tryCreate(this._email);
+    if (!emailVO) {
+      throw new ValidationError('Email must have a valid format', 'INVALID_EMAIL_FORMAT');
     }
-
-    this.email = this.email.toLowerCase().trim();
+    this._email = emailVO.getValue();
   }
 
 }

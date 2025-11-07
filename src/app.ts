@@ -17,19 +17,48 @@ import createQuestionListController from './controllers/questionlist.controller'
 import createGradeController from './controllers/grade.controller';
 import createConfigController from './controllers/config.controller';
 
-import { UserService } from './services/UserService';
-import { InviteService } from './services/InviteService';
-import { QuestionService } from './services/QuestionService';
-import { ClassService } from './services/ClassService';
 import { SubmissionService } from './services/SubmissionService';
-import { TestCaseService } from './services/TestCaseService';
-import { QuestionListService } from './services/QuestionListService';
-import { AllowedIPService } from './services/AllowedIPService';
-import { SystemResetService } from './services/SystemResetService';
-import { AuthenticationService } from './services/AuthenticationService';
-import { UserRegistrationService } from './services/UserRegistrationService';
-import { PasswordManagementService } from './services/PasswordManagementService';
-import { TokenManagementService } from './services/TokenManagementService';
+
+// Use Cases
+import { 
+  LoginUseCase, 
+  RegisterUserUseCase, 
+  RefreshTokenUseCase, 
+  LogoutUseCase,
+  RequestPasswordResetUseCase,
+  ResetPasswordUseCase
+} from './use-cases/auth';
+import { GetUserUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from './use-cases/user';
+import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase } from './use-cases/question';
+import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase } from './use-cases/submission';
+import { GetGradeUseCase, CalculateGradeUseCase, GetStudentGradesUseCase, GetListGradesUseCase, GetGradeByStudentAndListUseCase } from './use-cases/grade';
+import { CreateQuestionListUseCase, GetQuestionListUseCase, UpdateQuestionListUseCase, DeleteQuestionListUseCase, GetAllQuestionListsUseCase, UpdateListScoringUseCase, AddQuestionToListUseCase, RemoveQuestionFromListUseCase } from './use-cases/question-list';
+import { CreateInviteUseCase, GetAllInvitesUseCase, ValidateInviteUseCase, DeleteInviteUseCase, RevokeInviteUseCase } from './use-cases/invite';
+import { 
+  CreateClassUseCase, 
+  GetAllClassesUseCase, 
+  GetClassByIdUseCase, 
+  UpdateClassUseCase, 
+  DeleteClassUseCase, 
+  GetClassStudentsUseCase, 
+  AddStudentToClassUseCase, 
+  RemoveStudentFromClassUseCase 
+} from './use-cases/class';
+import {
+  CreateTestCaseUseCase,
+  GetTestCasesByQuestionUseCase,
+  GetTestCaseByIdUseCase,
+  UpdateTestCaseUseCase,
+  DeleteTestCaseUseCase
+} from './use-cases/testcase';
+import {
+  GetAllAllowedIPsUseCase,
+  GetAllowedIPByIdUseCase,
+  CreateAllowedIPUseCase,
+  ToggleAllowedIPStatusUseCase,
+  DeleteAllowedIPUseCase
+} from './use-cases/allowed-ip';
+import { PerformSystemResetUseCase } from './use-cases/system-reset';
 
 export function createApp(): Application {
   const app = express();
@@ -90,10 +119,10 @@ export function createApp(): Application {
 
   app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (err instanceof SyntaxError && 'body' in err) {
-      logger.error('[JSON] JSON inválido recebido', { error: err });
+      logger.error('[JSON] Invalid JSON received', { error: err });
       return res.status(400).json({ 
         success: false, 
-        message: 'Dados inválidos - JSON malformado',
+        message: 'Invalid data - Malformed JSON',
         error: 'INVALID_JSON'
       });
     }
@@ -103,7 +132,7 @@ export function createApp(): Application {
   const generalLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, 
     max: 100, 
-    message: 'Muitas requisições deste IP, tente novamente mais tarde.',
+    message: 'Too many requests from this IP, try again later.',
     standardHeaders: true,
     legacyHeaders: false,
   });
@@ -122,35 +151,142 @@ export function createApp(): Application {
     });
   });
 
-  const authenticationService = container.resolve(AuthenticationService);
-  const userRegistrationService = container.resolve(UserRegistrationService);
-  const passwordManagementService = container.resolve(PasswordManagementService);
-  const tokenManagementService = container.resolve(TokenManagementService);
-  const userService = container.resolve(UserService);
-  const inviteService = container.resolve(InviteService);
-  const questionService = container.resolve(QuestionService);
-  const classService = container.resolve(ClassService);
+  // Resolve Use Cases
+  const loginUseCase = container.resolve(LoginUseCase);
+  const registerUserUseCase = container.resolve(RegisterUserUseCase);
+  const refreshTokenUseCase = container.resolve(RefreshTokenUseCase);
+  const logoutUseCase = container.resolve(LogoutUseCase);
+  const requestPasswordResetUseCase = container.resolve(RequestPasswordResetUseCase);
+  const resetPasswordUseCase = container.resolve(ResetPasswordUseCase);
+  const getUserUseCase = container.resolve(GetUserUseCase);
+  const updateProfileUseCase = container.resolve(UpdateProfileUseCase);
+  const changePasswordUseCase = container.resolve(ChangePasswordUseCase);
+  const createQuestionUseCase = container.resolve(CreateQuestionUseCase);
+  const updateQuestionUseCase = container.resolve(UpdateQuestionUseCase);
+  const deleteQuestionUseCase = container.resolve(DeleteQuestionUseCase);
+  const getQuestionByIdUseCase = container.resolve(GetQuestionByIdUseCase);
+  const getAllQuestionsUseCase = container.resolve(GetAllQuestionsUseCase);
+  const createSubmissionUseCase = container.resolve(CreateSubmissionUseCase);
+  const getSubmissionUseCase = container.resolve(GetSubmissionUseCase);
+  const getAllSubmissionsUseCase = container.resolve(GetAllSubmissionsUseCase);
+  const getSubmissionWithResultsUseCase = container.resolve(GetSubmissionWithResultsUseCase);
+  const getGradeUseCase = container.resolve(GetGradeUseCase);
+  const calculateGradeUseCase = container.resolve(CalculateGradeUseCase);
+  const getStudentGradesUseCase = container.resolve(GetStudentGradesUseCase);
+  const getListGradesUseCase = container.resolve(GetListGradesUseCase);
+  const getGradeByStudentAndListUseCase = container.resolve(GetGradeByStudentAndListUseCase);
+  const createQuestionListUseCase = container.resolve(CreateQuestionListUseCase);
+  const getQuestionListUseCase = container.resolve(GetQuestionListUseCase);
+  const updateQuestionListUseCase = container.resolve(UpdateQuestionListUseCase);
+  const deleteQuestionListUseCase = container.resolve(DeleteQuestionListUseCase);
+  const getAllQuestionListsUseCase = container.resolve(GetAllQuestionListsUseCase);
+  const updateListScoringUseCase = container.resolve(UpdateListScoringUseCase);
+  const addQuestionToListUseCase = container.resolve(AddQuestionToListUseCase);
+  const removeQuestionFromListUseCase = container.resolve(RemoveQuestionFromListUseCase);
+  const createInviteUseCase = container.resolve(CreateInviteUseCase);
+  const getAllInvitesUseCase = container.resolve(GetAllInvitesUseCase);
+  const validateInviteUseCase = container.resolve(ValidateInviteUseCase);
+  const deleteInviteUseCase = container.resolve(DeleteInviteUseCase);
+  const revokeInviteUseCase = container.resolve(RevokeInviteUseCase);
+  const createClassUseCase = container.resolve(CreateClassUseCase);
+  const getAllClassesUseCase = container.resolve(GetAllClassesUseCase);
+  const getClassByIdUseCase = container.resolve(GetClassByIdUseCase);
+  const updateClassUseCase = container.resolve(UpdateClassUseCase);
+  const deleteClassUseCase = container.resolve(DeleteClassUseCase);
+  const getClassStudentsUseCase = container.resolve(GetClassStudentsUseCase);
+  const addStudentToClassUseCase = container.resolve(AddStudentToClassUseCase);
+  const removeStudentFromClassUseCase = container.resolve(RemoveStudentFromClassUseCase);
+  const createTestCaseUseCase = container.resolve(CreateTestCaseUseCase);
+  const getTestCasesByQuestionUseCase = container.resolve(GetTestCasesByQuestionUseCase);
+  const getTestCaseByIdUseCase = container.resolve(GetTestCaseByIdUseCase);
+  const updateTestCaseUseCase = container.resolve(UpdateTestCaseUseCase);
+  const deleteTestCaseUseCase = container.resolve(DeleteTestCaseUseCase);
+  const getAllAllowedIPsUseCase = container.resolve(GetAllAllowedIPsUseCase);
+  const getAllowedIPByIdUseCase = container.resolve(GetAllowedIPByIdUseCase);
+  const createAllowedIPUseCase = container.resolve(CreateAllowedIPUseCase);
+  const toggleAllowedIPStatusUseCase = container.resolve(ToggleAllowedIPStatusUseCase);
+  const deleteAllowedIPUseCase = container.resolve(DeleteAllowedIPUseCase);
+  const performSystemResetUseCase = container.resolve(PerformSystemResetUseCase);
+
+  // Resolve Services (temporary - for controllers not yet refactored)
   const submissionService = container.resolve(SubmissionService);
-  const testCaseService = container.resolve(TestCaseService);
-  const questionListService = container.resolve(QuestionListService);
-  const allowedIPService = container.resolve(AllowedIPService);
-  const systemResetService = container.resolve(SystemResetService);
 
   app.use('/api/auth', createAuthController(
-    authenticationService,
-    userRegistrationService,
-    passwordManagementService,
-    tokenManagementService
+    loginUseCase,
+    registerUserUseCase,
+    refreshTokenUseCase,
+    logoutUseCase,
+    requestPasswordResetUseCase,
+    resetPasswordUseCase
   ));
-  app.use('/api/users', createUserController(userService));
-  app.use('/api/invites', createInviteController(inviteService));
-  app.use('/api/questions', createQuestionController(questionService));
-  app.use('/api/classes', createClassController(classService));
-  app.use('/api/submissions', createSubmissionController(submissionService));
-  app.use('/api/lists', createQuestionListController(questionListService));
-  app.use('/api/grades', createGradeController());
-  app.use('/api/config', createConfigController(allowedIPService, systemResetService));
-  app.use('/api', createTestCaseController(testCaseService));
+  app.use('/api/users', createUserController(
+    getUserUseCase,
+    updateProfileUseCase,
+    changePasswordUseCase
+  ));
+  app.use('/api/invites', createInviteController(
+    createInviteUseCase,
+    getAllInvitesUseCase,
+    validateInviteUseCase,
+    deleteInviteUseCase,
+    revokeInviteUseCase
+  ));
+  app.use('/api/questions', createQuestionController(
+    createQuestionUseCase,
+    updateQuestionUseCase,
+    deleteQuestionUseCase,
+    getQuestionByIdUseCase,
+    getAllQuestionsUseCase
+  ));
+  app.use('/api/classes', createClassController(
+    createClassUseCase,
+    getAllClassesUseCase,
+    getClassByIdUseCase,
+    updateClassUseCase,
+    deleteClassUseCase,
+    getClassStudentsUseCase,
+    addStudentToClassUseCase,
+    removeStudentFromClassUseCase
+  ));
+  app.use('/api/submissions', createSubmissionController(
+    submissionService,
+    createSubmissionUseCase,
+    getSubmissionUseCase,
+    getAllSubmissionsUseCase,
+    getSubmissionWithResultsUseCase
+  ));
+  app.use('/api/lists', createQuestionListController(
+    createQuestionListUseCase,
+    getQuestionListUseCase,
+    updateQuestionListUseCase,
+    deleteQuestionListUseCase,
+    getAllQuestionListsUseCase,
+    updateListScoringUseCase,
+    addQuestionToListUseCase,
+    removeQuestionFromListUseCase
+  ));
+  app.use('/api/grades', createGradeController(
+    getGradeUseCase,
+    calculateGradeUseCase,
+    getStudentGradesUseCase,
+    getListGradesUseCase,
+    getGradeByStudentAndListUseCase
+  ));
+  app.use('/api/config', createConfigController(
+    getAllAllowedIPsUseCase,
+    getAllowedIPByIdUseCase,
+    createAllowedIPUseCase,
+    toggleAllowedIPStatusUseCase,
+    deleteAllowedIPUseCase,
+    performSystemResetUseCase
+  ));
+  app.use('/api', createTestCaseController(
+    createTestCaseUseCase,
+    getTestCasesByQuestionUseCase,
+    getTestCaseByIdUseCase,
+    updateTestCaseUseCase,
+    deleteTestCaseUseCase
+  ));
 
   app.use(notFoundHandler);
 

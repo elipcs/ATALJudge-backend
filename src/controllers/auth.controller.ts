@@ -1,8 +1,12 @@
 import { Router, Response } from 'express';
-import { AuthenticationService } from '../services/AuthenticationService';
-import { UserRegistrationService } from '../services/UserRegistrationService';
-import { PasswordManagementService } from '../services/PasswordManagementService';
-import { TokenManagementService } from '../services/TokenManagementService';
+import { 
+  LoginUseCase, 
+  RegisterUserUseCase, 
+  RefreshTokenUseCase, 
+  LogoutUseCase,
+  RequestPasswordResetUseCase,
+  ResetPasswordUseCase
+} from '../use-cases/auth';
 import { UserRegisterDTO, UserLoginDTO, RequestPasswordResetDTO, ResetPasswordDTO, RefreshTokenDTO } from '../dtos';
 import { validateBody, authenticate, AuthRequest, convertUserRegisterPayload, authRateLimiter, registerRateLimiter } from '../middlewares';
 import { successResponse, errorResponse } from '../utils/responses';
@@ -11,10 +15,12 @@ import { asyncHandler } from '../utils/asyncHandler';
 
 
 function createAuthController(
-  authenticationService: AuthenticationService,
-  userRegistrationService: UserRegistrationService,
-  passwordManagementService: PasswordManagementService,
-  tokenManagementService: TokenManagementService
+  loginUseCase: LoginUseCase,
+  registerUserUseCase: RegisterUserUseCase,
+  refreshTokenUseCase: RefreshTokenUseCase,
+  logoutUseCase: LogoutUseCase,
+  requestPasswordResetUseCase: RequestPasswordResetUseCase,
+  resetPasswordUseCase: ResetPasswordUseCase
 ): Router {
   const router = Router();
 
@@ -32,7 +38,7 @@ router.post(
   validateBody(UserRegisterDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     logger.info('[REGISTER] Validação passou, registrando usuário...');
-    const result = await userRegistrationService.registerWithInvite(req.body);
+    const result = await registerUserUseCase.execute(req.body);
     
     successResponse(
       res,
@@ -51,11 +57,11 @@ router.post(
     const ipAddress = req.ip;
     const userAgent = req.headers['user-agent'];
     
-    const result = await authenticationService.loginWithEmail(
-      req.body,
+    const result = await loginUseCase.execute({
+      dto: req.body,
       ipAddress,
       userAgent
-    );
+    });
 
     logger.debug('[LOGIN] Retornando resposta', {
       hasUser: !!result.user,
@@ -94,7 +100,7 @@ router.post(
       tokenStart: refreshToken?.substring(0, 20)
     });
     
-    const result = await tokenManagementService.refreshToken(refreshToken);
+    const result = await refreshTokenUseCase.execute(refreshToken);
     
     logger.info('[REFRESH] Tokens renovados com sucesso');
     successResponse(res, result, 'Tokens renovados com sucesso');
@@ -113,7 +119,7 @@ router.post(
       return;
     }
     
-    await authenticationService.logout(accessToken, refreshToken);
+    await logoutUseCase.execute({ accessToken, refreshToken });
     
     successResponse(res, null, 'Logout realizado com sucesso');
   })
@@ -142,7 +148,7 @@ router.post(
   authRateLimiter, 
   validateBody(RequestPasswordResetDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const result = await passwordManagementService.requestPasswordReset(req.body);
+    const result = await requestPasswordResetUseCase.execute(req.body);
     successResponse(res, result, result.message);
   })
 );
@@ -161,7 +167,7 @@ router.post(
   },
   validateBody(ResetPasswordDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const result = await passwordManagementService.resetPassword(req.body);
+    const result = await resetPasswordUseCase.execute(req.body);
     successResponse(res, result, result.message);
   })
 );

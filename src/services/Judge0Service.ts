@@ -563,7 +563,7 @@ export class Judge0Service {
     status: Judge0StatusResponse,
     expectedOutput?: string
   ): ProcessedSubmissionResult {
-    logger.debug('[Judge0] Processando resultado de submissão', {
+    logger.debug('[Judge0] Processing submission result', {
       token: status.token,
       statusId: status.status.id,
       statusDescription: status.status.description,
@@ -593,7 +593,7 @@ export class Judge0Service {
 
         if (!result.passed) {
           result.verdict = JudgeVerdict.WRONG_ANSWER;
-          logger.debug('[Judge0] Saída incorreta detectada', {
+          logger.debug('[Judge0] Incorrect output detected', {
             token: status.token,
             expectedLength: expectedTrimmed.length,
             actualLength: actualOutput.length
@@ -625,7 +625,7 @@ export class Judge0Service {
   }
 
   private mapStatusToVerdict(statusId: number): JudgeVerdict {
-    logger.debug('[Judge0] Mapeando status para veredicto', { statusId });
+    logger.debug('[Judge0] Mapping status to verdict', { statusId });
 
     const verdict = (() => {
       switch (statusId) {
@@ -653,7 +653,7 @@ export class Judge0Service {
       }
     })();
 
-    logger.debug('[Judge0] Veredicto mapeado', { statusId, verdict });
+    logger.debug('[Judge0] Verdict mapped', { statusId, verdict });
     return verdict;
   }
 

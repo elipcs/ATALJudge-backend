@@ -13,11 +13,11 @@ export class QuestionExampleDTO {
 
 export abstract class CreateQuestionDTO {
   @IsString()
-  @MinLength(3, { message: 'Título deve ter pelo menos 3 caracteres' })
+  @MinLength(3, { message: 'Title must be at least 3 characters' })
   title!: string;
 
   @IsString()
-  @MinLength(10, { message: 'Enunciado deve ter pelo menos 10 caracteres' })
+  @MinLength(10, { message: 'Statement must be at least 10 characters' })
   statement!: string;
 
   @IsOptional()

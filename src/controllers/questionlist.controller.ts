@@ -1,12 +1,30 @@
 import { Router, Response } from 'express';
-import { QuestionListService } from '../services/QuestionListService';
+import { 
+  CreateQuestionListUseCase, 
+  GetQuestionListUseCase, 
+  UpdateQuestionListUseCase, 
+  DeleteQuestionListUseCase,
+  GetAllQuestionListsUseCase,
+  UpdateListScoringUseCase,
+  AddQuestionToListUseCase,
+  RemoveQuestionFromListUseCase
+} from '../use-cases/question-list';
 import { CreateQuestionListDTO, UpdateQuestionListDTO, UpdateQuestionListScoringDTO } from '../dtos/QuestionListDtos';
 import { validateBody, authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { ValidationError, logger } from '../utils';
 import { asyncHandler } from '../utils/asyncHandler';
 
-function createQuestionListController(listService: QuestionListService): Router {
+function createQuestionListController(
+  createQuestionListUseCase: CreateQuestionListUseCase,
+  getQuestionListUseCase: GetQuestionListUseCase,
+  updateQuestionListUseCase: UpdateQuestionListUseCase,
+  deleteQuestionListUseCase: DeleteQuestionListUseCase,
+  getAllQuestionListsUseCase: GetAllQuestionListsUseCase,
+  updateListScoringUseCase: UpdateListScoringUseCase,
+  addQuestionToListUseCase: AddQuestionToListUseCase,
+  removeQuestionFromListUseCase: RemoveQuestionFromListUseCase
+): Router {
   const router = Router();
 
 router.get(
@@ -19,7 +37,7 @@ router.get(
       status: req.query.status as 'draft' | 'published' | undefined
     };
     
-    const lists = await listService.getAllLists(filters);
+    const lists = await getAllQuestionListsUseCase.execute(filters);
     
     successResponse(res, { lists, count: lists.length }, 'Listas de questões');
   })
@@ -29,7 +47,7 @@ router.get(
   '/:id',
   authenticate,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const list = await listService.getListById(req.params.id);
+    const list = await getQuestionListUseCase.execute(req.params.id);
     
     successResponse(res, list, 'Lista encontrada');
   })
@@ -41,16 +59,10 @@ router.post(
   requireTeacher,
   validateBody(CreateQuestionListDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const data = {
-      title: req.body.title,
-      description: req.body.description,
-      startDate: req.body.startDate,
-      endDate: req.body.endDate,
-      classIds: req.body.classIds,
-      isRestricted: req.body.isRestricted || false
-    };
-    
-const list = await listService.createList(data, req.user?.sub);
+    const list = await createQuestionListUseCase.execute({
+      dto: req.body,
+      authorId: req.user!.sub
+    });
     
     successResponse(res, list, 'Lista criada com sucesso', 201);
   })
@@ -87,25 +99,11 @@ router.put(
       userId: req.user?.sub
     });
 
-    const data = {
-      title: req.body.title,
-      description: req.body.description,
-      startDate: req.body.startDate,
-      endDate: req.body.endDate,
-      classIds: req.body.classIds,
-      scoringMode: req.body.scoringMode || 'simple',
-      maxScore: req.body.maxScore || 10,
-      minQuestionsForMaxScore: req.body.minQuestionsForMaxScore || undefined,
-      questionGroups: req.body.questionGroups || [],
-      isRestricted: req.body.isRestricted || false
-    };
-    
-    logger.debug('[QUESTION_LIST PUT] Dados transformados para service', {
+    const list = await updateQuestionListUseCase.execute({
       listId: req.params.id,
-      data
+      dto: req.body,
+      userId: req.user!.sub
     });
-    
-    const list = await listService.updateList(req.params.id, data);
     
     logger.info('[QUESTION_LIST PUT] Lista atualizada com sucesso', {
       listId: req.params.id,
@@ -137,7 +135,10 @@ router.patch(
       questionGroups: req.body.questionGroups || []
     };
     
-    const list = await listService.updateListScoring(req.params.id, data);
+    const list = await updateListScoringUseCase.execute({
+      listId: req.params.id,
+      data
+    });
     
     logger.info('[QUESTION_LIST PATCH SCORING] Pontuação atualizada com sucesso', {
       listId: req.params.id,
@@ -154,31 +155,12 @@ router.delete(
   authenticate,
   requireTeacher,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    await listService.deleteList(req.params.id);
+    await deleteQuestionListUseCase.execute({
+      listId: req.params.id,
+      userId: req.user!.sub
+    });
     
     successResponse(res, null, 'Lista deletada com sucesso');
-  })
-);
-
-router.post(
-  '/:id/publish',
-  authenticate,
-  requireTeacher,
-  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const list = await listService.publishList(req.params.id);
-    
-    successResponse(res, list, 'Lista publicada com sucesso');
-  })
-);
-
-router.post(
-  '/:id/unpublish',
-  authenticate,
-  requireTeacher,
-  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const list = await listService.unpublishList(req.params.id);
-    
-    successResponse(res, list, 'Lista despublicada com sucesso');
   })
 );
 
@@ -213,13 +195,16 @@ router.post(
       throw new ValidationError('ID da questão é obrigatório', 'QUESTION_ID_REQUIRED');
     }
     
-    logger.debug('[QUESTION_LIST ADD QUESTION] Chamando service.addQuestionToList', {
+    logger.debug('[QUESTION_LIST ADD QUESTION] Chamando addQuestionToListUseCase', {
       listId: req.params.id,
       questionId,
       userId: req.user?.sub
     });
 
-    await listService.addQuestionToList(req.params.id, questionId);
+    await addQuestionToListUseCase.execute({
+      listId: req.params.id,
+      questionId
+    });
     
     logger.info('[QUESTION_LIST ADD QUESTION] Questão adicionada com sucesso', {
       listId: req.params.id,
@@ -244,13 +229,16 @@ router.delete(
     next();
   },
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    logger.debug('[QUESTION_LIST REMOVE QUESTION] Chamando service.removeQuestionFromList', {
+    logger.debug('[QUESTION_LIST REMOVE QUESTION] Chamando removeQuestionFromListUseCase', {
       listId: req.params.id,
       questionId: req.params.questionId,
       userId: req.user?.sub
     });
 
-    await listService.removeQuestionFromList(req.params.id, req.params.questionId);
+    await removeQuestionFromListUseCase.execute({
+      listId: req.params.id,
+      questionId: req.params.questionId
+    });
     
     logger.info('[QUESTION_LIST REMOVE QUESTION] Questão removida com sucesso', {
       listId: req.params.id,

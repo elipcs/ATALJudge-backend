@@ -77,15 +77,15 @@ export class QuestionList {
   @BeforeUpdate()
   validate(): void {
     if (!this.title || !this.title.trim()) {
-      throw new ValidationError('Título não pode estar vazio', 'TITLE_REQUIRED');
+      throw new ValidationError('Title cannot be empty', 'TITLE_REQUIRED');
     }
 
     if (this.scoringMode !== 'simple' && this.scoringMode !== 'groups') {
-      throw new ValidationError('Modo de pontuação deve ser "simple" ou "groups"', 'INVALID_SCORING_MODE');
+      throw new ValidationError('Scoring mode must be "simple" or "groups"', 'INVALID_SCORING_MODE');
     }
 
     if (this.maxScore < 0) {
-      throw new ValidationError('Pontuação máxima não pode ser negativa', 'INVALID_MAX_SCORE');
+      throw new ValidationError('Maximum score cannot be negative', 'INVALID_MAX_SCORE');
     }
   }
 
@@ -106,5 +106,133 @@ export class QuestionList {
     
     return 'open';
   }
-}
 
+  // ============================================================
+  // ADDITIONAL DOMAIN METHODS (Business Logic)
+  // ============================================================
+
+  /**
+   * Checks if the list has questions
+   */
+  hasQuestions(): boolean {
+    return this.questions && this.questions.length > 0;
+  }
+
+  /**
+   * Gets the number of questions in the list
+   */
+  getQuestionCount(): number {
+    return this.questions ? this.questions.length : 0;
+  }
+
+  /**
+   * Checks if the list is active (open for submissions)
+   */
+  isActive(): boolean {
+    return this.isOpen();
+  }
+
+  /**
+   * Checks if the list is closed
+   */
+  isClosed(): boolean {
+    return this.getCalculatedStatus() === 'closed';
+  }
+
+  /**
+   * Checks if the list has not opened yet
+   */
+  isNotOpenYet(): boolean {
+    return this.getCalculatedStatus() === 'next';
+  }
+
+  /**
+   * Calculates the maximum possible score
+   * In simple mode: maxScore
+   * In groups mode: sum of group weights
+   */
+  calculateMaxPossibleScore(): number {
+    if (this.scoringMode === 'simple') {
+      return this.maxScore;
+    }
+    
+    // Groups mode
+    if (!this.questionGroups || this.questionGroups.length === 0) {
+      return this.maxScore;
+    }
+    
+    return this.questionGroups.reduce((sum, group) => sum + group.weight, 0);
+  }
+
+  /**
+   * Verifica se a lista usa pontuação por grupos
+   */
+  usesGroupScoring(): boolean {
+    return this.scoringMode === 'groups';
+  }
+
+  /**
+   * Verifica se a lista usa pontuação simples
+   */
+  usesSimpleScoring(): boolean {
+    return this.scoringMode === 'simple';
+  }
+
+  /**
+   * Verifica se a lista está restrita a turmas específicas
+   */
+  hasClassRestrictions(): boolean {
+    return this.isRestricted;
+  }
+
+  /**
+   * Obtém o tempo restante em milissegundos
+   */
+  getTimeRemainingMs(): number {
+    const now = new Date();
+    if (now >= this.endDate) return 0;
+    return this.endDate.getTime() - now.getTime();
+  }
+
+  /**
+   * Obtém o tempo restante formatado
+   */
+  getTimeRemainingFormatted(): string {
+    const ms = this.getTimeRemainingMs();
+    if (ms === 0) return 'Encerrada';
+
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  }
+
+  /**
+   * Verifica se a lista pode ser editada
+   * (Não pode editar listas que já fecharam)
+   */
+  canBeEdited(): boolean {
+    return !this.isClosed();
+  }
+
+  /**
+   * Verifica se a lista pode ser deletada
+   * (Não pode deletar listas abertas ou que já fecharam com submissões)
+   */
+  canBeDeleted(): boolean {
+    return this.isNotOpenYet();
+  }
+
+  /**
+   * Obtém o grupo de uma questão específica
+   */
+  getQuestionGroup(questionId: string): QuestionGroup | undefined {
+    if (!this.questionGroups) return undefined;
+    return this.questionGroups.find(group => 
+      group.questionIds.includes(questionId)
+    );
+  }
+}

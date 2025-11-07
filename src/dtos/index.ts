@@ -6,7 +6,6 @@ export {
   UserGrade,
   UpdateProfileDTO,
   ChangePasswordDTO,
-  CreateUserDTO,
   RequestPasswordResetDTO,
   ResetPasswordDTO,
   RefreshTokenDTO

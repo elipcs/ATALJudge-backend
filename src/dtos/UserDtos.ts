@@ -1,13 +1,13 @@
-import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
+import { IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
 import { UserRole } from '../enums';
-import { IsStrongPassword } from '../utils/validators';
+import { IsStrongPassword, IsValidEmail, IsValidStudentRegistration } from '../utils/validators';
 
 export class UserRegisterDTO {
   @IsString()
-  @MinLength(3, { message: 'Nome deve ter pelo menos 3 caracteres' })
+  @MinLength(3, { message: 'Name must be at least 3 characters' })
   name!: string;
 
-  @IsEmail({}, { message: 'Email deve ser válido' })
+  @IsValidEmail({ message: 'Email must be valid' })
   email!: string;
 
   @IsString()
@@ -15,11 +15,11 @@ export class UserRegisterDTO {
   password!: string;
 
   @IsOptional()
-  @IsEnum(UserRole, { message: 'Papel de usuário inválido' })
+  @IsEnum(UserRole, { message: 'Invalid user role' })
   role?: UserRole;
 
   @IsOptional()
-  @IsString()
+  @IsValidStudentRegistration()
   studentRegistration?: string;
 
   @IsOptional()
@@ -32,17 +32,17 @@ export class UserRegisterDTO {
 }
 
 export class UserLoginDTO {
-  @IsEmail({}, { message: 'Email deve ser válido' })
+  @IsValidEmail({ message: 'Email must be valid' })
   email!: string;
 
   @IsString()
-  @MinLength(1, { message: 'Senha é obrigatória' })
+  @MinLength(1, { message: 'Password is required' })
   password!: string;
 }
 
 export class RefreshTokenDTO {
-  @IsString({ message: 'Refresh token deve ser uma string' })
-  @MinLength(100, { message: 'Refresh token inválido: formato incorreto' })
+  @IsString({ message: 'Refresh token must be a string' })
+  @MinLength(100, { message: 'Refresh token invalid: incorrect format' })
   refreshToken!: string;
 }
 
@@ -106,17 +106,17 @@ export class UpdateProfileDTO {
   name?: string;
 
   @IsOptional()
-  @IsEmail()
+  @IsValidEmail()
   email?: string;
 
   @IsOptional()
-  @IsString()
+  @IsValidStudentRegistration()
   studentRegistration?: string;
 }
 
 export class ChangePasswordDTO {
   @IsString()
-  @MinLength(1, { message: 'Senha atual é obrigatória' })
+  @MinLength(1, { message: 'Current password is required' })
   currentPassword!: string;
 
   @IsString()
@@ -124,29 +124,13 @@ export class ChangePasswordDTO {
   newPassword!: string;
 }
 
-export class CreateUserDTO {
-  @IsString()
-  @MinLength(3)
-  name!: string;
-
-  @IsEmail()
-  email!: string;
-
-  @IsString()
-  @IsStrongPassword()
-  password!: string;
-
-  @IsEnum(UserRole)
-  role!: UserRole;
-}
-
 export class RequestPasswordResetDTO {
-  @IsEmail({}, { message: 'Email deve ser válido' })
+  @IsValidEmail({ message: 'Email must be valid' })
   email!: string;
 }
 
 export class ResetPasswordDTO {
-  @IsString({ message: 'Token é obrigatório' })
+  @IsString({ message: 'Token is required' })
   token!: string;
 
   @IsString()

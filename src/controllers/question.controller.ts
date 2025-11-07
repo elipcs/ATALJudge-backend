@@ -1,11 +1,17 @@
 import { Router, Response } from 'express';
-import { QuestionService } from '../services';
+import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase } from '../use-cases/question';
 import { authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { convertQuestionPayload } from '../middlewares/payload-converter.middleware';
 import { asyncHandler } from '../utils/asyncHandler';
 
-function createQuestionController(questionService: QuestionService): Router {
+function createQuestionController(
+  createQuestionUseCase: CreateQuestionUseCase,
+  updateQuestionUseCase: UpdateQuestionUseCase,
+  deleteQuestionUseCase: DeleteQuestionUseCase,
+  getQuestionByIdUseCase: GetQuestionByIdUseCase,
+  getAllQuestionsUseCase: GetAllQuestionsUseCase
+): Router {
   const router = Router();
 
 router.post(
@@ -14,10 +20,10 @@ router.post(
   requireTeacher,
   convertQuestionPayload,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const question = await questionService.createQuestion(
-      req.body,
-      req.user?.sub
-    );
+    const question = await createQuestionUseCase.execute({
+      dto: req.body,
+      authorId: req.user!.sub
+    });
     
     successResponse(res, question, 'Questão criada com sucesso', 201);
   })
@@ -27,7 +33,7 @@ router.get(
   '/',
   authenticate,
   asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
-    const questions = await questionService.getAllQuestions();
+    const questions = await getAllQuestionsUseCase.execute();
     
     successResponse(res, { questions }, 'Lista de questões');
   })
@@ -37,7 +43,7 @@ router.get(
   '/:id',
   authenticate,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const question = await questionService.getQuestionById(req.params.id);
+    const question = await getQuestionByIdUseCase.execute(req.params.id);
     
     successResponse(res, question, 'Dados da questão');
   })
@@ -49,10 +55,11 @@ router.put(
   requireTeacher,
   convertQuestionPayload,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const question = await questionService.updateQuestion(
-      req.params.id,
-      req.body
-    );
+    const question = await updateQuestionUseCase.execute({
+      questionId: req.params.id,
+      dto: req.body,
+      userId: req.user!.sub
+    });
     
     successResponse(res, question, 'Questão atualizada com sucesso');
   })
@@ -63,7 +70,10 @@ router.delete(
   authenticate,
   requireTeacher,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    await questionService.deleteQuestion(req.params.id);
+    await deleteQuestionUseCase.execute({
+      questionId: req.params.id,
+      userId: req.user!.sub
+    });
     
     successResponse(res, null, 'Questão deletada com sucesso');
   })

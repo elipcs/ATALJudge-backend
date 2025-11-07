@@ -8,6 +8,7 @@ import {
   ValidationOptions
 } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
+import { Password, Email, Score, StudentRegistration } from '../domain/value-objects';
 
 export class ValidationException extends Error {
   constructor(public errors: ValidationError[]) {
@@ -68,31 +69,18 @@ export class IsStrongPasswordConstraint implements ValidatorConstraintInterface 
       return false;
     }
 
-    if (password.length < 12) {
-      return false;
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      return false;
-    }
-
-    if (!/[a-z]/.test(password)) {
-      return false;
-    }
-
-    if (!/[0-9]/.test(password)) {
-      return false;
-    }
-
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      return false;
-    }
-
-    return true;
+    return Password.isStrongEnough(password);
   }
 
   defaultMessage(_args: ValidationArguments): string {
-    return 'Senha deve ter pelo menos 12 caracteres, incluindo: 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial (!@#$%^&*()_+-=[]{};\':"\\|,.<>/?)';
+    const reqs = Password.getRequirements();
+    const requirements = [];
+    if (reqs.requiresUppercase) requirements.push('1 uppercase letter');
+    if (reqs.requiresLowercase) requirements.push('1 lowercase letter');
+    if (reqs.requiresNumber) requirements.push('1 number');
+    if (reqs.requiresSpecial) requirements.push('1 special character');
+    
+    return `Password must be between ${reqs.minLength} and ${reqs.maxLength} characters, including: ${requirements.join(', ')}`;
   }
 }
 
@@ -109,3 +97,84 @@ export function IsStrongPassword(validationOptions?: ValidationOptions) {
   };
 }
 
+// Validator for Email using Email VO
+@ValidatorConstraint({ name: 'IsValidEmail', async: false })
+export class IsValidEmailConstraint implements ValidatorConstraintInterface {
+  validate(email: string, _args: ValidationArguments): boolean {
+    if (!email || typeof email !== 'string') {
+      return false;
+    }
+    return Email.isValid(email);
+  }
+
+  defaultMessage(_args: ValidationArguments): string {
+    return 'Email must have a valid format (max 255 chars, local part max 64, domain max 253)';
+  }
+}
+
+export function IsValidEmail(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsValidEmailConstraint,
+    });
+  };
+}
+
+// Validator for Score using Score VO
+@ValidatorConstraint({ name: 'IsValidScore', async: false })
+export class IsValidScoreConstraint implements ValidatorConstraintInterface {
+  validate(score: number, _args: ValidationArguments): boolean {
+    if (score === null || score === undefined || typeof score !== 'number') {
+      return false;
+    }
+    return Score.isValid(score);
+  }
+
+  defaultMessage(_args: ValidationArguments): string {
+    return `Score must be between ${Score.getMinValue()} and ${Score.getMaxValue()}`;
+  }
+}
+
+export function IsValidScore(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsValidScoreConstraint,
+    });
+  };
+}
+
+// Validator for StudentRegistration using StudentRegistration VO
+@ValidatorConstraint({ name: 'IsValidStudentRegistration', async: false })
+export class IsValidStudentRegistrationConstraint implements ValidatorConstraintInterface {
+  validate(registration: string, _args: ValidationArguments): boolean {
+    if (!registration || typeof registration !== 'string') {
+      return false;
+    }
+    return StudentRegistration.isValid(registration);
+  }
+
+  defaultMessage(_args: ValidationArguments): string {
+    const reqs = StudentRegistration.getRequirements();
+    return `Registration must be between ${reqs.minLength} and ${reqs.maxLength} characters (${reqs.allowedCharacters})`;
+  }
+}
+
+export function IsValidStudentRegistration(validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsValidStudentRegistrationConstraint,
+    });
+  };
+}
