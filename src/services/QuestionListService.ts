@@ -1,13 +1,24 @@
+/**
+ * @module services/QuestionListService
+ * @description Service for managing question lists and assignments.
+ * 
+ * Handles list CRUD, question associations, and grading configuration.
+ */
+
 import { injectable, inject } from 'tsyringe';
 import { CreateQuestionListDTO, UpdateQuestionListDTO, QuestionListResponseDTO } from '../dtos/QuestionListDtos';
 import { NotFoundError, logger } from '../utils';
 import { QuestionListRepository, QuestionRepository, ClassRepository, GradeRepository } from '../repositories';
 import { GradeService } from './GradeService';
 
+/**
+ * Service for question list management.
+ * @class QuestionListService
+ */
 @injectable()
 export class QuestionListService {
   constructor(
-    @inject(QuestionListRepository) private listRepository: QuestionListRepository,
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository,
     @inject(QuestionRepository) private questionRepository: QuestionRepository,
     @inject(ClassRepository) private classRepository: ClassRepository,
     @inject(GradeRepository) private gradeRepository: GradeRepository,
@@ -19,15 +30,15 @@ export class QuestionListService {
     classId?: string;
     status?: 'draft' | 'published';
   }): Promise<QuestionListResponseDTO[]> {
-    const queryBuilder = this.listRepository
-      .createQueryBuilder('list')
-      .leftJoinAndSelect('list.questions', 'questions')
-      .leftJoinAndSelect('list.classes', 'classes')
-      .orderBy('list.createdAt', 'DESC');
+    const queryBuilder = this.questionListRepository
+      .createQueryBuilder('question_list')
+      .leftJoinAndSelect('question_list.questions', 'questions')
+      .leftJoinAndSelect('question_list.classes', 'classes')
+      .orderBy('question_list.createdAt', 'DESC');
 
     if (filters?.search) {
       queryBuilder.andWhere(
-        '(list.title ILIKE :search OR list.description ILIKE :search)',
+        '(question_list.title ILIKE :search OR question_list.description ILIKE :search)',
         { search: `%${filters.search}%` }
       );
     }
@@ -36,19 +47,19 @@ export class QuestionListService {
       queryBuilder.andWhere('classes.id = :classId', { classId: filters.classId });
     }
 
-    const lists = await queryBuilder.getMany();
-    return lists.map(list => this.toResponseDTO(list));
+    const questionLists = await queryBuilder.getMany();
+    return questionLists.map(questionList => this.toResponseDTO(questionList));
   }
 
   async getListById(id: string): Promise<QuestionListResponseDTO> {
-    const list = await this.listRepository.findByIdWithRelations(id, true, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(id, true, true, true);
 
-    if (!list) {
-      logger.warn('Lista não encontrada', { listId: id });
+    if (!questionList) {
+      logger.warn('Lista não encontrada', { questionListId: id });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    return this.toResponseDTO(list);
+    return this.toResponseDTO(questionList);
   }
 
   async createList(data: CreateQuestionListDTO, authorId?: string): Promise<QuestionListResponseDTO> {
@@ -60,7 +71,7 @@ export class QuestionListService {
       percentage: g.percentage
     }));
 
-    const list = await this.listRepository.create({
+    const questionList = await this.questionListRepository.create({
       title: data.title,
       description: data.description,
       authorId,
@@ -75,125 +86,125 @@ export class QuestionListService {
 
     if (data.classIds && data.classIds.length > 0) {
       const classes = await this.classRepository.findByIds(data.classIds);
-      list.classes = classes;
-      const listWithClasses = await this.listRepository.save(list);
-      logger.info('Lista criada com turmas', { listId: listWithClasses.id, classesCount: classes.length });
-      return this.toResponseDTO(listWithClasses);
+      questionList.classes = classes;
+      const questionListWithClasses = await this.questionListRepository.save(questionList);
+      logger.info('Lista criada com turmas', { questionListId: questionListWithClasses.id, classesCount: classes.length });
+      return this.toResponseDTO(questionListWithClasses);
     }
 
-    logger.info('Lista criada', { listId: list.id });
-    return this.toResponseDTO(list);
+    logger.info('Lista criada', { questionListId: questionList.id });
+    return this.toResponseDTO(questionList);
   }
 
   async updateList(id: string, data: UpdateQuestionListDTO): Promise<QuestionListResponseDTO> {
-    const list = await this.listRepository.findByIdWithRelations(id, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(id, true, true);
 
-    if (!list) {
-      logger.warn('Lista não encontrada para atualização', { listId: id });
+    if (!questionList) {
+      logger.warn('Lista não encontrada para atualização', { questionListId: id });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    if (data.title) list.title = data.title;
-    if (data.description !== undefined) list.description = data.description;
-    if (data.startDate) list.startDate = new Date(data.startDate);
-    if (data.endDate) list.endDate = new Date(data.endDate);
-    if (data.isRestricted !== undefined) list.isRestricted = data.isRestricted;
+    if (data.title) questionList.title = data.title;
+    if (data.description !== undefined) questionList.description = data.description;
+    if (data.startDate) questionList.startDate = new Date(data.startDate);
+    if (data.endDate) questionList.endDate = new Date(data.endDate);
+    if (data.isRestricted !== undefined) questionList.isRestricted = data.isRestricted;
 
     if (data.classIds) {
       const classes = await this.classRepository.findByIds(data.classIds);
-      list.classes = classes;
+      questionList.classes = classes;
     }
 
-    await this.listRepository.save(list);
-    logger.info('Lista atualizada', { listId: id });
+    await this.questionListRepository.save(questionList);
+    logger.info('Lista atualizada', { questionListId: id });
 
-    return this.toResponseDTO(list);
+    return this.toResponseDTO(questionList);
   }
 
   async deleteList(id: string): Promise<void> {
-    const list = await this.listRepository.findById(id);
+    const questionList = await this.questionListRepository.findById(id);
 
-    if (!list) {
+    if (!questionList) {
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    await this.listRepository.delete(id);
+    await this.questionListRepository.delete(id);
   }
 
   async publishList(id: string): Promise<QuestionListResponseDTO> {
-    const list = await this.listRepository.findByIdWithRelations(id, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(id, true, true);
 
-    if (!list) {
+    if (!questionList) {
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    await this.listRepository.save(list);
+    await this.questionListRepository.save(questionList);
 
-    return this.toResponseDTO(list);
+    return this.toResponseDTO(questionList);
   }
 
   async unpublishList(id: string): Promise<QuestionListResponseDTO> {
-    const list = await this.listRepository.findByIdWithRelations(id, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(id, true, true);
 
-    if (!list) {
+    if (!questionList) {
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    await this.listRepository.save(list);
+    await this.questionListRepository.save(questionList);
 
-    return this.toResponseDTO(list);
+    return this.toResponseDTO(questionList);
   }
 
-  async addQuestionToList(listId: string, questionId: string): Promise<void> {
-    const list = await this.listRepository.findByIdWithRelations(listId, true);
+  async addQuestionToList(questionListId: string, questionId: string): Promise<void> {
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true);
 
-    if (!list) {
-      logger.warn('Lista não encontrada ao adicionar questão', { listId, questionId });
+    if (!questionList) {
+      logger.warn('Lista não encontrada ao adicionar questão', { questionListId, questionId });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
     const question = await this.questionRepository.findById(questionId);
 
     if (!question) {
-      logger.warn('Questão não encontrada ao adicionar', { listId, questionId });
+      logger.warn('Questão não encontrada ao adicionar', { questionListId, questionId });
       throw new NotFoundError('Questão não encontrada', 'QUESTION_NOT_FOUND');
     }
 
-    const alreadyAdded = list.questions.some(q => q.id === questionId);
+    const alreadyAdded = questionList.questions.some(q => q.id === questionId);
 
     if (!alreadyAdded) {
-      list.questions.push(question);
-      await this.listRepository.save(list);
-      logger.info('Questão adicionada à lista', { listId, questionId });
+      questionList.questions.push(question);
+      await this.questionListRepository.save(questionList);
+      logger.info('Questão adicionada à lista', { questionListId, questionId });
     } else {
-      logger.warn('Questão já estava na lista', { listId, questionId });
+      logger.warn('Questão já estava na lista', { questionListId, questionId });
     }
   }
 
-  async removeQuestionFromList(listId: string, questionId: string): Promise<void> {
-    const list = await this.listRepository.findByIdWithRelations(listId, true);
+  async removeQuestionFromList(questionListId: string, questionId: string): Promise<void> {
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true);
 
-    if (!list) {
-      logger.warn('Lista não encontrada ao remover questão', { listId, questionId });
+    if (!questionList) {
+      logger.warn('Lista não encontrada ao remover questão', { questionListId, questionId });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    const countBefore = list.questions.length;
-    list.questions = list.questions.filter((q: any) => q.id !== questionId);
-    const countAfter = list.questions.length;
+    const countBefore = questionList.questions.length;
+    questionList.questions = questionList.questions.filter((q: any) => q.id !== questionId);
+    const countAfter = questionList.questions.length;
 
     if (countBefore === countAfter) {
-      logger.warn('Questão não estava na lista', { listId, questionId });
+      logger.warn('Questão não estava na lista', { questionListId, questionId });
     } else {
-      await this.listRepository.save(list);
-      logger.info('Questão removida da lista', { listId, questionId });
+      await this.questionListRepository.save(questionList);
+      logger.info('Questão removida da lista', { questionListId, questionId });
     }
   }
 
-  private toResponseDTO(list: any): QuestionListResponseDTO {
-    const classIds = list.classes?.map((c: { id: string }) => c.id) || [];
+  private toResponseDTO(questionList: any): QuestionListResponseDTO {
+    const classIds = questionList.classes?.map((c: { id: string }) => c.id) || [];
     
-    const questions = (list.questions || [])
+    const questions = (questionList.questions || [])
       .sort((a: any, b: any) => {
         const aTime = a.createdAt?.getTime() || 0;
         const bTime = b.createdAt?.getTime() || 0;
@@ -227,41 +238,41 @@ export class QuestionListService {
       });
     
     const response = new QuestionListResponseDTO({
-      id: list.id,
-      title: list.title,
-      description: list.description,
-      authorId: list.authorId,
-      startDate: list.startDate?.toISOString(),
-      endDate: list.endDate?.toISOString(),
-      scoringMode: list.scoringMode,
-      maxScore: list.maxScore,
-      minQuestionsForMaxScore: list.minQuestionsForMaxScore,
-      questionGroups: list.questionGroups,
-      isRestricted: list.isRestricted,
+      id: questionList.id,
+      title: questionList.title,
+      description: questionList.description,
+      authorId: questionList.authorId,
+      startDate: questionList.startDate?.toISOString(),
+      endDate: questionList.endDate?.toISOString(),
+      scoringMode: questionList.scoringMode,
+      maxScore: questionList.maxScore,
+      minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
+      questionGroups: questionList.questionGroups,
+      isRestricted: questionList.isRestricted,
       classIds,
       questions,
       questionCount: questions.length,
-      createdAt: list.createdAt,
-      updatedAt: list.updatedAt,
-      calculatedStatus: list.getCalculatedStatus()
+      createdAt: questionList.createdAt,
+      updatedAt: questionList.updatedAt,
+      calculatedStatus: questionList.getCalculatedStatus()
     });
 
     return response;
   }
 
   async updateListScoring(id: string, data: any): Promise<QuestionListResponseDTO> {
-    const list = await this.listRepository.findByIdWithRelations(id, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(id, true, true);
 
-    if (!list) {
-      logger.warn('Lista não encontrada para atualizar scoring', { listId: id });
+    if (!questionList) {
+      logger.warn('Lista não encontrada para atualizar scoring', { questionListId: id });
       throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
     }
 
-    if (data.scoringMode !== undefined) list.scoringMode = data.scoringMode;
-    if (data.maxScore !== undefined) list.maxScore = data.maxScore;
-    if (data.minQuestionsForMaxScore !== undefined) list.minQuestionsForMaxScore = data.minQuestionsForMaxScore;
+    if (data.scoringMode !== undefined) questionList.scoringMode = data.scoringMode;
+    if (data.maxScore !== undefined) questionList.maxScore = data.maxScore;
+    if (data.minQuestionsForMaxScore !== undefined) questionList.minQuestionsForMaxScore = data.minQuestionsForMaxScore;
     if (data.questionGroups !== undefined) {
-      list.questionGroups = (data.questionGroups || []).map((g: any) => ({
+      questionList.questionGroups = (data.questionGroups || []).map((g: any) => ({
         id: g.id,
         name: g.name,
         questionIds: g.questionIds || [],
@@ -270,7 +281,7 @@ export class QuestionListService {
       }));
     }
 
-    await this.listRepository.save(list);
+    await this.questionListRepository.save(questionList);
 
     try {
       const grades = await this.gradeRepository.findByList(id);
@@ -280,7 +291,7 @@ export class QuestionListService {
           await this.gradeService.recalculateAndUpsertGrade(grade.studentId, id);
         } catch (gradeError) {
           logger.error('Erro ao recalcular nota individual', {
-            listId: id,
+            questionListId: id,
             studentId: grade.studentId,
             error: gradeError instanceof Error ? gradeError.message : 'Erro desconhecido'
           });
@@ -288,17 +299,17 @@ export class QuestionListService {
       }
 
       logger.info('Notas recalculadas após atualização de configuração', {
-        listId: id,
+        questionListId: id,
         totalGrades: grades.length
       });
     } catch (recalcError) {
       logger.error('Erro ao recalcular notas após atualização de configuração', {
-        listId: id,
+        questionListId: id,
         error: recalcError instanceof Error ? recalcError.message : 'Erro desconhecido'
       });
     }
 
-    const response = this.toResponseDTO(list);
+    const response = this.toResponseDTO(questionList);
     
     return response;
   }

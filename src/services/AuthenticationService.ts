@@ -1,3 +1,14 @@
+/**
+ * @module services/AuthenticationService
+ * @description Service for user authentication and login.
+ * 
+ * This service handles:
+ * - User login with email and password
+ * - Token generation and management
+ * - Logout and token blacklisting
+ * - Credentials validation
+ */
+
 import { injectable, inject } from 'tsyringe';
 import { UserRepository, TokenBlacklistRepository } from '../repositories';
 import { TokenManager, JwtPayload } from '../utils/TokenManager';
@@ -6,7 +17,10 @@ import { RefreshTokenService } from './RefreshTokenService';
 import { config } from '../config';
 import { logger, UnauthorizedError } from '../utils';
 
-
+/**
+ * Service for user authentication.
+ * @class AuthenticationService
+ */
 @injectable()
 export class AuthenticationService {
   constructor(

@@ -1,30 +1,50 @@
+/**
+ * Invite Data Transfer Objects (DTOs)
+ * 
+ * Defines request/response data structures for user invitation operations.
+ * Manages class invitations with role assignment and usage limits.
+ * 
+ * @module dtos/InviteDtos
+ */
 import { IsEnum, IsOptional, IsUUID, IsInt, Min, IsString } from 'class-validator';
 import { UserRole } from '../enums';
 
+/**
+ * DTO for creating an invitation
+ * 
+ * @class CreateInviteDTO
+ */
 export class CreateInviteDTO {
-  @IsEnum(UserRole, { message: 'Papel de usuário inválido' })
+  /** Role assigned to users who accept the invitation */
+  @IsEnum(UserRole, { message: 'Invalid user role' })
   role!: UserRole;
 
-  @IsInt({ message: 'Número máximo de usos deve ser um inteiro' })
-  @Min(1, { message: 'Número máximo de usos deve ser pelo menos 1' })
+  /** Maximum number of times this invitation can be used */
+  @IsInt({ message: 'Maximum number of uses must be an integer' })
+  @Min(1, { message: 'Maximum number of uses must be at least 1' })
   maxUses!: number;
 
-  @IsInt({ message: 'Dias de expiração deve ser um inteiro' })
-  @Min(1, { message: 'Dias de expiração deve ser pelo menos 1' })
+  /** Number of days before invitation expires */
+  @IsInt({ message: 'Expiration days must be an integer' })
+  @Min(1, { message: 'Expiration days must be at least 1' })
   expirationDays!: number;
 
+  /** Class ID for the invitation (optional) */
   @IsOptional()
-  @IsUUID('4', { message: 'ID da turma deve ser um UUID válido' })
+  @IsUUID('4', { message: 'Class ID must be a valid UUID' })
   classId?: string;
 
+  /** Class name for reference */
   @IsOptional()
-  @IsString({ message: 'Nome da turma deve ser uma string' })
+  @IsString({ message: 'Class name must be a string' })
   className?: string;
 
-  @IsString({ message: 'ID do criador é obrigatório' })
+  /** ID of the user creating the invitation */
+  @IsString({ message: 'Creator ID is required' })
   createdBy!: string;
 
-  @IsString({ message: 'Nome do criador é obrigatório' })
+  /** Name of the user creating the invitation */
+  @IsString({ message: 'Creator name is required' })
   creatorName!: string;
 }
 

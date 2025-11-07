@@ -1,55 +1,91 @@
+/**
+ * User Data Transfer Objects (DTOs)
+ * 
+ * Defines request/response data structures for user-related operations.
+ * Includes validation rules using class-validator decorators.
+ * 
+ * @module dtos/UserDtos
+ */
 import { IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
 import { UserRole } from '../enums';
 import { IsStrongPassword, IsValidEmail, IsValidStudentRegistration } from '../utils/validators';
 
+/**
+ * DTO for user registration request
+ * 
+ * @class UserRegisterDTO
+ */
 export class UserRegisterDTO {
+  /** User's full name - minimum 3 characters */
   @IsString()
   @MinLength(3, { message: 'Name must be at least 3 characters' })
   name!: string;
 
+  /** User's email address - must be valid format */
   @IsValidEmail({ message: 'Email must be valid' })
   email!: string;
 
+  /** User's password - must meet strength requirements */
   @IsString()
   @IsStrongPassword()
   password!: string;
 
+  /** User's role in the system */
   @IsOptional()
   @IsEnum(UserRole, { message: 'Invalid user role' })
   role?: UserRole;
 
+  /** Student registration number (if applicable) */
   @IsOptional()
   @IsValidStudentRegistration()
   studentRegistration?: string;
 
+  /** ID of class to join (if applicable) */
   @IsOptional()
   @IsString()
   classId?: string;
 
+  /** Invite token for registration (if using invite system) */
   @IsOptional()
   @IsString()
   inviteToken?: string;
 }
 
+/**
+ * DTO for user login request
+ * 
+ * @class UserLoginDTO
+ */
 export class UserLoginDTO {
+  /** Email address for authentication */
   @IsValidEmail({ message: 'Email must be valid' })
   email!: string;
 
+  /** Password for authentication */
   @IsString()
   @MinLength(1, { message: 'Password is required' })
   password!: string;
 }
 
+/**
+ * DTO for token refresh request
+ * 
+ * @class RefreshTokenDTO
+ */
 export class RefreshTokenDTO {
+  /** JWT refresh token */
   @IsString({ message: 'Refresh token must be a string' })
   @MinLength(100, { message: 'Refresh token invalid: incorrect format' })
   refreshToken!: string;
 }
 
+/**
+ * Interface for user grade information
+ */
 export interface UserGrade {
   id: string;
-  listId: string;
-  listTitle?: string;
+  questionListId: string;
+  questionListTitle?: string;
   score: number;
   createdAt: Date;
   updatedAt: Date;

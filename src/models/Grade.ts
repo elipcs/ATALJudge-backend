@@ -11,8 +11,8 @@ export class Grade {
   @Column({ name: 'student_id', type: 'uuid', nullable: false })
   studentId!: string;
 
-  @Column({ name: 'list_id', type: 'uuid', nullable: false })
-  listId!: string;
+  @Column({ name: 'question_list_id', type: 'uuid', nullable: false })
+  questionListId!: string;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: false, default: 0 })
   private _score!: number;
@@ -30,7 +30,7 @@ export class Grade {
     if (scoreVO) {
       this._score = scoreVO.getValue();
     } else {
-      this._score = value; // Permite temporariamente para validação posterior
+      this._score = value; // Allows temporarily for later validation
     }
   }
 
@@ -42,15 +42,15 @@ export class Grade {
   student!: Student;
 
   @ManyToOne(() => QuestionList, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'list_id' })
-  list!: QuestionList;
+  @JoinColumn({ name: 'question_list_id' })
+  questionList!: QuestionList;
 
   // ============================================================
   // DOMAIN METHODS (Business Logic)
   // ============================================================
 
   /**
-   * Verifica se a nota é aprovação (>= 60)
+   * Checks if the grade is passing (>= 60)
    */
   isPassing(_passingScore: number = 60): boolean {
     const scoreVO = Score.tryCreate(this._score);
@@ -58,7 +58,7 @@ export class Grade {
   }
 
   /**
-   * Verifica se a nota é nota máxima (100)
+   * Checks if the grade is perfect (100)
    */
   isPerfectScore(): boolean {
     const scoreVO = Score.tryCreate(this._score);
@@ -66,15 +66,15 @@ export class Grade {
   }
 
   /**
-   * Obtém a porcentagem da nota (já é 0-100)
+   * Gets the grade percentage (already 0-100)
    */
   getPercentage(): number {
     return this._score;
   }
 
   /**
-   * Verifica se a nota pode ser atualizada
-   * (Notas não podem ser reduzidas, apenas aumentadas)
+   * Checks if the grade can be updated
+   * (Grades cannot be reduced, only increased)
    */
   canBeUpdated(newScore: number): boolean {
     const currentScoreVO = Score.tryCreate(this._score);
@@ -86,7 +86,7 @@ export class Grade {
   }
 
   /**
-   * Atualiza a nota se o novo valor for maior
+   * Updates the grade if the new value is higher
    */
   updateScore(newScore: number): boolean {
     if (this.canBeUpdated(newScore)) {
@@ -97,7 +97,7 @@ export class Grade {
   }
 
   /**
-   * Verifica se a nota é recente (atualizada nos últimos 7 dias)
+   * Checks if the grade is recent (updated within the last 7 days)
    */
   isRecent(): boolean {
     const sevenDaysAgo = new Date();

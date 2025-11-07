@@ -1,3 +1,9 @@
+/**
+ * @module controllers/question
+ * @description REST API controller for question endpoints
+ * Manages question creation, retrieval, updates, and deletion
+ * @class QuestionController
+ */
 import { Router, Response } from 'express';
 import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase } from '../use-cases/question';
 import { authenticate, requireTeacher, AuthRequest } from '../middlewares';
@@ -25,7 +31,7 @@ router.post(
       authorId: req.user!.sub
     });
     
-    successResponse(res, question, 'Questão criada com sucesso', 201);
+    successResponse(res, question, 'Question created successfully', 201);
   })
 );
 
@@ -35,7 +41,7 @@ router.get(
   asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
     const questions = await getAllQuestionsUseCase.execute();
     
-    successResponse(res, { questions }, 'Lista de questões');
+    successResponse(res, { questions }, 'List of questions');
   })
 );
 
@@ -45,7 +51,7 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     const question = await getQuestionByIdUseCase.execute(req.params.id);
     
-    successResponse(res, question, 'Dados da questão');
+    successResponse(res, question, 'Question data');
   })
 );
 
@@ -61,7 +67,7 @@ router.put(
       userId: req.user!.sub
     });
     
-    successResponse(res, question, 'Questão atualizada com sucesso');
+    successResponse(res, question, 'Question updated successfully');
   })
 );
 
@@ -75,7 +81,7 @@ router.delete(
       userId: req.user!.sub
     });
     
-    successResponse(res, null, 'Questão deletada com sucesso');
+    successResponse(res, null, 'Question deleted successfully');
   })
 );
 

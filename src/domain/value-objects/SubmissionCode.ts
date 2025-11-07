@@ -2,7 +2,7 @@ import { ValidationError } from '../../utils';
 
 /**
  * SubmissionCode Value Object
- * Representa código-fonte de uma submissão com validação e sanitização
+ * Represents source code of a submission with validation and sanitization
  */
 export class SubmissionCode {
   private readonly value: string;
@@ -11,67 +11,67 @@ export class SubmissionCode {
 
   constructor(code: string) {
     if (code === null || code === undefined) {
-      throw new ValidationError('Código é obrigatório', 'CODE_REQUIRED');
+      throw new ValidationError('Code is required', 'CODE_REQUIRED');
     }
 
-    // Permite código vazio (alguns juízes aceitam)
+    // Allows empty code (some judges accept it)
     this.value = code;
     this.validate();
   }
 
   /**
-   * Valida o código
+   * Validates the code
    */
   private validate(): void {
-    // Validação de tamanho em bytes
+    // Size validation in bytes
     const sizeInBytes = Buffer.byteLength(this.value, 'utf8');
     if (sizeInBytes > SubmissionCode.MAX_SIZE_BYTES) {
       throw new ValidationError(
-        `Código muito grande (máximo ${SubmissionCode.MAX_SIZE_BYTES} bytes)`,
+        `Code too large (maximum ${SubmissionCode.MAX_SIZE_BYTES} bytes)`,
         'CODE_TOO_LARGE'
       );
     }
 
-    // Validação de número de linhas
+    // Line count validation
     const lineCount = this.getLineCount();
     if (lineCount > SubmissionCode.MAX_LINES) {
       throw new ValidationError(
-        `Código tem muitas linhas (máximo ${SubmissionCode.MAX_LINES} linhas)`,
+        `Code has too many lines (maximum ${SubmissionCode.MAX_LINES} lines)`,
         'CODE_TOO_MANY_LINES'
       );
     }
   }
 
   /**
-   * Retorna o valor do código
+   * Returns the code value
    */
   getValue(): string {
     return this.value;
   }
 
   /**
-   * Retorna o código como string
+   * Returns the code as string
    */
   toString(): string {
     return this.value;
   }
 
   /**
-   * Retorna o tamanho do código em bytes
+   * Returns the code size in bytes
    */
   getSizeInBytes(): number {
     return Buffer.byteLength(this.value, 'utf8');
   }
 
   /**
-   * Retorna o tamanho do código em kilobytes
+   * Returns the code size in kilobytes
    */
   getSizeInKB(): number {
     return this.getSizeInBytes() / 1024;
   }
 
   /**
-   * Retorna o número de linhas do código
+   * Returns the number of code lines
    */
   getLineCount(): number {
     if (!this.value) return 0;
@@ -79,52 +79,52 @@ export class SubmissionCode {
   }
 
   /**
-   * Retorna o número de caracteres do código
+   * Returns the character count of the code
    */
   getCharacterCount(): number {
     return this.value.length;
   }
 
   /**
-   * Verifica se o código está vazio
+   * Checks if the code is empty
    */
   isEmpty(): boolean {
     return this.value.trim().length === 0;
   }
 
   /**
-   * Remove comentários do código (simples, para estatísticas)
-   * Nota: Implementação simplificada, não cobre todos os casos
+   * Removes code comments (simple, for statistics)
+   * Note: Simplified implementation, does not cover all cases
    */
   removeComments(): string {
-    // Remove comentários de linha única (//)
+    // Remove single-line comments (//)
     let cleaned = this.value.replace(/\/\/.*$/gm, '');
     
-    // Remove comentários de múltiplas linhas (/* */)
+    // Remove multi-line comments (/* */)
     cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
     
     return cleaned.trim();
   }
 
   /**
-   * Retorna o número de linhas de código sem comentários
+   * Returns the number of code lines without comments
    */
   getEffectiveLineCount(): number {
     const cleaned = this.removeComments();
     if (!cleaned) return 0;
     
-    // Remove linhas em branco
+    // Remove blank lines
     const lines = cleaned.split('\n').filter(line => line.trim().length > 0);
     return lines.length;
   }
 
   /**
-   * Sanitiza o código removendo caracteres potencialmente perigosos
-   * (para prevenir injeção de código em logs, etc)
+   * Sanitizes the code by removing potentially dangerous characters
+   * (to prevent code injection in logs, etc)
    */
   sanitizeForDisplay(maxLength: number = 200): string {
     let sanitized = this.value
-      .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove caracteres de controle
+      .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
       .substring(0, maxLength);
     
     if (this.value.length > maxLength) {
@@ -135,7 +135,7 @@ export class SubmissionCode {
   }
 
   /**
-   * Retorna um resumo do código (primeiras linhas)
+   * Returns a preview of the code (first lines)
    */
   getPreview(lines: number = 5): string {
     const codeLines = this.value.split('\n');
@@ -149,14 +149,14 @@ export class SubmissionCode {
   }
 
   /**
-   * Verifica se o código contém uma substring
+   * Checks if the code contains a substring
    */
   contains(substring: string): boolean {
     return this.value.includes(substring);
   }
 
   /**
-   * Compara se dois códigos são iguais
+   * Compares if two codes are equal
    */
   equals(other: SubmissionCode): boolean {
     if (!other) return false;
@@ -164,7 +164,7 @@ export class SubmissionCode {
   }
 
   /**
-   * Cria um SubmissionCode a partir de uma string, retornando null se inválido
+   * Creates a SubmissionCode from a string, returning null if invalid
    */
   static tryCreate(code: string): SubmissionCode | null {
     try {
@@ -175,7 +175,7 @@ export class SubmissionCode {
   }
 
   /**
-   * Valida se uma string é um código válido
+   * Validates if a string is valid code
    */
   static isValid(code: string): boolean {
     try {
@@ -187,21 +187,21 @@ export class SubmissionCode {
   }
 
   /**
-   * Retorna o tamanho máximo permitido em bytes
+   * Returns the maximum allowed size in bytes
    */
   static getMaxSizeBytes(): number {
     return SubmissionCode.MAX_SIZE_BYTES;
   }
 
   /**
-   * Retorna o número máximo de linhas permitido
+   * Returns the maximum allowed number of lines
    */
   static getMaxLines(): number {
     return SubmissionCode.MAX_LINES;
   }
 
   /**
-   * Cria um SubmissionCode vazio
+   * Creates an empty SubmissionCode
    */
   static empty(): SubmissionCode {
     return new SubmissionCode('');

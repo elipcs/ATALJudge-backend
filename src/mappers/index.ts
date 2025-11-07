@@ -1,3 +1,11 @@
+/**
+ * Mappers Module Exports
+ * 
+ * Central export point for all mapper classes.
+ * Mappers handle conversion between domain models and DTOs.
+ * 
+ * @module mappers
+ */
 export { UserMapper } from './UserMapper';
 export { SubmissionMapper } from './SubmissionMapper';
 export { QuestionMapper } from './QuestionMapper';

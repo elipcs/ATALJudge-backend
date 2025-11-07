@@ -2,7 +2,7 @@ import { ValidationError } from '../../utils';
 
 /**
  * Email Value Object
- * Garante que emails sejam sempre válidos e normalizados
+ * Ensures that emails are always valid and normalized
  */
 export class Email {
   private readonly value: string;
@@ -18,34 +18,34 @@ export class Email {
   }
 
   /**
-   * Normaliza o email para lowercase e remove espaços
+   * Normalizes email to lowercase and removes spaces
    */
   private normalize(email: string): string {
     return email.toLowerCase().trim();
   }
 
   /**
-   * Valida o formato do email
+   * Validates email format
    */
   private validate(): void {
     if (!Email.EMAIL_REGEX.test(this.value)) {
-      throw new ValidationError('Email inválido', 'INVALID_EMAIL');
+      throw new ValidationError('Invalid email', 'INVALID_EMAIL');
     }
 
-    // Validação adicional: tamanho
+    // Additional validation: size
     if (this.value.length > 255) {
-      throw new ValidationError('Email muito longo (máximo 255 caracteres)', 'EMAIL_TOO_LONG');
+      throw new ValidationError('Email too long (maximum 255 characters)', 'EMAIL_TOO_LONG');
     }
 
-    // Validação adicional: parte local (antes do @)
+    // Additional validation: local part (before @)
     const [localPart, domain] = this.value.split('@');
     if (localPart.length > 64) {
-      throw new ValidationError('Parte local do email muito longa (máximo 64 caracteres)', 'EMAIL_LOCAL_TOO_LONG');
+      throw new ValidationError('Email local part too long (maximum 64 characters)', 'EMAIL_LOCAL_TOO_LONG');
     }
 
-    // Validação adicional: domínio
+    // Additional validation: domain
     if (domain.length > 253) {
-      throw new ValidationError('Domínio do email muito longo (máximo 253 caracteres)', 'EMAIL_DOMAIN_TOO_LONG');
+      throw new ValidationError('Email domain too long (maximum 253 characters)', 'EMAIL_DOMAIN_TOO_LONG');
     }
   }
 
@@ -64,7 +64,7 @@ export class Email {
   }
 
   /**
-   * Compara dois emails para verificar igualdade
+   * Compares two emails to check equality
    */
   equals(other: Email): boolean {
     if (!other) return false;
@@ -72,7 +72,7 @@ export class Email {
   }
 
   /**
-   * Retorna o domínio do email
+   * Returns the email domain
    */
   getDomain(): string {
     return this.value.split('@')[1];
@@ -86,7 +86,7 @@ export class Email {
   }
 
   /**
-   * Cria um Email a partir de uma string, retornando null se inválido
+   * Creates an Email from a string, returning null if invalid
    */
   static tryCreate(email: string): Email | null {
     try {
@@ -97,7 +97,7 @@ export class Email {
   }
 
   /**
-   * Valida se uma string é um email válido sem criar o objeto
+   * Validates if a string is a valid email without creating the object
    */
   static isValid(email: string): boolean {
     try {

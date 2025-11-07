@@ -1,8 +1,17 @@
+/**
+ * @module services/AllowedIPService
+ * @description Service for managing allowed IP addresses for security.
+ */
+
 import { injectable, inject } from 'tsyringe';
 import { AllowedIPRepository } from '../repositories/AllowedIPRepository';
 import { AllowedIPDTO, CreateAllowedIPDTO, UpdateAllowedIPDTO } from '../dtos';
 import { NotFoundError, ConflictError, InternalServerError } from '../utils';
 
+/**
+ * Service for allowed IP management.
+ * @class AllowedIPService
+ */
 @injectable()
 export class AllowedIPService {
   constructor(

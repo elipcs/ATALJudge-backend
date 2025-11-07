@@ -1,7 +1,28 @@
+/**
+ * Error Handling Middleware Module
+ * 
+ * Provides centralized error handling for the Express application.
+ * Catches and formats errors for consistent API responses.
+ * 
+ * @module middlewares/error
+ */
 import { Request, Response, NextFunction } from 'express';
 import { errorResponse, validationErrorResponse } from '../utils/responses';
 import { logger, AppError, ValidationError as CustomValidationError } from '../utils';
 
+/**
+ * Global error handler middleware
+ * 
+ * Catches all errors thrown in route handlers or other middleware.
+ * Formats errors and sends appropriate HTTP responses.
+ * 
+ * @function errorHandler
+ * @param {Error} error - The error object
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} _next - Express next middleware function
+ * @returns {void}
+ */
 export function errorHandler(
   error: Error,
   req: Request,

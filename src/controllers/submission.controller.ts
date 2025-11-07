@@ -1,3 +1,9 @@
+/**
+ * @module controllers/submission
+ * @description REST API controller for submission endpoints
+ * Manages submission creation, retrieval, and result handling
+ * @class SubmissionController
+ */
 import { Router, Response } from 'express';
 import { SubmissionService } from '../services/SubmissionService';
 import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase } from '../use-cases/submission';
@@ -40,7 +46,7 @@ router.get(
     
     const result = await getAllSubmissionsUseCase.execute(filters);
     
-    successResponse(res, result, 'Lista de submissões');
+    successResponse(res, result, 'List of submissions');
   })
 );
 
@@ -50,7 +56,7 @@ router.get(
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     const submission = await getSubmissionUseCase.execute(req.params.id);
     
-    successResponse(res, submission, 'Submissão encontrada');
+    successResponse(res, submission, 'Submission found');
   })
 );
 
@@ -60,7 +66,7 @@ router.post(
   validateBody(CreateSubmissionDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     if (!req.user) {
-      throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
+      throw new UnauthorizedError('User not authenticated', 'UNAUTHORIZED');
     }
     
     const submission = await createSubmissionUseCase.execute({
@@ -68,7 +74,7 @@ router.post(
       userId: req.user.sub
     });
     
-    successResponse(res, submission, 'Submissão criada com sucesso', 201);
+    successResponse(res, submission, 'Submission created successfully', 201);
   })
 );
 
@@ -77,13 +83,13 @@ router.post(
   authenticate,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     if (!req.user) {
-      throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
+      throw new UnauthorizedError('User not authenticated', 'UNAUTHORIZED');
     }
     
     const { questionId, code, language } = req.body;
     
     if (!questionId || !code || !language) {
-      throw new ValidationError('Campos obrigatórios: questionId, code, language', 'REQUIRED_FIELDS');
+      throw new ValidationError('Required fields: questionId, code, language', 'REQUIRED_FIELDS');
     }
     
     const result = await submissionService.submitCode({
@@ -93,7 +99,7 @@ router.post(
       userId: req.user.sub
     });
     
-    successResponse(res, result, 'Código submetido com sucesso', 201);
+    successResponse(res, result, 'Code submitted successfully', 201);
   })
 );
 
@@ -106,7 +112,7 @@ router.get(
       requestUserId: req.user?.role === UserRole.STUDENT ? req.user.sub : undefined
     });
     
-    successResponse(res, submissionDetail, 'Resultados da submissão');
+    successResponse(res, submissionDetail, 'Submission results');
   })
 );
 

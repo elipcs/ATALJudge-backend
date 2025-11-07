@@ -1,11 +1,33 @@
+/**
+ * Question List Data Mapper
+ * 
+ * Maps between QuestionList domain models and DTOs.
+ * Handles conversion of QuestionList entities to data transfer objects for API responses.
+ * 
+ * @module mappers/QuestionListMapper
+ */
 import { QuestionList } from '../models/QuestionList';
 import { QuestionListResponseDTO } from '../dtos/QuestionListDtos';
 
+/**
+ * Question List Mapper Class
+ * 
+ * Provides static methods for converting between QuestionList domain objects and DTOs.
+ * 
+ * @class QuestionListMapper
+ */
 export class QuestionListMapper {
-  static toDTO(list: QuestionList): QuestionListResponseDTO {
-    const classIds = list.classes?.map((c: { id: string }) => c.id) || [];
+  /**
+   * Converts a QuestionList domain model to QuestionListResponseDTO
+   * 
+   * @static
+   * @param {QuestionList} questionList - The question list domain model
+   * @returns {QuestionListResponseDTO} The question list data transfer object
+   */
+  static toDTO(questionList: QuestionList): QuestionListResponseDTO {
+    const classIds = questionList.classes?.map((c: { id: string }) => c.id) || [];
     
-    const questions = (list.questions || [])
+    const questions = (questionList.questions || [])
       .sort((a: any, b: any) => {
         const aTime = a.createdAt?.getTime() || 0;
         const bTime = b.createdAt?.getTime() || 0;
@@ -39,23 +61,23 @@ export class QuestionListMapper {
       });
     
     return new QuestionListResponseDTO({
-      id: list.id,
-      title: list.title,
-      description: list.description,
-      authorId: list.authorId,
-      startDate: list.startDate?.toISOString(),
-      endDate: list.endDate?.toISOString(),
-      scoringMode: list.scoringMode,
-      maxScore: list.maxScore,
-      minQuestionsForMaxScore: list.minQuestionsForMaxScore,
-      questionGroups: list.questionGroups,
-      isRestricted: list.isRestricted,
+      id: questionList.id,
+      title: questionList.title,
+      description: questionList.description,
+      authorId: questionList.authorId,
+      startDate: questionList.startDate?.toISOString(),
+      endDate: questionList.endDate?.toISOString(),
+      scoringMode: questionList.scoringMode,
+      maxScore: questionList.maxScore,
+      minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
+      questionGroups: questionList.questionGroups,
+      isRestricted: questionList.isRestricted,
       classIds,
       questions,
       questionCount: questions.length,
-      createdAt: list.createdAt,
-      updatedAt: list.updatedAt,
-      calculatedStatus: list.getCalculatedStatus()
+      createdAt: questionList.createdAt,
+      updatedAt: questionList.updatedAt,
+      calculatedStatus: questionList.getCalculatedStatus()
     });
   }
 }

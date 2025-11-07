@@ -18,9 +18,9 @@ export class GetListGradesUseCase implements IUseCase<string, any[]> {
     @inject(GradeRepository) private gradeRepository: GradeRepository
   ) {}
 
-  async execute(listId: string): Promise<any[]> {
+  async execute(questionListId: string): Promise<any[]> {
     // 1. Find grades for the list
-    const grades = await this.gradeRepository.findByList(listId);
+    const grades = await this.gradeRepository.findByList(questionListId);
     
     // 2. Order by score (highest to lowest)
     grades.sort((a, b) => b.score - a.score);

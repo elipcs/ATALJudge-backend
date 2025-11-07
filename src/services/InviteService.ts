@@ -1,3 +1,10 @@
+/**
+ * @module services/InviteService
+ * @description Service to manage registration invitations in the system.
+ * Provides operations to create, validate, consume and delete invitations for
+ * new users to register and join classes.
+ * @class InviteService
+ */
 import { injectable, inject } from 'tsyringe';
 import { InviteRepository } from '../repositories';
 import { Invite } from '../models/Invite';

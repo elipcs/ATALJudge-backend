@@ -1,13 +1,37 @@
+/**
+ * @module services/SubmissionQueueService
+ * @description Service for managing submission processing queue using BullMQ and Redis.
+ * 
+ * This service handles:
+ * - Queuing submissions for async processing
+ * - Worker initialization and job processing
+ * - Queue statistics and monitoring
+ * - Job retry logic and error handling
+ * 
+ * @example
+ * const queueService = container.resolve(SubmissionQueueService);
+ * await queueService.addSubmissionToQueue(submissionId);
+ * queueService.initializeWorker(submissionService);
+ */
+
 import { injectable } from 'tsyringe';
 import { Queue, Worker, Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import { logger } from '../utils';
 import { SubmissionService } from './SubmissionService';
 
+/**
+ * Job data structure for submission processing.
+ */
 export interface SubmissionJobData {
   submissionId: string;
 }
 
+/**
+ * Service for managing submission processing queue.
+ * 
+ * @class SubmissionQueueService
+ */
 @injectable()
 export class SubmissionQueueService {
   private queue: Queue<SubmissionJobData>;
@@ -40,12 +64,18 @@ export class SubmissionQueueService {
       },
     });
 
-    logger.info('SubmissionQueueService inicializado');
+    logger.info('SubmissionQueueService initialized');
   }
 
-
+  /**
+   * Adds a submission to the processing queue.
+   * 
+   * @async
+   * @param {string} submissionId - The submission ID to queue
+   * @returns {Promise<Job<SubmissionJobData>>} The created job
+   */
   async addSubmissionToQueue(submissionId: string): Promise<Job<SubmissionJobData>> {
-    logger.info('Adicionando submissão à fila', { submissionId });
+    logger.info('Adding submission to queue', { submissionId });
 
     const job = await this.queue.add(
       'process-submission',
@@ -55,7 +85,7 @@ export class SubmissionQueueService {
       }
     );
 
-    logger.info('Submissão adicionada à fila com sucesso', {
+    logger.info('Submission added to queue successfully', {
       submissionId,
       jobId: job.id,
     });
@@ -63,21 +93,26 @@ export class SubmissionQueueService {
     return job;
   }
 
-
+  /**
+   * Initializes the worker for processing queued submissions.
+   * 
+   * @param {SubmissionService} submissionService - The service to process submissions
+   * @returns {void}
+   */
   initializeWorker(submissionService: SubmissionService): void {
     if (this.worker) {
-      logger.warn('Worker já inicializado, ignorando');
+      logger.warn('Worker already initialized, ignoring');
       return;
     }
 
-    logger.info('Inicializando worker de processamento de submissões');
+    logger.info('Initializing submission processing worker');
 
     this.worker = new Worker<SubmissionJobData>(
       'submission-processing',
       async (job: Job<SubmissionJobData>) => {
         const { submissionId } = job.data;
 
-        logger.info('Worker processando submissão', {
+        logger.info('Worker processing submission', {
           submissionId,
           jobId: job.id,
           attempt: job.attemptsMade + 1,
@@ -86,14 +121,14 @@ export class SubmissionQueueService {
         try {
           await submissionService.processSubmission(submissionId);
 
-          logger.info('Worker concluiu processamento da submissão', {
+          logger.info('Worker completed submission processing', {
             submissionId,
             jobId: job.id,
           });
 
           return { success: true, submissionId };
         } catch (error) {
-          logger.error('Worker falhou ao processar submissão', {
+          logger.error('Worker failed to process submission', {
             submissionId,
             jobId: job.id,
             error: error instanceof Error ? error.message : String(error),
@@ -114,14 +149,14 @@ export class SubmissionQueueService {
     );
 
     this.worker.on('completed', (job: Job<SubmissionJobData>) => {
-      logger.info('Job concluído com sucesso', {
+      logger.info('Job completed successfully', {
         jobId: job.id,
         submissionId: job.data.submissionId,
       });
     });
 
     this.worker.on('failed', (job: Job<SubmissionJobData> | undefined, error: Error) => {
-      logger.error('Job falhou', {
+      logger.error('Job failed', {
         jobId: job?.id,
         submissionId: job?.data.submissionId,
         error: error.message,
@@ -130,13 +165,13 @@ export class SubmissionQueueService {
     });
 
     this.worker.on('active', (job: Job<SubmissionJobData>) => {
-      logger.debug('Job iniciado', {
+      logger.debug('Job started', {
         jobId: job.id,
         submissionId: job.data.submissionId,
       });
     });
 
-    logger.info('Worker inicializado com sucesso', {
+    logger.info('Worker initialized successfully', {
       concurrency: this.worker.opts.concurrency,
     });
   }

@@ -6,15 +6,15 @@ import { GradeMapper } from '../../mappers';
 
 export interface GetGradeByStudentAndListInput {
   studentId: string;
-  listId: string;
+  questionListId: string;
 }
 
 /**
  * Use Case: Get student grade for a specific list
  * 
  * Responsibilities:
- * - Search grade by studentId + listId combination
- * - Include relationships (student, list)
+ * - Search grade by studentId + questionListId combination
+ * - Include relationships (student, question_list)
  * - Convert to DTO
  * - Return null if not found (not an error)
  */
@@ -25,10 +25,10 @@ export class GetGradeByStudentAndListUseCase implements IUseCase<GetGradeByStude
   ) {}
 
   async execute(input: GetGradeByStudentAndListInput): Promise<GradeResponseDTO | null> {
-    const { studentId, listId } = input;
+    const { studentId, questionListId } = input;
 
     // 1. Find grade with relationships
-    const grade = await this.gradeRepository.findByStudentAndList(studentId, listId);
+    const grade = await this.gradeRepository.findByStudentAndList(studentId, questionListId);
 
     // 2. Return null if not found (student may not have a grade yet)
     if (!grade) {

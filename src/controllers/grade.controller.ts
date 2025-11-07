@@ -1,4 +1,10 @@
-﻿import { Router, Response } from 'express';
+﻿/**
+ * @module controllers/grade
+ * @description REST API controller for grade endpoints
+ * Manages grade retrieval and calculation for students and question lists
+ * @class GradeController
+ */
+import { Router, Response } from 'express';
 import { 
   GetGradeUseCase, 
   CalculateGradeUseCase, 
@@ -20,61 +26,61 @@ function createGradeController(
 ): Router {
   const router = Router();
 
-  // GET /api/grades/student/:studentId/list/:listId - Obter nota de um aluno em uma lista específica
+  // GET /api/grades/student/:studentId/questionList/:questionListId - Get student grade on a specific list
   router.get(
-    '/student/:studentId/list/:listId',
+    '/student/:studentId/questionList/:questionListId',
     authenticate,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
       const grade = await getGradeByStudentAndListUseCase.execute({
         studentId: req.params.studentId,
-        listId: req.params.listId
+        questionListId: req.params.questionListId
       });
       
-      successResponse(res, grade, 'Nota do aluno na lista');
+      successResponse(res, grade, 'Student grade in list');
     })
   );
 
-  // POST /api/grades/calculate/student/:studentId/list/:listId - Calcular/recalcular nota
+  // POST /api/grades/calculate/student/:studentId/questionList/:questionListId - Calculate/recalculate grade
   router.post(
-    '/calculate/student/:studentId/list/:listId',
+    '/calculate/student/:studentId/questionList/:questionListId',
     authenticate,
     requireTeacher,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
       const grade = await calculateGradeUseCase.execute({
         studentId: req.params.studentId,
-        listId: req.params.listId
+        questionListId: req.params.questionListId
       });
       
-      successResponse(res, grade, 'Nota calculada com sucesso');
+      successResponse(res, grade, 'Grade calculated successfully');
     })
   );
 
-  // GET /api/grades/student/:studentId - Obter todas as notas de um aluno
+  // GET /api/grades/student/:studentId - Get all grades for a student
   router.get(
     '/student/:studentId',
     authenticate,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-      // Estudante só pode ver suas próprias notas
+      // Student can only see their own grades
       if (req.user?.role === UserRole.STUDENT && req.user.sub !== req.params.studentId) {
-        successResponse(res, { grades: [] }, 'Sem permissão para visualizar essas notas');
+        successResponse(res, { grades: [] }, 'No permission to view these grades');
         return;
       }
 
       const grades = await getStudentGradesUseCase.execute(req.params.studentId);
       
-      successResponse(res, { grades }, 'Notas do aluno');
+      successResponse(res, { grades }, 'Student grades');
     })
   );
 
-  // GET /api/grades/list/:listId - Obter todas as notas de uma lista
+  // GET /api/grades/questionList/:questionListId - Get all grades for a list
   router.get(
-    '/list/:listId',
+    '/questionList/:questionListId',
     authenticate,
     requireTeacher,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-      const grades = await getListGradesUseCase.execute(req.params.listId);
+      const grades = await getListGradesUseCase.execute(req.params.questionListId);
       
-      successResponse(res, { grades }, 'Notas da lista');
+      successResponse(res, { grades }, 'List grades');
     })
   );
 

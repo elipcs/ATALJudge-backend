@@ -8,7 +8,7 @@ import { GradeMapper } from '../../mappers';
 
 export interface CalculateGradeUseCaseInput {
   studentId: string;
-  listId: string;
+  questionListId: string;
 }
 
 /**
@@ -25,29 +25,29 @@ export interface CalculateGradeUseCaseInput {
 export class CalculateGradeUseCase implements IUseCase<CalculateGradeUseCaseInput, GradeResponseDTO> {
   constructor(
     @inject(GradeRepository) private gradeRepository: GradeRepository,
-    @inject(QuestionListRepository) private listRepository: QuestionListRepository,
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository,
     @inject(SubmissionRepository) private submissionRepository: SubmissionRepository
   ) {}
 
   async execute(input: CalculateGradeUseCaseInput): Promise<GradeResponseDTO> {
-    const { studentId, listId } = input;
+    const { studentId, questionListId } = input;
 
-    logger.info('[CalculateGradeUseCase] Calculating grade', { studentId, listId });
+    logger.info('[CalculateGradeUseCase] Calculating grade', { studentId, questionListId });
 
     // 1. Find list with questions
-    const list = await this.listRepository.findByIdWithRelations(listId, true, false, false);
-    if (!list) {
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, false, false);
+    if (!questionList) {
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }
 
     // 2. Check if list has questions
-    if (!list.hasQuestions()) {
-      logger.warn('[CalculateGradeUseCase] List without questions', { listId });
-      return this.createOrUpdateGrade(studentId, listId, 0);
+    if (!questionList.hasQuestions()) {
+      logger.warn('[CalculateGradeUseCase] List without questions', { questionListId });
+      return this.createOrUpdateGrade(studentId, questionListId, 0);
     }
 
     // 3. Find all student submissions for list questions
-    const questionIds = list.questions!.map(q => q.id);
+    const questionIds = questionList.questions!.map(q => q.id);
     const allSubmissions = await Promise.all(
       questionIds.map(questionId => 
         this.submissionRepository.findByUserAndQuestion(studentId, questionId)
@@ -57,14 +57,14 @@ export class CalculateGradeUseCase implements IUseCase<CalculateGradeUseCaseInpu
     // 4. Calculate score
     let totalScore = 0;
 
-    if (list.usesGroupScoring()) {
+    if (questionList.usesGroupScoring()) {
       // Group system: best submission per group
       const groups = new Map<string, number>();
       
-      list.questions!.forEach((question, index) => {
+      questionList.questions!.forEach((question, index) => {
         const submissions = allSubmissions[index];
         const bestScore = this.getBestScore(submissions);
-        const group = list.getQuestionGroup(question.id);
+        const group = questionList.getQuestionGroup(question.id);
         
         if (group) {
           const groupId = group.id;
@@ -87,19 +87,19 @@ export class CalculateGradeUseCase implements IUseCase<CalculateGradeUseCaseInpu
     }
 
     // 5. Normalize score to 0-100
-    const maxScore = list.calculateMaxPossibleScore();
+    const maxScore = questionList.calculateMaxPossibleScore();
     const normalizedScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
     logger.info('[CalculateGradeUseCase] Grade calculated', { 
       studentId, 
-      listId, 
+      questionListId, 
       normalizedScore,
       totalScore,
       maxScore
     });
 
     // 6. Create or update grade
-    return this.createOrUpdateGrade(studentId, listId, normalizedScore);
+    return this.createOrUpdateGrade(studentId, questionListId, normalizedScore);
   }
 
   /**
@@ -115,11 +115,11 @@ export class CalculateGradeUseCase implements IUseCase<CalculateGradeUseCaseInpu
    */
   private async createOrUpdateGrade(
     studentId: string,
-    listId: string,
+    questionListId: string,
     score: number
   ): Promise<GradeResponseDTO> {
     // Find existing grade
-    let grade = await this.gradeRepository.findByStudentAndList(studentId, listId);
+    let grade = await this.gradeRepository.findByStudentAndList(studentId, questionListId);
 
     if (grade) {
       // Update existing grade using domain method
@@ -130,7 +130,7 @@ export class CalculateGradeUseCase implements IUseCase<CalculateGradeUseCaseInpu
       // Create new grade
       grade = new Grade();
       grade.studentId = studentId;
-      grade.listId = listId;
+      grade.questionListId = questionListId;
       grade.score = score;
       grade = await this.gradeRepository.create(grade);
     }

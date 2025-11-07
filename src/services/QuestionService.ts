@@ -1,3 +1,10 @@
+/**
+ * @module services/QuestionService
+ * @description Service for managing programming questions in the system.
+ * Provides operations to create, update, delete, and retrieve questions,
+ * as well as manage their types, test cases, and relationships with question lists.
+ * @class QuestionService
+ */
 import { injectable, inject } from 'tsyringe';
 import { QuestionRepository } from '../repositories';
 import { CreateQuestionDTO, UpdateQuestionDTO, QuestionResponseDTO } from '../dtos';
@@ -22,47 +29,47 @@ export class QuestionService {
     const question = await this.questionRepository.findById(id);
     
     if (!question) {
-      throw new NotFoundError('Questão não encontrada', 'QUESTION_NOT_FOUND');
+      throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
     }
     
     return this.toResponseDTO(question);
   }
 
-  async createQuestion(data: CreateQuestionDTO | any, authorId?: string, listId?: string): Promise<QuestionResponseDTO> {
-    logger.debug('[QUESTION SERVICE] createQuestion chamado', {
+  async createQuestion(data: CreateQuestionDTO | any, authorId?: string, questionListId?: string): Promise<QuestionResponseDTO> {
+    logger.debug('[QUESTION SERVICE] createQuestion called', {
       title: data.title,
       authorId,
-      listId,
+      questionListId,
       submissionType: data.submissionType
     });
 
     const submissionType: SubmissionType = data.submissionType || (data.contestId ? 'codeforces' : 'local');
 
     if (!data.submissionType) {
-      return await this.createBasicQuestion(data, authorId, listId, submissionType);
+      return await this.createBasicQuestion(data, authorId, questionListId, submissionType);
     }
 
-    if (!listId) {
+    if (!questionListId) {
       return this.createQuestionDirect(data, authorId, submissionType);
     }
 
-    return await this.createQuestionAndAddToList(data, authorId, listId, submissionType);
+    return await this.createQuestionAndAddToList(data, authorId, questionListId, submissionType);
   }
 
   private async createBasicQuestion(
     data: any, 
     authorId?: string, 
-    listId?: string,
+    questionListId?: string,
     submissionType: SubmissionType = 'local'
   ): Promise<QuestionResponseDTO> {
-    logger.debug('[QUESTION SERVICE] Criando questão básica (sem tipo definido)', {
+    logger.debug('[QUESTION SERVICE] Creating basic question (no type defined)', {
       title: data.title,
       authorId,
-      listId,
+      questionListId,
       submissionType
     });
 
-    if (!listId) {
+    if (!questionListId) {
       const question = new Question();
       question.title = data.title;
       question.statement = data.statement;
@@ -79,7 +86,7 @@ export class QuestionService {
 
       const saved = await this.questionRepository.save(question);
       
-      logger.info('[QUESTION SERVICE] Questão básica criada', {
+      logger.info('[QUESTION SERVICE] Basic question created', {
         questionId: saved.id,
         title: saved.title,
         authorId: saved.authorId,
@@ -89,21 +96,21 @@ export class QuestionService {
       return this.toResponseDTO(saved);
     }
 
-    return await this.createBasicQuestionAndAddToList(data, authorId, listId, submissionType);
+    return await this.createBasicQuestionAndAddToList(data, authorId, questionListId, submissionType);
   }
 
   private async createBasicQuestionAndAddToList(
     data: any, 
     authorId: string | undefined, 
-    listId: string,
+    questionListId: string,
     submissionType: SubmissionType = 'local'
   ): Promise<QuestionResponseDTO> {
     const queryRunner = AppDataSource.createQueryRunner();
 
     try {
-      logger.debug('[QUESTION SERVICE] Iniciando transação para criar questão básica e adicionar à lista', {
+      logger.debug('[QUESTION SERVICE] Starting transaction to create basic question and add to list', {
         title: data.title,
-        listId,
+        questionListId,
         submissionType
       });
 
@@ -126,50 +133,50 @@ export class QuestionService {
 
       const savedQuestion = await queryRunner.manager.save(question);
 
-      logger.debug('[QUESTION SERVICE] Questão básica criada na transação', {
+      logger.debug('[QUESTION SERVICE] Basic question created in transaction', {
         questionId: savedQuestion.id,
         title: savedQuestion.title,
         submissionType: savedQuestion.submissionType
       });
 
-      const list = await queryRunner.manager.findOne(QuestionList, {
-        where: { id: listId }
+      const questionList = await queryRunner.manager.findOne(QuestionList, {
+        where: { id: questionListId }
       });
 
-      if (!list) {
-        throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
+      if (!questionList) {
+        throw new NotFoundError('Question list not found', 'LIST_NOT_FOUND');
       }
 
-      logger.debug('[QUESTION SERVICE] Lista encontrada, adicionando questão', {
-        listId,
+      logger.debug('[QUESTION SERVICE] Question list found, adding question', {
+        questionListId,
         questionId: savedQuestion.id
       });
 
       await queryRunner.manager.query(
-        `INSERT INTO question_list_questions (list_id, question_id) VALUES ($1, $2)
-         ON CONFLICT (list_id, question_id) DO NOTHING`,
-        [listId, savedQuestion.id]
+        `INSERT INTO question_list_questions (question_list_id, question_id) VALUES ($1, $2)
+         ON CONFLICT (question_list_id, question_id) DO NOTHING`,
+        [questionListId, savedQuestion.id]
       );
 
-      logger.debug('[QUESTION SERVICE] Questão adicionada ao relacionamento', {
-        listId,
+      logger.debug('[QUESTION SERVICE] Question added to relationship', {
+        questionListId,
         questionId: savedQuestion.id
       });
 
       await queryRunner.commitTransaction();
 
-      logger.info('[QUESTION SERVICE] Transação concluída com sucesso para questão básica', {
+      logger.info('[QUESTION SERVICE] Transaction completed successfully for basic question', {
         questionId: savedQuestion.id,
-        listId,
+        questionListId,
         title: savedQuestion.title,
         submissionType: savedQuestion.submissionType
       });
 
       return this.toResponseDTO(savedQuestion);
     } catch (error) {
-      logger.error('[QUESTION SERVICE] Erro na transação de questão básica, revertendo', {
+      logger.error('[QUESTION SERVICE] Error in basic question transaction, rolling back', {
         title: data.title,
-        listId,
+        questionListId,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined
       });
@@ -186,7 +193,7 @@ export class QuestionService {
     authorId: string | undefined,
     submissionType: SubmissionType
   ): Promise<QuestionResponseDTO> {
-    logger.debug('[QUESTION SERVICE] Criando questão completa', {
+    logger.debug('[QUESTION SERVICE] Creating complete question', {
       title: data.title,
       submissionType
     });
@@ -214,7 +221,7 @@ export class QuestionService {
 
     const saved = await this.questionRepository.save(question);
 
-    logger.info('[QUESTION SERVICE] Questão completa criada', {
+    logger.info('[QUESTION SERVICE] Complete question created', {
       questionId: saved.id,
       title: saved.title,
       submissionType: saved.submissionType
@@ -226,15 +233,15 @@ export class QuestionService {
   private async createQuestionAndAddToList(
     data: CreateQuestionDTO | any,
     authorId: string | undefined,
-    listId: string,
+    questionListId: string,
     submissionType: SubmissionType
   ): Promise<QuestionResponseDTO> {
     const queryRunner = AppDataSource.createQueryRunner();
 
     try {
-      logger.debug('[QUESTION SERVICE] Iniciando transação para criar questão e adicionar à lista', {
+      logger.debug('[QUESTION SERVICE] Starting transaction to create question and add to list', {
         title: data.title,
-        listId,
+        questionListId,
         submissionType
       });
 
@@ -264,50 +271,50 @@ export class QuestionService {
 
       const savedQuestion = await queryRunner.manager.save(question);
 
-      logger.debug('[QUESTION SERVICE] Questão criada na transação', {
+      logger.debug('[QUESTION SERVICE] Question created in transaction', {
         questionId: savedQuestion.id,
         title: savedQuestion.title,
         submissionType: savedQuestion.submissionType
       });
 
-      const list = await queryRunner.manager.findOne(QuestionList, {
-        where: { id: listId }
+      const questionList = await queryRunner.manager.findOne(QuestionList, {
+        where: { id: questionListId }
       });
 
-      if (!list) {
-        throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
+      if (!questionList) {
+        throw new NotFoundError('Question list not found', 'LIST_NOT_FOUND');
       }
 
-      logger.debug('[QUESTION SERVICE] Lista encontrada, adicionando questão', {
-        listId,
+      logger.debug('[QUESTION SERVICE] Question list found, adding question', {
+        questionListId,
         questionId: savedQuestion.id
       });
 
       await queryRunner.manager.query(
-        `INSERT INTO question_list_questions (list_id, question_id) VALUES ($1, $2)
-         ON CONFLICT (list_id, question_id) DO NOTHING`,
-        [listId, savedQuestion.id]
+        `INSERT INTO question_list_questions (question_list_id, question_id) VALUES ($1, $2)
+         ON CONFLICT (question_list_id, question_id) DO NOTHING`,
+        [questionListId, savedQuestion.id]
       );
 
-      logger.debug('[QUESTION SERVICE] Questão adicionada ao relacionamento', {
-        listId,
+      logger.debug('[QUESTION SERVICE] Question added to relationship', {
+        questionListId,
         questionId: savedQuestion.id
       });
 
       await queryRunner.commitTransaction();
 
-      logger.info('[QUESTION SERVICE] Transação concluída com sucesso', {
+      logger.info('[QUESTION SERVICE] Transaction completed successfully', {
         questionId: savedQuestion.id,
-        listId,
+        questionListId,
         title: savedQuestion.title,
         submissionType: savedQuestion.submissionType
       });
 
       return this.toResponseDTO(savedQuestion);
     } catch (error) {
-      logger.error('[QUESTION SERVICE] Erro na transação, revertendo', {
+      logger.error('[QUESTION SERVICE] Error in transaction, rolling back', {
         title: data.title,
-        listId,
+        questionListId,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined
       });
@@ -352,7 +359,7 @@ export class QuestionService {
     return this.toResponseDTO(saved);
   }
 
-  async finalizeQuestion(id: string, data: any, listId?: string): Promise<QuestionResponseDTO> {
+  async finalizeQuestion(id: string, data: any, questionListId?: string): Promise<QuestionResponseDTO> {
     const queryRunner = AppDataSource.createQueryRunner();
 
     try {
@@ -370,7 +377,7 @@ export class QuestionService {
       logger.debug('[QUESTION SERVICE] Finalizando questão', {
         questionId: id,
         newSubmissionType: data.submissionType,
-        listId
+        questionListId
       });
 
       question.submissionType = data.submissionType || question.submissionType;
@@ -392,28 +399,28 @@ export class QuestionService {
         submissionType: finalQuestion.submissionType
       });
 
-      if (listId) {
-        const list = await queryRunner.manager.findOne(QuestionList, {
-          where: { id: listId }
+      if (questionListId) {
+        const questionList = await queryRunner.manager.findOne(QuestionList, {
+          where: { id: questionListId }
         });
 
-        if (!list) {
+        if (!questionList) {
           throw new NotFoundError('Lista não encontrada', 'LIST_NOT_FOUND');
         }
 
         logger.debug('[QUESTION SERVICE] Lista encontrada, adicionando questão à lista', {
-          listId,
+          questionListId,
           questionId: finalQuestion.id
         });
 
         await queryRunner.manager.query(
-          `INSERT INTO question_list_questions (list_id, question_id) VALUES ($1, $2)
-           ON CONFLICT (list_id, question_id) DO NOTHING`,
-          [listId, finalQuestion.id]
+          `INSERT INTO question_list_questions (question_list_id, question_id) VALUES ($1, $2)
+           ON CONFLICT (question_list_id, question_id) DO NOTHING`,
+          [questionListId, finalQuestion.id]
         );
 
         logger.debug('[QUESTION SERVICE] Questão adicionada ao relacionamento', {
-          listId,
+          questionListId,
           questionId: finalQuestion.id
         });
       }
@@ -422,7 +429,7 @@ export class QuestionService {
 
       logger.info('[QUESTION SERVICE] Questão finalizada com sucesso', {
         questionId: finalQuestion.id,
-        listId,
+        questionListId,
         submissionType: finalQuestion.submissionType,
         title: finalQuestion.title
       });
@@ -431,7 +438,7 @@ export class QuestionService {
     } catch (error) {
       logger.error('[QUESTION SERVICE] Erro na transação de finalização, revertendo', {
         questionId: id,
-        listId,
+        questionListId,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined
       });

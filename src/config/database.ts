@@ -1,8 +1,26 @@
+/**
+ * Database Configuration and Connection Module
+ * 
+ * Manages TypeORM data source initialization and lifecycle.
+ * Provides connection pooling, logging, and error handling for PostgreSQL.
+ * 
+ * @module config/database
+ * @see {@link https://typeorm.io/ TypeORM documentation}
+ */
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { config } from './environment';
 import { logger } from '../utils';
 
+/**
+ * TypeORM Data Source Configuration
+ * 
+ * Configured with:
+ * - PostgreSQL database engine
+ * - Connection pooling (min: 2, max: 10 connections)
+ * - Entity and migration auto-discovery
+ * - Query logging in development mode
+ */
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: config.database.host,
@@ -36,6 +54,16 @@ export const AppDataSource = new DataSource({
   }
 });
 
+
+/**
+ * Initializes the database connection
+ * 
+ * Establishes connection to PostgreSQL and runs migrations if needed.
+ * Logs connection details on success or throws error on failure.
+ * 
+ * @returns {Promise<void>}
+ * @throws {Error} If database connection fails
+ */
 export async function initializeDatabase(): Promise<void> {
   try {
     await AppDataSource.initialize();
@@ -46,6 +74,15 @@ export async function initializeDatabase(): Promise<void> {
   }
 }
 
+/**
+ * Closes the database connection gracefully
+ * 
+ * Destroys the TypeORM data source connection.
+ * Logs the disconnection or any errors that occur.
+ * 
+ * @returns {Promise<void>}
+ * @throws {Error} If disconnection fails
+ */
 export async function closeDatabase(): Promise<void> {
   try {
     if (AppDataSource.isInitialized) {
@@ -58,6 +95,11 @@ export async function closeDatabase(): Promise<void> {
   }
 }
 
+/**
+ * Checks if database connection is active
+ * 
+ * @returns {boolean} True if connected, false otherwise
+ */
 export function isDatabaseConnected(): boolean {
   return AppDataSource.isInitialized;
 }

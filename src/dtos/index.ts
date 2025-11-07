@@ -1,3 +1,11 @@
+/**
+ * Data Transfer Objects (DTOs) Module Exports
+ * 
+ * Central export point for all DTO classes used throughout the application.
+ * DTOs define the structure of request and response payloads.
+ * 
+ * @module dtos
+ */
 
 export {
   UserRegisterDTO,

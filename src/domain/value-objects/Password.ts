@@ -3,7 +3,7 @@ import { ValidationError } from '../../utils';
 
 /**
  * Password Value Object
- * Gerencia senhas de forma segura com validação e hashing
+ * Manages passwords securely with validation and hashing
  */
 export class Password {
   private readonly hashedValue: string;
@@ -12,32 +12,32 @@ export class Password {
   private static readonly SALT_ROUNDS = 10;
 
   /**
-   * Construtor privado - use os métodos estáticos para criar instâncias
+   * Private constructor - use static methods to create instances
    */
   private constructor(hashedValue: string) {
     this.hashedValue = hashedValue;
   }
 
   /**
-   * Cria um Password a partir de uma senha em texto puro
-   * Valida a força da senha e a armazena hasheada
+   * Creates a Password from a plain text password
+   * Validates password strength and stores it hashed
    */
   static async create(plainPassword: string): Promise<Password> {
     if (!plainPassword) {
       throw new ValidationError('Senha é obrigatória', 'PASSWORD_REQUIRED');
     }
 
-    // Valida a força da senha
+    // Validates password strength
     Password.validateStrength(plainPassword);
 
-    // Hasheia a senha
+    // Hashes the password
     const hashed = await bcrypt.hash(plainPassword, Password.SALT_ROUNDS);
     return new Password(hashed);
   }
 
   /**
-   * Cria um Password a partir de um hash já existente
-   * Usado ao carregar do banco de dados
+   * Creates a Password from an already existing hash
+   * Used when loading from database
    */
   static fromHash(hashedPassword: string): Password {
     if (!hashedPassword) {
@@ -47,60 +47,60 @@ export class Password {
   }
 
   /**
-   * Valida a força da senha
+   * Validates password strength
    */
   private static validateStrength(password: string): void {
-    // Tamanho mínimo
+    // Minimum size
     if (password.length < Password.MIN_LENGTH) {
       throw new ValidationError(
-        `Senha deve ter no mínimo ${Password.MIN_LENGTH} caracteres`,
+        `Password must have at least ${Password.MIN_LENGTH} characters`,
         'PASSWORD_TOO_SHORT'
       );
     }
 
-    // Tamanho máximo
+    // Maximum size
     if (password.length > Password.MAX_LENGTH) {
       throw new ValidationError(
-        `Senha deve ter no máximo ${Password.MAX_LENGTH} caracteres`,
+        `Password must have at most ${Password.MAX_LENGTH} characters`,
         'PASSWORD_TOO_LONG'
       );
     }
 
-    // Ao menos uma letra maiúscula
+    // At least one uppercase letter
     if (!/[A-Z]/.test(password)) {
       throw new ValidationError(
-        'Senha deve conter ao menos uma letra maiúscula',
+        'Password must contain at least one uppercase letter',
         'PASSWORD_NO_UPPERCASE'
       );
     }
 
-    // Ao menos uma letra minúscula
+    // At least one lowercase letter
     if (!/[a-z]/.test(password)) {
       throw new ValidationError(
-        'Senha deve conter ao menos uma letra minúscula',
+        'Password must contain at least one lowercase letter',
         'PASSWORD_NO_LOWERCASE'
       );
     }
 
-    // Ao menos um número
+    // At least one number
     if (!/\d/.test(password)) {
       throw new ValidationError(
-        'Senha deve conter ao menos um número',
+        'Password must contain at least one number',
         'PASSWORD_NO_NUMBER'
       );
     }
 
-    // Ao menos um caractere especial
+    // At least one special character
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
       throw new ValidationError(
-        'Senha deve conter ao menos um caractere especial',
+        'Password must contain at least one special character',
         'PASSWORD_NO_SPECIAL'
       );
     }
   }
 
   /**
-   * Compara uma senha em texto puro com o hash armazenado
+   * Compares a plain text password with the stored hash
    */
   async compare(plainPassword: string): Promise<boolean> {
     if (!plainPassword) return false;
@@ -108,15 +108,15 @@ export class Password {
   }
 
   /**
-   * Retorna o hash da senha
+   * Returns the password hash
    */
   getHash(): string {
     return this.hashedValue;
   }
 
   /**
-   * Verifica se uma senha em texto puro é forte o suficiente
-   * Útil para validação no frontend antes de enviar
+   * Checks if a plain text password is strong enough
+   * Useful for validation on frontend before sending
    */
   static isStrongEnough(password: string): boolean {
     try {

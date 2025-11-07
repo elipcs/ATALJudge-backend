@@ -2,7 +2,7 @@ import { ValidationError } from '../../utils';
 
 /**
  * StudentRegistration Value Object
- * Representa uma matrícula de aluno com validação de formato
+ * Represents a student registration with format validation
  */
 export class StudentRegistration {
   private readonly value: string;
@@ -20,42 +20,42 @@ export class StudentRegistration {
   }
 
   /**
-   * Normaliza a matrícula para uppercase e remove espaços
+   * Normalizes registration to uppercase and removes spaces
    */
   private normalize(registration: string): string {
     return registration.toUpperCase().trim();
   }
 
   /**
-   * Valida o formato da matrícula
+   * Validates registration format
    */
   private validate(): void {
-    // Validação de tamanho
+    // Size validation
     if (this.value.length < StudentRegistration.MIN_LENGTH) {
       throw new ValidationError(
-        `Matrícula deve ter no mínimo ${StudentRegistration.MIN_LENGTH} digitos`,
+        `Registration must have at least ${StudentRegistration.MIN_LENGTH} digits`,
         'REGISTRATION_TOO_SHORT'
       );
     }
 
     if (this.value.length > StudentRegistration.MAX_LENGTH) {
       throw new ValidationError(
-        `Matrícula deve ter no máximo ${StudentRegistration.MAX_LENGTH} digitos`,
+        `Registration must have at most ${StudentRegistration.MAX_LENGTH} digits`,
         'REGISTRATION_TOO_LONG'
       );
     }
 
-    // Validação de formato (números apenas)
+    // Format validation (numbers only)
     if (!StudentRegistration.REGISTRATION_REGEX.test(this.value)) {
       throw new ValidationError(
-        'Matrícula deve conter apenas números',
+        'Registration must contain only numbers',
         'INVALID_REGISTRATION_FORMAT'
       );
     }
   }
 
   /**
-   * Retorna o valor da matrícula
+   * Returns the registration value
    */
   getValue(): string {
     return this.value;
@@ -69,7 +69,7 @@ export class StudentRegistration {
   }
 
   /**
-   * Compara se duas matrículas são iguais
+   * Compares if two registrations are equal
    */
   equals(other: StudentRegistration): boolean {
     if (!other) return false;
@@ -78,7 +78,7 @@ export class StudentRegistration {
 
 
   /**
-   * Cria um StudentRegistration a partir de uma string, retornando null se inválido
+   * Creates a StudentRegistration from a string, returning null if invalid
    */
   static tryCreate(registration: string): StudentRegistration | null {
     try {
@@ -89,7 +89,7 @@ export class StudentRegistration {
   }
 
   /**
-   * Valida se uma string é uma matrícula válida
+   * Validates if a string is a valid registration
    */
   static isValid(registration: string): boolean {
     try {
@@ -101,7 +101,7 @@ export class StudentRegistration {
   }
 
   /**
-   * Retorna os requisitos de formato da matrícula
+   * Returns the registration format requirements
    */
   static getRequirements(): {
     minLength: number;
@@ -113,7 +113,7 @@ export class StudentRegistration {
       minLength: StudentRegistration.MIN_LENGTH,
       maxLength: StudentRegistration.MAX_LENGTH,
       allowedCharacters: '0-9',
-      format: 'Números apenas',
+      format: 'Numbers only',
     };
   }
 }

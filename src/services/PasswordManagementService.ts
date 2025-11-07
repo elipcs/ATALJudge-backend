@@ -1,3 +1,10 @@
+/**
+ * @module services/PasswordManagementService
+ * @description Service to manage user password requests and resets.
+ * Provides operations to generate reset tokens, validate tokens,
+ * process password resets and send notification emails.
+ * @class PasswordManagementService
+ */
 import { injectable, inject } from 'tsyringe';
 import { UserRepository } from '../repositories';
 import { RequestPasswordResetDTO, ResetPasswordDTO } from '../dtos';

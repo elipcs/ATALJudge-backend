@@ -23,21 +23,21 @@ export interface GetAllQuestionListsFilters {
 @injectable()
 export class GetAllQuestionListsUseCase implements IUseCase<GetAllQuestionListsFilters, QuestionListResponseDTO[]> {
   constructor(
-    @inject(QuestionListRepository) private listRepository: QuestionListRepository
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository
   ) {}
 
   async execute(filters: GetAllQuestionListsFilters): Promise<QuestionListResponseDTO[]> {
     // 1. Create query builder with relationships
-    const queryBuilder = this.listRepository
-      .createQueryBuilder('list')
-      .leftJoinAndSelect('list.questions', 'questions')
-      .leftJoinAndSelect('list.classes', 'classes')
-      .orderBy('list.createdAt', 'DESC');
+    const queryBuilder = this.questionListRepository
+      .createQueryBuilder('question_list')
+      .leftJoinAndSelect('question_list.questions', 'questions')
+      .leftJoinAndSelect('question_list.classes', 'classes')
+      .orderBy('question_list.createdAt', 'DESC');
 
     // 2. Apply search filter (title or description)
     if (filters.search) {
       queryBuilder.andWhere(
-        '(list.title ILIKE :search OR list.description ILIKE :search)',
+        '(question_list.title ILIKE :search OR question_list.description ILIKE :search)',
         { search: `%${filters.search}%` }
       );
     }
@@ -48,24 +48,24 @@ export class GetAllQuestionListsUseCase implements IUseCase<GetAllQuestionListsF
     }
 
     // 4. Find lists
-    const lists = await queryBuilder.getMany();
+    const questionLists = await queryBuilder.getMany();
 
     // 5. Convert to DTOs
-    return lists.map(list => new QuestionListResponseDTO({
-      id: list.id,
-      title: list.title,
-      description: list.description,
-      startDate: list.startDate.toISOString(),
-      endDate: list.endDate.toISOString(),
-      isRestricted: list.isRestricted,
-      scoringMode: list.scoringMode,
-      maxScore: list.maxScore,
-      minQuestionsForMaxScore: list.minQuestionsForMaxScore,
-      questionGroups: list.questionGroups,
-      createdAt: list.createdAt,
-      updatedAt: list.updatedAt,
-      questionCount: list.questions?.length || 0,
-      classIds: list.classes?.map(c => c.id) || []
+    return questionLists.map(questionList => new QuestionListResponseDTO({
+      id: questionList.id,
+      title: questionList.title,
+      description: questionList.description,
+      startDate: questionList.startDate.toISOString(),
+      endDate: questionList.endDate.toISOString(),
+      isRestricted: questionList.isRestricted,
+      scoringMode: questionList.scoringMode,
+      maxScore: questionList.maxScore,
+      minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
+      questionGroups: questionList.questionGroups,
+      createdAt: questionList.createdAt,
+      updatedAt: questionList.updatedAt,
+      questionCount: questionList.questions?.length || 0,
+      classIds: questionList.classes?.map(c => c.id) || []
     }));
   }
 }

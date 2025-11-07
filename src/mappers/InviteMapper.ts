@@ -1,13 +1,23 @@
+/**
+ * Invite Data Mapper
+ * 
+ * Maps between Invite domain models and DTOs.
+ * Handles conversion of Invite entities to data transfer objects for API responses.
+ * 
+ * @module mappers/InviteMapper
+ */
 import { Invite } from '../models';
 import { InviteResponseDTO } from '../dtos';
 
 /**
- * Mapper: Invite Entity ↔ DTOs
+ * Invite Mapper Class
  * 
- * Responsabilidades:
- * - Converter entidade Invite para InviteResponseDTO
- * - Garantir separação entre camada de domínio e apresentação
+ * Provides static methods for converting between Invite domain objects and DTOs.
+ * Ensures separation between domain layer and presentation layer.
+ * 
+ * @class InviteMapper
  */
+
 export class InviteMapper {
   /**
    * Converte Invite entity para InviteResponseDTO

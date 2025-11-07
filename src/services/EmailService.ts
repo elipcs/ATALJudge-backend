@@ -1,8 +1,19 @@
+/**
+ * @module services/EmailService
+ * @description Service for sending email notifications and communications.
+ * 
+ * Handles email templates and SMTP delivery.
+ */
+
 import { injectable } from 'tsyringe';
 import * as nodemailer from 'nodemailer';
 import { config } from '../config';
 import { logger } from '../utils';
 
+/**
+ * Service for email notifications.
+ * @class EmailService
+ */
 @injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter;

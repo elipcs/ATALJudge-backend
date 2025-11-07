@@ -70,9 +70,9 @@ export class PerformSystemResetUseCase implements IUseCase<PerformSystemResetInp
 
       // Reset question lists
       if (resetOptions.resetLists) {
-        const lists = await this.questionListRepository.findAll();
-        for (const list of lists) {
-          await this.questionListRepository.delete(list.id);
+        const questionLists = await this.questionListRepository.findAll();
+        for (const questionList of questionLists) {
+          await this.questionListRepository.delete(questionList.id);
           totalDeleted++;
         }
       }

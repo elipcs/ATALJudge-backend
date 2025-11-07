@@ -2,7 +2,7 @@ import { ValidationError } from '../../utils';
 
 /**
  * Score Value Object
- * Representa uma pontuação/nota com validação de range
+ * Represents a score/grade with range validation
  */
 export class Score {
   private readonly value: number;
@@ -23,26 +23,26 @@ export class Score {
   }
 
   /**
-   * Valida se a pontuação está dentro do range permitido
+   * Validates if the score is within the allowed range
    */
   private validate(): void {
     if (this.value < Score.MIN_VALUE) {
       throw new ValidationError(
-        `Pontuação não pode ser menor que ${Score.MIN_VALUE}`,
+        `Score cannot be less than ${Score.MIN_VALUE}`,
         'SCORE_TOO_LOW'
       );
     }
 
     if (this.value > Score.MAX_VALUE) {
       throw new ValidationError(
-        `Pontuação não pode ser maior que ${Score.MAX_VALUE}`,
+        `Score cannot be greater than ${Score.MAX_VALUE}`,
         'SCORE_TOO_HIGH'
       );
     }
   }
 
   /**
-   * Retorna o valor da pontuação
+   * Returns the score value
    */
   getValue(): number {
     return this.value;
@@ -56,55 +56,55 @@ export class Score {
   }
 
   /**
-   * Adiciona pontos à pontuação atual
+   * Adds points to the current score
    */
   add(points: number): Score {
     return new Score(this.value + points);
   }
 
   /**
-   * Subtrai pontos da pontuação atual
+   * Subtracts points from the current score
    */
   subtract(points: number): Score {
     return new Score(this.value - points);
   }
 
   /**
-   * Multiplica a pontuação por um fator
+   * Multiplies the score by a factor
    */
   multiply(factor: number): Score {
     return new Score(this.value * factor);
   }
 
   /**
-   * Divide a pontuação por um divisor
+   * Divides the score by a divisor
    */
   divide(divisor: number): Score {
     if (divisor === 0) {
-      throw new ValidationError('Não é possível dividir por zero', 'DIVISION_BY_ZERO');
+      throw new ValidationError('Cannot divide by zero', 'DIVISION_BY_ZERO');
     }
     return new Score(this.value / divisor);
   }
 
   /**
-   * Retorna a porcentagem da pontuação em relação ao máximo
+   * Returns the percentage of the score relative to the maximum
    */
   percentage(): number {
     return (this.value / Score.MAX_VALUE) * 100;
   }
 
   /**
-   * Retorna a porcentagem da pontuação em relação a um valor máximo customizado
+   * Returns the percentage of the score relative to a custom maximum value
    */
   percentageOf(maxValue: number): number {
     if (maxValue <= 0) {
-      throw new ValidationError('Valor máximo deve ser maior que zero', 'INVALID_MAX_VALUE');
+      throw new ValidationError('Maximum value must be greater than zero', 'INVALID_MAX_VALUE');
     }
     return (this.value / maxValue) * 100;
   }
 
   /**
-   * Compara se duas pontuações são iguais
+   * Compares if two scores are equal
    */
   equals(other: Score): boolean {
     if (!other) return false;
@@ -112,42 +112,42 @@ export class Score {
   }
 
   /**
-   * Verifica se esta pontuação é maior que outra
+   * Checks if this score is greater than another
    */
   isGreaterThan(other: Score): boolean {
     return this.value > other.value;
   }
 
   /**
-   * Verifica se esta pontuação é menor que outra
+   * Checks if this score is less than another
    */
   isLessThan(other: Score): boolean {
     return this.value < other.value;
   }
 
   /**
-   * Verifica se a pontuação é zero
+   * Checks if the score is zero
    */
   isZero(): boolean {
     return this.value === 0;
   }
 
   /**
-   * Verifica se a pontuação é máxima (100)
+   * Checks if the score is maximum (100)
    */
   isPerfect(): boolean {
     return this.value === Score.MAX_VALUE;
   }
 
   /**
-   * Verifica se a pontuação é suficiente para aprovação (>= 60)
+   * Checks if the score is sufficient for passing (>= 60)
    */
   isPassing(): boolean {
     return this.value >= 60;
   }
 
   /**
-   * Cria um Score a partir de um valor, retornando null se inválido
+   * Creates a Score from a value, returning null if invalid
    */
   static tryCreate(value: number): Score | null {
     try {
@@ -158,7 +158,7 @@ export class Score {
   }
 
   /**
-   * Valida se um número é uma pontuação válida
+   * Validates if a number is a valid score
    */
   static isValid(value: number): boolean {
     try {
@@ -170,28 +170,28 @@ export class Score {
   }
 
   /**
-   * Retorna a pontuação mínima permitida
+   * Returns the minimum allowed score
    */
   static getMinValue(): number {
     return Score.MIN_VALUE;
   }
 
   /**
-   * Retorna a pontuação máxima permitida
+   * Returns the maximum allowed score
    */
   static getMaxValue(): number {
     return Score.MAX_VALUE;
   }
 
   /**
-   * Cria um Score com valor zero
+   * Creates a Score with value zero
    */
   static zero(): Score {
     return new Score(0);
   }
 
   /**
-   * Cria um Score com valor máximo (100)
+   * Creates a Score with maximum value (100)
    */
   static perfect(): Score {
     return new Score(100);

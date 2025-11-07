@@ -1,32 +1,59 @@
+/**
+ * Question List Data Transfer Objects (DTOs)
+ * 
+ * Defines request/response data structures for question list (problem sets) management.
+ * Question lists group multiple questions with scoring and grading configurations.
+ * 
+ * @module dtos/QuestionListDtos
+ */
 import { IsString, IsOptional, IsArray, IsEnum, IsInt, Min, ValidateNested, IsBoolean, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 
+/**
+ * DTO for a question group within a list
+ * 
+ * Groups questions together with optional weighting and percentage distribution.
+ * 
+ * @class QuestionGroupDTO
+ */
 export class QuestionGroupDTO {
+  /** Group identifier */
   @IsString()
   id!: string;
 
+  /** Group name/title */
   @IsString()
   name!: string;
 
+  /** Array of question IDs in this group */
   @IsArray()
   @IsString({ each: true })
   questionIds!: string[];
 
+  /** Weight assigned to this group */
   @IsOptional()
   @IsInt()
   @Min(0)
   weight?: number;
 
+  /** Percentage distribution for grading */
   @IsOptional()
   @IsInt()
   @Min(0)
   percentage?: number;
 }
 
+/**
+ * DTO for creating a question list
+ * 
+ * @class CreateQuestionListDTO
+ */
 export class CreateQuestionListDTO {
+  /** List title/name */
   @IsString()
   title!: string;
 
+  /** List description */
   @IsOptional()
   @IsString()
   description?: string;

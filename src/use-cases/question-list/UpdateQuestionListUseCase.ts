@@ -6,7 +6,7 @@ import { NotFoundError, ForbiddenError, logger } from '../../utils';
 import { QuestionList } from '../../models/QuestionList';
 
 export interface UpdateQuestionListUseCaseInput {
-  listId: string;
+  questionListId: string;
   dto: UpdateQuestionListDTO;
   userId: string;
 }
@@ -24,75 +24,75 @@ export interface UpdateQuestionListUseCaseInput {
 @injectable()
 export class UpdateQuestionListUseCase implements IUseCase<UpdateQuestionListUseCaseInput, QuestionListResponseDTO> {
   constructor(
-    @inject(QuestionListRepository) private listRepository: QuestionListRepository,
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository,
     @inject(ClassRepository) private classRepository: ClassRepository
   ) {}
 
   async execute(input: UpdateQuestionListUseCaseInput): Promise<QuestionListResponseDTO> {
-    const { listId, dto, userId } = input;
+    const { questionListId, dto, userId } = input;
 
     // 1. Find list with relationships
-    const list = await this.listRepository.findByIdWithRelations(listId, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, true);
 
-    if (!list) {
-      logger.warn('[UpdateQuestionListUseCase] List not found', { listId });
+    if (!questionList) {
+      logger.warn('[UpdateQuestionListUseCase] List not found', { questionListId });
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }
 
     // 2. Check permission (only author can edit)
-    if (list.authorId !== userId) {
+    if (questionList.authorId !== userId) {
       throw new ForbiddenError('You do not have permission to edit this list', 'FORBIDDEN');
     }
 
     // 3. Check if list can be edited
-    if (!list.canBeEdited()) {
-      throw new ForbiddenError('This list can no longer be edited', 'CANNOT_EDIT_LIST');
+    if (!questionList.canBeEdited()) {
+      throw new ForbiddenError('This questionList can no longer be edited', 'CANNOT_EDIT_LIST');
     }
 
     // 4. Apply updates
-    if (dto.title) list.title = dto.title;
-    if (dto.description !== undefined) list.description = dto.description;
-    if (dto.startDate) list.startDate = new Date(dto.startDate);
-    if (dto.endDate) list.endDate = new Date(dto.endDate);
-    if (dto.isRestricted !== undefined) list.isRestricted = dto.isRestricted;
+    if (dto.title) questionList.title = dto.title;
+    if (dto.description !== undefined) questionList.description = dto.description;
+    if (dto.startDate) questionList.startDate = new Date(dto.startDate);
+    if (dto.endDate) questionList.endDate = new Date(dto.endDate);
+    if (dto.isRestricted !== undefined) questionList.isRestricted = dto.isRestricted;
 
     // 5. Update classes (if specified)
     if (dto.classIds !== undefined) {
       if (dto.classIds.length > 0) {
         const classes = await this.classRepository.findByIds(dto.classIds);
-        list.classes = classes;
+        questionList.classes = classes;
       } else {
-        list.classes = [];
+        questionList.classes = [];
       }
     }
 
     // 6. Save changes
-    const updatedList = await this.listRepository.save(list);
+    const updatedList = await this.questionListRepository.save(questionList);
 
-    logger.info('[UpdateQuestionListUseCase] List updated', { listId, userId });
+    logger.info('[UpdateQuestionListUseCase] List updated', { questionListId, userId });
 
     return this.toDTO(updatedList);
   }
 
-  private toDTO(list: QuestionList): QuestionListResponseDTO {
+  private toDTO(questionList: QuestionList): QuestionListResponseDTO {
     return new QuestionListResponseDTO({
-      id: list.id,
-      title: list.title,
-      description: list.description,
-      authorId: list.authorId,
-      startDate: list.startDate?.toISOString(),
-      endDate: list.endDate?.toISOString(),
-      scoringMode: list.scoringMode,
-      maxScore: list.maxScore,
-      minQuestionsForMaxScore: list.minQuestionsForMaxScore,
-      questionGroups: list.questionGroups,
-      isRestricted: list.isRestricted,
-      calculatedStatus: list.getCalculatedStatus(),
-      createdAt: list.createdAt,
-      updatedAt: list.updatedAt,
-      questions: list.questions,
-      questionCount: list.getQuestionCount(),
-      classIds: list.classes?.map(c => c.id) || []
+      id: questionList.id,
+      title: questionList.title,
+      description: questionList.description,
+      authorId: questionList.authorId,
+      startDate: questionList.startDate?.toISOString(),
+      endDate: questionList.endDate?.toISOString(),
+      scoringMode: questionList.scoringMode,
+      maxScore: questionList.maxScore,
+      minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
+      questionGroups: questionList.questionGroups,
+      isRestricted: questionList.isRestricted,
+      calculatedStatus: questionList.getCalculatedStatus(),
+      createdAt: questionList.createdAt,
+      updatedAt: questionList.updatedAt,
+      questions: questionList.questions,
+      questionCount: questionList.getQuestionCount(),
+      classIds: questionList.classes?.map(c => c.id) || []
     });
   }
 }

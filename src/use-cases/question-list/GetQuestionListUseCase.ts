@@ -16,42 +16,42 @@ import { QuestionList } from '../../models/QuestionList';
 @injectable()
 export class GetQuestionListUseCase implements IUseCase<string, QuestionListResponseDTO> {
   constructor(
-    @inject(QuestionListRepository) private listRepository: QuestionListRepository
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository
   ) {}
 
-  async execute(listId: string): Promise<QuestionListResponseDTO> {
+  async execute(questionListId: string): Promise<QuestionListResponseDTO> {
     // 1. Find list with relationships
-    const list = await this.listRepository.findByIdWithRelations(listId, true, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, true, true);
 
     // 2. Validate existence
-    if (!list) {
-      logger.warn('[GetQuestionListUseCase] List not found', { listId });
+    if (!questionList) {
+      logger.warn('[GetQuestionListUseCase] List not found', { questionListId });
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }
 
     // 3. Convert to DTO
-    return this.toDTO(list);
+    return this.toDTO(questionList);
   }
 
-  private toDTO(list: QuestionList): QuestionListResponseDTO {
+  private toDTO(questionList: QuestionList): QuestionListResponseDTO {
     return new QuestionListResponseDTO({
-      id: list.id,
-      title: list.title,
-      description: list.description,
-      authorId: list.authorId,
-      startDate: list.startDate?.toISOString(),
-      endDate: list.endDate?.toISOString(),
-      scoringMode: list.scoringMode,
-      maxScore: list.maxScore,
-      minQuestionsForMaxScore: list.minQuestionsForMaxScore,
-      questionGroups: list.questionGroups,
-      isRestricted: list.isRestricted,
-      calculatedStatus: list.getCalculatedStatus(),
-      createdAt: list.createdAt,
-      updatedAt: list.updatedAt,
-      questions: list.questions,
-      questionCount: list.getQuestionCount(),
-      classIds: list.classes?.map(c => c.id) || []
+      id: questionList.id,
+      title: questionList.title,
+      description: questionList.description,
+      authorId: questionList.authorId,
+      startDate: questionList.startDate?.toISOString(),
+      endDate: questionList.endDate?.toISOString(),
+      scoringMode: questionList.scoringMode,
+      maxScore: questionList.maxScore,
+      minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
+      questionGroups: questionList.questionGroups,
+      isRestricted: questionList.isRestricted,
+      calculatedStatus: questionList.getCalculatedStatus(),
+      createdAt: questionList.createdAt,
+      updatedAt: questionList.updatedAt,
+      questions: questionList.questions,
+      questionCount: questionList.getQuestionCount(),
+      classIds: questionList.classes?.map(c => c.id) || []
     });
   }
 }

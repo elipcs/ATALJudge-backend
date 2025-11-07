@@ -1,3 +1,18 @@
+/**
+ * @module services/UserRegistrationService
+ * @description Service for user registration and onboarding.
+ * 
+ * This service handles:
+ * - User registration with email and password
+ * - Registration via invite tokens
+ * - Student enrollment in classes
+ * - Token generation and storage
+ * 
+ * @example
+ * const regService = container.resolve(UserRegistrationService);
+ * const result = await regService.registerWithInvite(userData);
+ */
+
 import { injectable, inject } from 'tsyringe';
 import { UserRepository, ClassRepository } from '../repositories';
 import { TokenManager, JwtPayload } from '../utils/TokenManager';
@@ -11,7 +26,11 @@ import { User } from '../models/User';
 import { Student } from '../models/Student';
 import { Professor } from '../models/Professor';
 
-
+/**
+ * Service for user registration.
+ * 
+ * @class UserRegistrationService
+ */
 @injectable()
 export class UserRegistrationService {
   constructor(
@@ -29,7 +48,7 @@ export class UserRegistrationService {
   }> {
     const emailExists = await this.userRepository.emailExists(dto.email);
     if (emailExists) {
-      throw new ConflictError('Email já está em uso', 'EMAIL_IN_USE');
+      throw new ConflictError('Email already in use', 'EMAIL_IN_USE');
     }
 
     let inviteData: InviteResponseDTO | null = null;
@@ -60,7 +79,7 @@ export class UserRegistrationService {
     await user.setPassword(dto.password);
 
     const savedUser = await this.userRepository.create(user);
-    logger.info('[REGISTRATION] Usuário registrado', { userId: savedUser.id, role: savedUser.role });
+    logger.info('[REGISTRATION] User registered', { userId: savedUser.id, role: savedUser.role });
 
     if (dto.inviteToken) {
       await this.inviteService.useInvite(dto.inviteToken);
@@ -69,12 +88,12 @@ export class UserRegistrationService {
     if (userRole === UserRole.STUDENT && targetClassId) {
       try {
         await this.classRepository.addStudent(targetClassId, savedUser.id);
-        logger.info('[REGISTRATION] Estudante adicionado à turma', { 
+        logger.info('[REGISTRATION] Student added to class', { 
           userId: savedUser.id, 
           classId: targetClassId 
         });
       } catch (error) {
-        logger.error('[REGISTRATION] Falha ao adicionar estudante à turma', { 
+        logger.error('[REGISTRATION] Failed to add student to class', { 
           error, 
           userId: savedUser.id, 
           classId: targetClassId 

@@ -4,7 +4,7 @@ import { QuestionListRepository } from '../../repositories';
 import { NotFoundError, ForbiddenError, logger } from '../../utils';
 
 export interface DeleteQuestionListUseCaseInput {
-  listId: string;
+  questionListId: string;
   userId: string;
 }
 
@@ -20,26 +20,26 @@ export interface DeleteQuestionListUseCaseInput {
 @injectable()
 export class DeleteQuestionListUseCase implements IUseCase<DeleteQuestionListUseCaseInput, void> {
   constructor(
-    @inject(QuestionListRepository) private listRepository: QuestionListRepository
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository
   ) {}
 
   async execute(input: DeleteQuestionListUseCaseInput): Promise<void> {
-    const { listId, userId } = input;
+    const { questionListId, userId } = input;
 
     // 1. Find list
-    const list = await this.listRepository.findByIdWithRelations(listId, false, false, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, false, false, true);
 
-    if (!list) {
+    if (!questionList) {
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }
 
     // 2. Check permission (only author)
-    if (list.authorId !== userId) {
+    if (questionList.authorId !== userId) {
       throw new ForbiddenError('You do not have permission to delete this list', 'FORBIDDEN');
     }
 
     // 3. Check if can be deleted
-    if (!list.canBeDeleted()) {
+    if (!questionList.canBeDeleted()) {
       throw new ForbiddenError(
         'This list cannot be deleted because it has recorded grades',
         'CANNOT_DELETE_LIST'
@@ -47,8 +47,8 @@ export class DeleteQuestionListUseCase implements IUseCase<DeleteQuestionListUse
     }
 
     // 4. Delete list
-    await this.listRepository.delete(listId);
+    await this.questionListRepository.delete(questionListId);
 
-    logger.info('[DeleteQuestionListUseCase] List deleted', { listId, userId });
+    logger.info('[DeleteQuestionListUseCase] List deleted', { questionListId, userId });
   }
 }

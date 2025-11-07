@@ -1,9 +1,20 @@
+/**
+ * @module services/RefreshTokenService
+ * @description Service for managing refresh tokens and token families.
+ * 
+ * Handles token storage, validation, rotation, and revocation.
+ */
+
 import { injectable, inject } from 'tsyringe';
 import { TokenManager } from '../utils/TokenManager';
 import { RefreshTokenRepository } from '../repositories';
 import { RefreshToken } from '../models/RefreshToken';
 import { NotFoundError, UnauthorizedError } from '../utils';
 
+/**
+ * Service for refresh token management.
+ * @class RefreshTokenService
+ */
 @injectable()
 export class RefreshTokenService {
   constructor(

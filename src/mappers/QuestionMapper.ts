@@ -1,12 +1,28 @@
+/**
+ * Question Data Mapper
+ * 
+ * Maps between Question domain models and DTOs.
+ * Handles conversion of Question entities to data transfer objects for API responses.
+ * 
+ * @module mappers/QuestionMapper
+ */
 import { Question } from '../models/Question';
 import { QuestionResponseDTO, CreateQuestionDTO, UpdateQuestionDTO } from '../dtos/QuestionDtos';
 
 /**
- * Mapper para transformação entre Question (Domain) e DTOs
+ * Question Mapper Class
+ * 
+ * Provides static methods for converting between Question domain objects and DTOs.
+ * 
+ * @class QuestionMapper
  */
 export class QuestionMapper {
   /**
-   * Converte Question (Domain) para QuestionResponseDTO
+   * Converts a Question domain model to QuestionResponseDTO
+   * 
+   * @static
+   * @param {Question} question - The question domain model
+   * @returns {QuestionResponseDTO} The question data transfer object
    */
   static toDTO(question: Question): QuestionResponseDTO {
     return new QuestionResponseDTO({
@@ -82,7 +98,7 @@ export class QuestionMapper {
   }
 
   /**
-   * Cria um DTO simplificado para listagem
+   * Creates a simplified DTO for listing
    */
   static toListItemDTO(question: Question): Pick<QuestionResponseDTO, 'id' | 'title' | 'tags' | 'submissionType'> {
     return {

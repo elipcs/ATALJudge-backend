@@ -1,3 +1,18 @@
+/**
+ * Express Application Factory
+ * 
+ * Creates and configures the Express application with all routes, middlewares,
+ * and error handling.
+ * 
+ * Features:
+ * - CORS and security headers (Helmet)
+ * - Rate limiting
+ * - Request validation
+ * - Error handling
+ * - All API routes
+ * 
+ * @module app
+ */
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

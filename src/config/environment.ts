@@ -1,8 +1,26 @@
+/**
+ * Environment Configuration Module
+ * 
+ * Loads and validates environment variables from .env file.
+ * Provides centralized configuration for the entire application.
+ * 
+ * @module config/environment
+ * @see {@link https://www.npmjs.com/package/dotenv dotenv documentation}
+ */
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+/**
+ * Application Configuration Object
+ * 
+ * Contains all environment-dependent settings including:
+ * - Database connection
+ * - JWT and security settings
+ * - External service integrations (Judge0, Codeforces, Email)
+ * - Rate limiting and size restrictions
+ */
 export const config = {
   
   nodeEnv: process.env.NODE_ENV || 'development',

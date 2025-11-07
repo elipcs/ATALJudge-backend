@@ -1,5 +1,19 @@
+/**
+ * Rate Limiting Middleware Module
+ * 
+ * Provides rate limiting configuration for different API endpoints.
+ * Prevents abuse and protects against brute-force attacks.
+ * 
+ * @module middlewares/rate-limit
+ */
 import rateLimit from 'express-rate-limit';
 
+/**
+ * Rate limiter for authentication endpoints
+ * 
+ * Limits login attempts to prevent brute-force attacks.
+ * Window: 15 minutes, Max: 100 requests
+ */
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
   max: 100, 

@@ -1,18 +1,41 @@
+/**
+ * Submission Data Transfer Objects (DTOs)
+ * 
+ * Defines request/response data structures for code submission operations.
+ * Includes validation rules for submission-related operations.
+ * 
+ * @module dtos/SubmissionDtos
+ */
 import { IsString, IsUUID, IsEnum, MinLength } from 'class-validator';
 import { ProgrammingLanguage, SubmissionStatus, JudgeVerdict } from '../enums';
 
+/**
+ * DTO for creating a new code submission
+ * 
+ * @class CreateSubmissionDTO
+ */
 export class CreateSubmissionDTO {
-  @IsUUID('4', { message: 'ID da questão deve ser um UUID válido' })
+  /** UUID of the question being solved */
+  @IsUUID('4', { message: 'Question ID must be a valid UUID' })
   questionId!: string;
 
+  /** Source code to be submitted */
   @IsString()
-  @MinLength(1, { message: 'Código não pode estar vazio' })
+  @MinLength(1, { message: 'Code cannot be empty' })
   code!: string;
 
-  @IsEnum(ProgrammingLanguage, { message: 'Linguagem de programação inválida' })
+  /** Programming language used in the submission */
+  @IsEnum(ProgrammingLanguage, { message: 'Invalid programming language' })
   language!: ProgrammingLanguage;
 }
 
+/**
+ * DTO for submission response data
+ * 
+ * Contains submission details including status, results, and execution metrics.
+ * 
+ * @class SubmissionResponseDTO
+ */
 export class SubmissionResponseDTO {
   id!: string;
   userId!: string;
@@ -33,8 +56,8 @@ export class SubmissionResponseDTO {
   userEmail?: string;
   studentRegistration?: string;
   questionName?: string;
-  listId?: string;
-  listName?: string;
+  questionListId?: string;
+  questionListTitle?: string;
 
   constructor(partial: Partial<SubmissionResponseDTO>) {
     Object.assign(this, partial);

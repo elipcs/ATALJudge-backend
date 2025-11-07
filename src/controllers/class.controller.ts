@@ -1,3 +1,9 @@
+/**
+ * @module controllers/class
+ * @description REST API controller for class endpoints
+ * Manages class creation, retrieval, updates, and student enrollment
+ * @class ClassController
+ */
 import { Router, Response } from 'express';
 import { CreateClassDTO } from '../dtos';
 import { validateBody, authenticate, requireTeacher, AuthRequest } from '../middlewares';
@@ -34,7 +40,7 @@ router.get(
     const includeRelations = req.query.include === 'relations';
     const classes = await getAllClassesUseCase.execute({ includeRelations });
     
-    successResponse(res, classes, 'Lista de turmas');
+    successResponse(res, classes, 'List of classes');
   })
 );
 
@@ -48,7 +54,7 @@ router.get(
       includeRelations 
     });
     
-    successResponse(res, classData, 'Turma encontrada');
+    successResponse(res, classData, 'Class found');
   })
 );
 
@@ -65,8 +71,8 @@ router.post(
       userId: req.user?.sub!
     });
     
-    logger.info('[CREATE CLASS] Turma criada com sucesso', { classId: classData.id });
-    successResponse(res, classData, 'Turma criada com sucesso', 201);
+    logger.info('[CREATE CLASS] Class created successfully', { classId: classData.id });
+    successResponse(res, classData, 'Class created successfully', 201);
   })
 );
 
@@ -81,7 +87,7 @@ router.put(
       userId: req.user?.sub
     });
     
-    successResponse(res, classData, 'Turma atualizada com sucesso');
+    successResponse(res, classData, 'Class updated successfully');
   })
 );
 
@@ -94,7 +100,7 @@ router.delete(
       userId: req.user?.sub
     });
     
-    successResponse(res, null, 'Turma deletada com sucesso');
+    successResponse(res, null, 'Class deleted successfully');
   })
 );
 
@@ -115,7 +121,7 @@ router.post(
     const { studentId } = req.body;
     
     if (!studentId) {
-      errorResponse(res, 'ID do estudante é obrigatório', 'VALIDATION_ERROR', 400);
+      errorResponse(res, 'Student ID is required', 'VALIDATION_ERROR', 400);
       return;
     }
     
@@ -124,7 +130,7 @@ router.post(
       studentId
     });
     
-    successResponse(res, null, 'Aluno adicionado à turma');
+    successResponse(res, null, 'Student added to class');
   })
 );
 

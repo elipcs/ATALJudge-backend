@@ -1,3 +1,21 @@
+/**
+ * @module services/SystemResetService
+ * @description Service for system data reset operations (admin only).
+ * 
+ * This service handles:
+ * - Bulk deletion of submissions
+ * - Bulk deletion of users by role
+ * - Bulk deletion of classes
+ * - Bulk deletion of question lists
+ * - Bulk deletion of invites
+ * 
+ * WARNING: This is a destructive operation intended for admin use only.
+ * 
+ * @example
+ * const resetService = container.resolve(SystemResetService);
+ * const result = await resetService.performSystemReset(options, adminUserId);
+ */
+
 import { injectable, inject } from 'tsyringe';
 import {
   SubmissionRepository,
@@ -7,6 +25,11 @@ import {
   InviteRepository,
 } from '../repositories';
 
+/**
+ * Service for system-wide reset operations.
+ * 
+ * @class SystemResetService
+ */
 @injectable()
 export class SystemResetService {
   constructor(
@@ -17,6 +40,23 @@ export class SystemResetService {
     @inject(InviteRepository) private inviteRepository: InviteRepository,
   ) {}
 
+  /**
+   * Performs a system-wide reset based on specified options.
+   * 
+   * WARNING: This is a destructive operation that permanently deletes data.
+   * 
+   * @async
+   * @param {Object} resetOptions - Configuration for what to reset
+   * @param {boolean} resetOptions.resetSubmissions - Delete all submissions
+   * @param {boolean} resetOptions.resetStudents - Delete all student users
+   * @param {boolean} resetOptions.resetClasses - Delete all classes
+   * @param {boolean} resetOptions.resetLists - Delete all question lists
+   * @param {boolean} resetOptions.resetMonitors - Delete all assistant users
+   * @param {boolean} resetOptions.resetProfessors - Delete all professors (except current user)
+   * @param {boolean} resetOptions.resetInvites - Delete all invites
+   * @param {string} currentUserId - Current user ID (to protect from deletion)
+   * @returns {Promise<{message: string; itemsDeleted: number}>} Reset result
+   */
   async performSystemReset(
     resetOptions: {
       resetSubmissions: boolean;
@@ -58,9 +98,9 @@ export class SystemResetService {
       }
 
       if (resetOptions.resetLists) {
-        const lists = await this.questionListRepository.findAll();
-        for (const list of lists) {
-          await this.questionListRepository.delete(list.id);
+        const question_lists = await this.questionListRepository.findAll();
+        for (const question_list of question_lists) {
+          await this.questionListRepository.delete(question_list.id);
           totalDeleted++;
         }
       }
@@ -92,7 +132,7 @@ export class SystemResetService {
       }
 
       return {
-        message: 'Reset do sistema realizado com sucesso',
+        message: 'System reset completed successfully',
         itemsDeleted: totalDeleted
       };
     } catch (error) {

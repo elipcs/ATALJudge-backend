@@ -1,3 +1,11 @@
+/**
+ * Authentication Middleware Module
+ * 
+ * Provides middleware functions for JWT authentication and authorization.
+ * Handles token validation, blacklist checking, and role-based access control.
+ * 
+ * @module middlewares/auth
+ */
 import { Request, Response, NextFunction } from 'express';
 import { TokenManager, JwtPayload } from '../utils/TokenManager';
 import { errorResponse } from '../utils/responses';
@@ -5,12 +13,33 @@ import { logger } from '../utils';
 import { TokenBlacklistRepository } from '../repositories/TokenBlacklistRepository';
 import { UserRole } from '../enums';
 
+/**
+ * Extended Request interface with authenticated user payload
+ * 
+ * @interface AuthRequest
+ * @extends {Request}
+ */
 export interface AuthRequest extends Request {
+  /** JWT payload of authenticated user */
   user?: JwtPayload;
 }
 
 const tokenBlacklistRepo = new TokenBlacklistRepository();
 
+/**
+ * Authentication middleware
+ * 
+ * Validates JWT token from Authorization header and extracts user information.
+ * Checks token blacklist to prevent use of logged-out tokens.
+ * 
+ * @async
+ * @function authenticate
+ * @param {AuthRequest} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {Promise<void>}
+ * @throws {Error} If token validation fails
+ */
 export async function authenticate(
   req: AuthRequest,
   res: Response,

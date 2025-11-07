@@ -18,19 +18,19 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     includeAuthor: boolean = false
   ): Promise<QuestionList | null> {
     const queryBuilder = this.repository
-      .createQueryBuilder('list')
-      .where('list.id = :id', { id });
+      .createQueryBuilder('question_list')
+      .where('question_list.id = :id', { id });
 
     if (includeAuthor) {
-      queryBuilder.leftJoinAndSelect('list.author', 'author');
+      queryBuilder.leftJoinAndSelect('question_list.author', 'author');
     }
 
     if (includeQuestions) {
-      queryBuilder.leftJoinAndSelect('list.questions', 'questions');
+      queryBuilder.leftJoinAndSelect('question_list.questions', 'questions');
     }
 
     if (includeClasses) {
-      queryBuilder.leftJoinAndSelect('list.classes', 'classes');
+      queryBuilder.leftJoinAndSelect('question_list.classes', 'classes');
     }
 
     return queryBuilder.getOne();
@@ -42,19 +42,19 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     includeAuthor: boolean = false
   ): Promise<QuestionList[]> {
     const queryBuilder = this.repository
-      .createQueryBuilder('list')
-      .orderBy('list.createdAt', 'DESC');
+      .createQueryBuilder('question_list')
+      .orderBy('question_list.createdAt', 'DESC');
 
     if (includeAuthor) {
-      queryBuilder.leftJoinAndSelect('list.author', 'author');
+      queryBuilder.leftJoinAndSelect('question_list.author', 'author');
     }
 
     if (includeQuestions) {
-      queryBuilder.leftJoinAndSelect('list.questions', 'questions');
+      queryBuilder.leftJoinAndSelect('question_list.questions', 'questions');
     }
 
     if (includeClasses) {
-      queryBuilder.leftJoinAndSelect('list.classes', 'classes');
+      queryBuilder.leftJoinAndSelect('question_list.classes', 'classes');
     }
 
     return queryBuilder.getMany();
@@ -64,8 +64,8 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     return this.repository.createQueryBuilder(alias);
   }
 
-  async saveWithRelations(list: QuestionList): Promise<QuestionList> {
-    return this.repository.save(list);
+  async saveWithRelations(questionList: QuestionList): Promise<QuestionList> {
+    return this.repository.save(questionList);
   }
 
   async findByAuthor(authorId: string): Promise<QuestionList[]> {
@@ -77,103 +77,103 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
 
   async findByClass(classId: string): Promise<QuestionList[]> {
     return this.repository
-      .createQueryBuilder('list')
-      .innerJoin('list.classes', 'class', 'class.id = :classId', { classId })
-      .orderBy('list.createdAt', 'DESC')
+      .createQueryBuilder('question_list')
+      .innerJoin('question_list.classes', 'class', 'class.id = :classId', { classId })
+      .orderBy('question_list.createdAt', 'DESC')
       .getMany();
   }
 
   async findOpenLists(): Promise<QuestionList[]> {
     const now = new Date();
     return this.repository
-      .createQueryBuilder('list')
-      .where('list.startDate <= :now', { now })
-      .andWhere('list.endDate >= :now', { now })
-      .orderBy('list.endDate', 'ASC')
+      .createQueryBuilder('question_list')
+      .where('question_list.startDate <= :now', { now })
+      .andWhere('question_list.endDate >= :now', { now })
+      .orderBy('question_list.endDate', 'ASC')
       .getMany();
   }
 
   async findFutureLists(): Promise<QuestionList[]> {
     const now = new Date();
     return this.repository
-      .createQueryBuilder('list')
-      .where('list.startDate > :now', { now })
-      .orderBy('list.startDate', 'ASC')
+      .createQueryBuilder('question_list')
+      .where('question_list.startDate > :now', { now })
+      .orderBy('question_list.startDate', 'ASC')
       .getMany();
   }
 
-  async addQuestion(listId: string, question: Question): Promise<void> {
-    const list = await this.findByIdWithRelations(listId, true);
-    if (!list) {
+  async addQuestion(questionListId: string, question: Question): Promise<void> {
+    const questionList = await this.findByIdWithRelations(questionListId, true);
+    if (!questionList) {
       throw new Error('Lista não encontrada');
     }
 
-    if (!list.questions) {
-      list.questions = [];
+    if (!questionList.questions) {
+      questionList.questions = [];
     }
 
-    const isAlreadyAdded = list.questions.some(q => q.id === question.id);
+    const isAlreadyAdded = questionList.questions.some(q => q.id === question.id);
     if (!isAlreadyAdded) {
-      list.questions.push(question);
-      await this.repository.save(list);
+      questionList.questions.push(question);
+      await this.repository.save(questionList);
     }
   }
 
-  async removeQuestion(listId: string, questionId: string): Promise<void> {
-    const list = await this.findByIdWithRelations(listId, true);
-    if (!list) {
+  async removeQuestion(questionListId: string, questionId: string): Promise<void> {
+    const questionList = await this.findByIdWithRelations(questionListId, true);
+    if (!questionList) {
       throw new Error('Lista não encontrada');
     }
 
-    if (list.questions) {
-      list.questions = list.questions.filter(q => q.id !== questionId);
-      await this.repository.save(list);
+    if (questionList.questions) {
+      questionList.questions = questionList.questions.filter(q => q.id !== questionId);
+      await this.repository.save(questionList);
     }
   }
 
-  async addClass(listId: string, classEntity: Class): Promise<void> {
-    const list = await this.findByIdWithRelations(listId, false, true);
-    if (!list) {
+  async addClass(questionListId: string, classEntity: Class): Promise<void> {
+    const questionList = await this.findByIdWithRelations(questionListId, false, true);
+    if (!questionList) {
       throw new Error('Lista não encontrada');
     }
 
-    if (!list.classes) {
-      list.classes = [];
+    if (!questionList.classes) {
+      questionList.classes = [];
     }
 
-    const isAlreadyAdded = list.classes.some(c => c.id === classEntity.id);
+    const isAlreadyAdded = questionList.classes.some(c => c.id === classEntity.id);
     if (!isAlreadyAdded) {
-      list.classes.push(classEntity);
-      await this.repository.save(list);
+      questionList.classes.push(classEntity);
+      await this.repository.save(questionList);
     }
   }
 
-  async removeClass(listId: string, classId: string): Promise<void> {
-    const list = await this.findByIdWithRelations(listId, false, true);
-    if (!list) {
+  async removeClass(questionListId: string, classId: string): Promise<void> {
+    const questionList = await this.findByIdWithRelations(questionListId, false, true);
+    if (!questionList) {
       throw new Error('Lista não encontrada');
     }
 
-    if (list.classes) {
-      list.classes = list.classes.filter(c => c.id !== classId);
-      await this.repository.save(list);
+    if (questionList.classes) {
+      questionList.classes = questionList.classes.filter(c => c.id !== classId);
+      await this.repository.save(questionList);
     }
   }
 
-  async findQuestions(listId: string): Promise<Question[]> {
-    const list = await this.findByIdWithRelations(listId, true);
-    return list?.questions || [];
+  async findQuestions(questionListId: string): Promise<Question[]> {
+    const questionList = await this.findByIdWithRelations(questionListId, true);
+    return questionList?.questions || [];
   }
 
-  async findClasses(listId: string): Promise<Class[]> {
-    const list = await this.findByIdWithRelations(listId, false, true);
-    return list?.classes || [];
+  async findClasses(questionListId: string): Promise<Class[]> {
+    const questionList = await this.findByIdWithRelations(questionListId, false, true);
+    return questionList?.classes || [];
   }
 
   async findByQuestionId(questionId: string): Promise<QuestionList | null> {
     return this.repository
-      .createQueryBuilder('list')
-      .innerJoin('list.questions', 'question', 'question.id = :questionId', { questionId })
+      .createQueryBuilder('question_list')
+      .innerJoin('question_list.questions', 'question', 'question.id = :questionId', { questionId })
       .getOne();
   }
 }

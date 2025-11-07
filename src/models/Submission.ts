@@ -45,7 +45,7 @@ export class Submission {
     if (codeVO) {
       this._code = codeVO.getValue();
     } else {
-      this._code = value; // Permite temporariamente para validação posterior
+      this._code = value; // Allows temporarily for later validation
     }
   }
 
@@ -58,7 +58,7 @@ export class Submission {
     if (scoreVO) {
       this._score = scoreVO.getValue();
     } else {
-      this._score = value; // Permite temporariamente para validação posterior
+      this._score = value; // Allows temporarily for later validation
     }
   }
 
@@ -102,7 +102,7 @@ export class Submission {
   // ============================================================
 
   /**
-   * Verifica se a submissão pode ser reenviada
+   * Checks if the submission can be resubmitted
    */
   canBeResubmitted(): boolean {
     return this.status === SubmissionStatus.ERROR || 
@@ -110,7 +110,7 @@ export class Submission {
   }
 
   /**
-   * Verifica se a submissão está em processamento
+   * Checks if the submission is processing
    */
   isProcessing(): boolean {
     return this.status === SubmissionStatus.IN_QUEUE || 
@@ -118,7 +118,7 @@ export class Submission {
   }
 
   /**
-   * Verifica se a submissão está pendente ou na fila
+   * Checks if the submission is pending or queued
    */
   isWaiting(): boolean {
     return this.status === SubmissionStatus.PENDING || 
@@ -126,7 +126,7 @@ export class Submission {
   }
 
   /**
-   * Verifica se a submissão foi finalizada (sucesso ou erro)
+   * Checks if the submission is finished (success or error)
    */
   isFinished(): boolean {
     return this.status === SubmissionStatus.COMPLETED || 
@@ -199,7 +199,7 @@ export class Submission {
   }
 
   /**
-   * Obtém o tamanho do código em bytes
+   * Gets the code size in bytes
    */
   getCodeSizeInBytes(): number {
     const codeVO = SubmissionCode.tryCreate(this._code);
@@ -207,7 +207,7 @@ export class Submission {
   }
 
   /**
-   * Obtém o número de linhas do código
+   * Gets the number of code lines
    */
   getCodeLineCount(): number {
     const codeVO = SubmissionCode.tryCreate(this._code);
@@ -215,7 +215,7 @@ export class Submission {
   }
 
   /**
-   * Obtém um preview do código (primeiras N linhas)
+   * Gets a preview of the code (first N lines)
    */
   getCodePreview(lines: number = 10): string {
     const codeVO = SubmissionCode.tryCreate(this._code);

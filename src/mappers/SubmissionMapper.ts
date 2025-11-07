@@ -1,13 +1,29 @@
+/**
+ * Submission Data Mapper
+ * 
+ * Maps between Submission domain models and DTOs.
+ * Handles conversion of Submission entities to data transfer objects for API responses.
+ * 
+ * @module mappers/SubmissionMapper
+ */
 import { Submission } from '../models/Submission';
 import { SubmissionResponseDTO, SubmissionDetailDTO, CreateSubmissionDTO, TestCaseResultDTO } from '../dtos/SubmissionDtos';
 import { SubmissionStatus } from '../enums';
 
 /**
- * Mapper para transformação entre Submission (Domain) e DTOs
+ * Submission Mapper Class
+ * 
+ * Provides static methods for converting between Submission domain objects and DTOs.
+ * 
+ * @class SubmissionMapper
  */
 export class SubmissionMapper {
   /**
-   * Converte Submission (Domain) para SubmissionResponseDTO
+   * Converts a Submission domain model to SubmissionResponseDTO
+   * 
+   * @static
+   * @param {Submission} submission - The submission domain model
+   * @returns {SubmissionResponseDTO} The submission data transfer object
    */
   static toDTO(submission: Submission): SubmissionResponseDTO {
     return new SubmissionResponseDTO({
@@ -87,7 +103,7 @@ export class SubmissionMapper {
   }
 
   /**
-   * Cria um DTO simplificado para listagem
+   * Creates a simplified DTO for listing
    */
   static toListItemDTO(submission: Submission): Pick<SubmissionResponseDTO, 'id' | 'questionId' | 'status' | 'score' | 'createdAt'> {
     return {
@@ -100,7 +116,7 @@ export class SubmissionMapper {
   }
 
   /**
-   * Cria um DTO com informações de progresso
+   * Creates a DTO with progress information
    */
   static toProgressDTO(submission: Submission) {
     return {

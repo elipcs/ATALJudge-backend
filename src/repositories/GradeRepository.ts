@@ -11,28 +11,28 @@ export class GradeRepository extends BaseRepository<Grade> {
   async findById(id: string): Promise<Grade | null> {
     return this.repository.findOne({
       where: { id },
-      relations: ['student', 'list']
+      relations: ['student', 'question_list']
     });
   }
 
-  async findByStudentAndList(studentId: string, listId: string): Promise<Grade | null> {
+  async findByStudentAndList(studentId: string, questionListId: string): Promise<Grade | null> {
     return this.repository.findOne({
-      where: { studentId, listId },
-      relations: ['student', 'list']
+      where: { studentId, questionListId },
+      relations: ['student', 'question_list']
     });
   }
 
   async findByStudent(studentId: string): Promise<Grade[]> {
     return this.repository.find({
       where: { studentId },
-      relations: ['list'],
+      relations: ['question_list'],
       order: { createdAt: 'DESC' }
     });
   }
 
-  async findByList(listId: string): Promise<Grade[]> {
+  async findByList(questionListId: string): Promise<Grade[]> {
     return this.repository.find({
-      where: { listId },
+      where: { questionListId },
       relations: ['student'],
       order: { score: 'DESC' }
     });
@@ -53,8 +53,8 @@ export class GradeRepository extends BaseRepository<Grade> {
     return result.affected || 0;
   }
 
-  async deleteByList(listId: string): Promise<number> {
-    const result = await this.repository.delete({ listId });
+  async deleteByList(questionListId: string): Promise<number> {
+    const result = await this.repository.delete({ questionListId });
     return result.affected || 0;
   }
 }

@@ -1,3 +1,9 @@
+/**
+ * @module controllers/config
+ * @description REST API controller for system configuration endpoints
+ * Manages allowed IPs and system-level operations (reset)
+ * @class ConfigController
+ */
 import { Router, Response } from 'express';
 import { CreateAllowedIPDTO } from '../dtos';
 import { validateBody, authenticate, requireProfessor, AuthRequest } from '../middlewares';
@@ -29,7 +35,7 @@ function createConfigController(
     requireProfessor,
     asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
       const allowedIPs = await getAllAllowedIPsUseCase.execute();
-      successResponse(res, allowedIPs, 'Lista de IPs permitidos');
+      successResponse(res, allowedIPs, 'List of allowed IPs');
     })
   );
 
@@ -39,7 +45,7 @@ function createConfigController(
     requireProfessor,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
       const allowedIP = await getAllowedIPByIdUseCase.execute(req.params.id);
-      successResponse(res, allowedIP, 'IP encontrado');
+      successResponse(res, allowedIP, 'IP found');
     })
   );
 
@@ -50,7 +56,7 @@ function createConfigController(
     validateBody(CreateAllowedIPDTO),
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
       const allowedIP = await createAllowedIPUseCase.execute(req.body);
-      successResponse(res, allowedIP, 'IP adicionado com sucesso', 201);
+      successResponse(res, allowedIP, 'IP added successfully', 201);
     })
   );
 
@@ -60,7 +66,7 @@ function createConfigController(
     requireProfessor,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
       const allowedIP = await toggleAllowedIPStatusUseCase.execute(req.params.id);
-      successResponse(res, allowedIP, 'Status do IP alterado');
+      successResponse(res, allowedIP, 'IP status changed');
     })
   );
 
@@ -70,7 +76,7 @@ function createConfigController(
     requireProfessor,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
       await deleteAllowedIPUseCase.execute(req.params.id);
-      successResponse(res, null, 'IP removido com sucesso');
+      successResponse(res, null, 'IP removed successfully');
     })
   );
 
@@ -80,7 +86,7 @@ function createConfigController(
     requireProfessor,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
       if (!req.user) {
-        throw new UnauthorizedError('Usuário não autenticado', 'UNAUTHORIZED');
+        throw new UnauthorizedError('User not authenticated', 'UNAUTHORIZED');
       }
 
       const resetOptions = {
@@ -98,7 +104,7 @@ function createConfigController(
         currentUserId: req.user.sub
       });
 
-      successResponse(res, result, 'Reset do sistema concluído com sucesso');
+      successResponse(res, result, 'System reset completed successfully');
     })
   );
 

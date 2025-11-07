@@ -1,10 +1,32 @@
+/**
+ * Allowed IP Data Transfer Objects (DTOs)
+ * 
+ * Defines request/response data structures for managing allowed IP addresses.
+ * Used for access control and security policies.
+ * 
+ * @module dtos/AllowedIPDtos
+ */
 import { IsString, IsBoolean, IsOptional } from 'class-validator';
 
+/**
+ * DTO for allowed IP response
+ * 
+ * @class AllowedIPDTO
+ */
 export class AllowedIPDTO {
+  /** IP address identifier */
   id!: string;
+  
+  /** IP address string */
   ip!: string;
+  
+  /** Description of the IP address */
   description!: string;
+  
+  /** Whether this IP is currently active */
   active!: boolean;
+  
+  /** Timestamp when the IP was added */
   createdAt!: string;
 
   constructor(data: any) {
@@ -18,20 +40,33 @@ export class AllowedIPDTO {
   }
 }
 
+/**
+ * DTO for creating an allowed IP
+ * 
+ * @class CreateAllowedIPDTO
+ */
 export class CreateAllowedIPDTO {
-  @IsString({ message: 'IP deve ser uma string' })
+  /** IP address to allow */
+  @IsString({ message: 'IP must be a string' })
   ip!: string;
 
-  @IsString({ message: 'Descrição deve ser uma string' })
+  /** Description for this IP address */
+  @IsString({ message: 'Description must be a string' })
   description!: string;
 }
 
+/**
+ * DTO for updating an allowed IP
+ * 
+ * @class UpdateAllowedIPDTO
+ */
 export class UpdateAllowedIPDTO {
+  /** Updated IP address (optional) */
   @IsOptional()
-  @IsString({ message: 'Descrição deve ser uma string' })
+  @IsString({ message: 'Description must be a string' })
   description?: string;
 
   @IsOptional()
-  @IsBoolean({ message: 'Ativo deve ser um booleano' })
+  @IsBoolean({ message: 'Active must be a boolean' })
   active?: boolean;
 }

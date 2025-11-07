@@ -1,3 +1,12 @@
+/**
+ * Dependency Injection Container Configuration
+ * 
+ * Registers all repositories, services, and use cases with the tsyringe container.
+ * Implements the Singleton pattern for application-wide dependency management.
+ * 
+ * @module config/container
+ * @see {@link https://github.com/Microsoft/tsyringe tsyringe documentation}
+ */
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 
@@ -35,6 +44,16 @@ import { UserRegistrationService } from '../services/UserRegistrationService';
 import { PasswordManagementService } from '../services/PasswordManagementService';
 import { TokenManagementService } from '../services/TokenManagementService';
 
+/**
+ * Sets up the dependency injection container
+ * 
+ * Registers all repositories and services as singletons.
+ * This function must be called during application initialization.
+ * 
+ * @returns {void}
+ * @example
+ * setupContainer();
+ */
 export function setupContainer(): void {
   container.registerSingleton(UserRepository);
   container.registerSingleton(QuestionRepository);

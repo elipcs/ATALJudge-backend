@@ -1,6 +1,26 @@
+/**
+ * Payload Converter Middleware Module
+ * 
+ * Provides middleware for normalizing and converting request payloads.
+ * Handles type conversions for request bodies from different sources.
+ * 
+ * @module middlewares/payload-converter
+ */
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils';
 
+/**
+ * Parses time limit strings or numbers into milliseconds
+ * 
+ * Supports formats: 'ms', 's', or plain number
+ * 
+ * @function parseTimeLimit
+ * @param {string | number} limit - Time limit value
+ * @returns {number} Time limit in milliseconds
+ * @example
+ * parseTimeLimit('2s') // returns 2000
+ * parseTimeLimit('500ms') // returns 500
+ */
 function parseTimeLimit(limit: string | number): number {
   if (typeof limit === 'number') return limit;
   
@@ -17,6 +37,15 @@ function parseTimeLimit(limit: string | number): number {
   return parseInt(limitStr);
 }
 
+/**
+ * Parses memory limit strings or numbers into kilobytes
+ * 
+ * Supports formats: 'kb', 'mb', 'gb', or plain number
+ * 
+ * @function parseMemoryLimit
+ * @param {string | number} limit - Memory limit value
+ * @returns {number} Memory limit in kilobytes
+ */
 function parseMemoryLimit(limit: string | number): number {
   if (typeof limit === 'number') return limit;
   

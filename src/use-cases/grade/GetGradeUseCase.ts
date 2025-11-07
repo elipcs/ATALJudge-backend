@@ -10,7 +10,7 @@ import { GradeMapper } from '../../mappers';
  * 
  * Responsibilities:
  * - Find grade by ID
- * - Include relationships (student, list)
+ * - Include relationships (student, question_list)
  * - Convert to DTO
  */
 @injectable()

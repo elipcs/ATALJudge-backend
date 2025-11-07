@@ -7,7 +7,7 @@ import { QuestionListMapper } from '../../mappers';
 import { GradeService } from '../../services/GradeService';
 
 export interface UpdateListScoringInput {
-  listId: string;
+  questionListId: string;
   data: {
     scoringMode?: 'simple' | 'groups';
     maxScore?: number;
@@ -25,27 +25,27 @@ export interface UpdateListScoringInput {
 @injectable()
 export class UpdateListScoringUseCase implements IUseCase<UpdateListScoringInput, QuestionListResponseDTO> {
   constructor(
-    @inject(QuestionListRepository) private listRepository: QuestionListRepository,
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository,
     @inject(GradeRepository) private gradeRepository: GradeRepository,
     @inject(GradeService) private gradeService: GradeService
   ) {}
 
   async execute(input: UpdateListScoringInput): Promise<QuestionListResponseDTO> {
-    const { listId, data } = input;
+    const { questionListId, data } = input;
 
-    const list = await this.listRepository.findByIdWithRelations(listId, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, true);
 
-    if (!list) {
-      logger.warn('List not found to update scoring', { listId });
+    if (!questionList) {
+      logger.warn('List not found to update scoring', { questionListId });
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }
 
     // Update scoring configuration
-    if (data.scoringMode !== undefined) list.scoringMode = data.scoringMode;
-    if (data.maxScore !== undefined) list.maxScore = data.maxScore;
-    if (data.minQuestionsForMaxScore !== undefined) list.minQuestionsForMaxScore = data.minQuestionsForMaxScore;
+    if (data.scoringMode !== undefined) questionList.scoringMode = data.scoringMode;
+    if (data.maxScore !== undefined) questionList.maxScore = data.maxScore;
+    if (data.minQuestionsForMaxScore !== undefined) questionList.minQuestionsForMaxScore = data.minQuestionsForMaxScore;
     if (data.questionGroups !== undefined) {
-      list.questionGroups = (data.questionGroups || []).map((g: any) => ({
+      questionList.questionGroups = (data.questionGroups || []).map((g: any) => ({
         id: g.id,
         name: g.name,
         questionIds: g.questionIds || [],
@@ -54,18 +54,18 @@ export class UpdateListScoringUseCase implements IUseCase<UpdateListScoringInput
       }));
     }
 
-    await this.listRepository.save(list);
+    await this.questionListRepository.save(questionList);
 
     // Recalculate all grades for the list
     try {
-      const grades = await this.gradeRepository.findByList(listId);
+      const grades = await this.gradeRepository.findByList(questionListId);
 
       for (const grade of grades) {
         try {
-          await this.gradeService.recalculateAndUpsertGrade(grade.studentId, listId);
+          await this.gradeService.recalculateAndUpsertGrade(grade.studentId, questionListId);
         } catch (gradeError) {
           logger.error('Error recalculating individual grade', {
-            listId,
+            questionListId,
             studentId: grade.studentId,
             error: gradeError instanceof Error ? gradeError.message : 'Unknown error'
           });
@@ -73,16 +73,16 @@ export class UpdateListScoringUseCase implements IUseCase<UpdateListScoringInput
       }
 
       logger.info('Grades recalculated after configuration update', {
-        listId,
+        questionListId,
         totalGrades: grades.length
       });
     } catch (recalcError) {
       logger.error('Error recalculating grades after configuration update', {
-        listId,
+        questionListId,
         error: recalcError instanceof Error ? recalcError.message : 'Unknown error'
       });
     }
 
-    return QuestionListMapper.toDTO(list);
+    return QuestionListMapper.toDTO(questionList);
   }
 }

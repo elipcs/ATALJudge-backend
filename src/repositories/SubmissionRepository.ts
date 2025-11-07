@@ -67,9 +67,9 @@ export class SubmissionRepository extends BaseRepository<Submission> {
       .leftJoinAndSelect('submission.user', 'user')
       .leftJoinAndSelect('submission.question', 'question')
       .leftJoin('question_list_questions', 'qlq', 'qlq.question_id = question.id')
-      .leftJoin('question_lists', 'list', 'list.id = qlq.list_id')
-      .addSelect('list.id', 'list_id')
-      .addSelect('list.title', 'list_title');
+      .leftJoin('question_lists', 'question_list', 'question_list.id = qlq.question_list_id')
+      .addSelect('question_list.id', 'question_list_id')
+      .addSelect('question_list.title', 'question_list_title');
 
     if (filters.questionId) {
       queryBuilder.andWhere('submission.questionId = :questionId', { questionId: filters.questionId });
@@ -109,8 +109,8 @@ export class SubmissionRepository extends BaseRepository<Submission> {
       const raw = result.raw[index];
       return {
         ...entity,
-        listId: raw.list_id,
-        listTitle: raw.list_title
+        questionListId: raw.question_list_id,
+        questionListTitle: raw.question_list_title
       };
     });
 

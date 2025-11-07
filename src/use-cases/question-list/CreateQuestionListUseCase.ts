@@ -22,7 +22,7 @@ export interface CreateQuestionListUseCaseInput {
 @injectable()
 export class CreateQuestionListUseCase implements IUseCase<CreateQuestionListUseCaseInput, QuestionListResponseDTO> {
   constructor(
-    @inject(QuestionListRepository) private listRepository: QuestionListRepository,
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository,
     @inject(ClassRepository) private classRepository: ClassRepository
   ) {}
 
@@ -39,56 +39,56 @@ export class CreateQuestionListUseCase implements IUseCase<CreateQuestionListUse
     }));
 
     // 2. Create QuestionList
-    const list = new QuestionList();
-    list.title = dto.title;
-    list.description = dto.description;
-    list.authorId = authorId;
-    list.startDate = dto.startDate ? new Date(dto.startDate) : null as any;
-    list.endDate = dto.endDate ? new Date(dto.endDate) : null as any;
-    list.scoringMode = dto.scoringMode || 'simple';
-    list.maxScore = dto.maxScore || 10;
-    list.minQuestionsForMaxScore = dto.minQuestionsForMaxScore;
-    list.questionGroups = normalizedGroups;
-    list.isRestricted = dto.isRestricted || false;
+    const questionList = new QuestionList();
+    questionList.title = dto.title;
+    questionList.description = dto.description;
+    questionList.authorId = authorId;
+    questionList.startDate = dto.startDate ? new Date(dto.startDate) : null as any;
+    questionList.endDate = dto.endDate ? new Date(dto.endDate) : null as any;
+    questionList.scoringMode = dto.scoringMode || 'simple';
+    questionList.maxScore = dto.maxScore || 10;
+    questionList.minQuestionsForMaxScore = dto.minQuestionsForMaxScore;
+    questionList.questionGroups = normalizedGroups;
+    questionList.isRestricted = dto.isRestricted || false;
 
     // 3. Save to database
-    const savedList = await this.listRepository.create(list);
+    const savedList = await this.questionListRepository.create(questionList);
 
     // 4. Associate classes (if specified)
     if (dto.classIds && dto.classIds.length > 0) {
       const classes = await this.classRepository.findByIds(dto.classIds);
       savedList.classes = classes;
-      const listWithClasses = await this.listRepository.save(savedList);
+      const questionListWithClasses = await this.questionListRepository.save(savedList);
       
       logger.info('[CreateQuestionListUseCase] List created with classes', { 
-        listId: listWithClasses.id, 
+        questionListId: questionListWithClasses.id, 
         classesCount: classes.length 
       });
       
-      return this.toDTO(listWithClasses);
+      return this.toDTO(questionListWithClasses);
     }
 
-    logger.info('[CreateQuestionListUseCase] List created', { listId: savedList.id });
+    logger.info('[CreateQuestionListUseCase] List created', { questionListId: savedList.id });
     return this.toDTO(savedList);
   }
 
-  private toDTO(list: QuestionList): QuestionListResponseDTO {
+  private toDTO(questionList: QuestionList): QuestionListResponseDTO {
     return new QuestionListResponseDTO({
-      id: list.id,
-      title: list.title,
-      description: list.description,
-      startDate: list.startDate?.toISOString(),
-      endDate: list.endDate?.toISOString(),
-      scoringMode: list.scoringMode,
-      maxScore: list.maxScore,
-      minQuestionsForMaxScore: list.minQuestionsForMaxScore,
-      questionGroups: list.questionGroups,
-      isRestricted: list.isRestricted,
-      calculatedStatus: list.getCalculatedStatus(),
-      createdAt: list.createdAt,
-      updatedAt: list.updatedAt,
-      questionCount: list.getQuestionCount(),
-      classIds: list.classes?.map(c => c.id) || []
+      id: questionList.id,
+      title: questionList.title,
+      description: questionList.description,
+      startDate: questionList.startDate?.toISOString(),
+      endDate: questionList.endDate?.toISOString(),
+      scoringMode: questionList.scoringMode,
+      maxScore: questionList.maxScore,
+      minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
+      questionGroups: questionList.questionGroups,
+      isRestricted: questionList.isRestricted,
+      calculatedStatus: questionList.getCalculatedStatus(),
+      createdAt: questionList.createdAt,
+      updatedAt: questionList.updatedAt,
+      questionCount: questionList.getQuestionCount(),
+      classIds: questionList.classes?.map(c => c.id) || []
     });
   }
 }

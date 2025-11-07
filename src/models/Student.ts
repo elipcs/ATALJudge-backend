@@ -27,12 +27,12 @@ export class Student extends User {
     if (regVO) {
       this._studentRegistration = regVO.getValue();
     } else {
-      this._studentRegistration = value; // Permite temporariamente para validação posterior
+      this._studentRegistration = value; // Allows temporarily for later validation
     }
   }
 
   /**
-   * Obtém a matrícula formatada (apenas retorna o valor)
+   * Gets the formatted registration number (returns value only)
    */
   getFormattedRegistration(): string | undefined {
     return this._studentRegistration;

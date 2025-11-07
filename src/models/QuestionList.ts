@@ -60,7 +60,7 @@ export class QuestionList {
   @ManyToMany(() => Question)
   @JoinTable({
     name: 'question_list_questions',
-    joinColumn: { name: 'list_id', referencedColumnName: 'id' },
+    joinColumn: { name: 'question_list_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'question_id', referencedColumnName: 'id' }
   })
   questions!: Question[];
@@ -68,7 +68,7 @@ export class QuestionList {
   @ManyToMany(() => Class)
   @JoinTable({
     name: 'question_list_classes',
-    joinColumn: { name: 'list_id', referencedColumnName: 'id' },
+    joinColumn: { name: 'question_list_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'class_id', referencedColumnName: 'id' }
   })
   classes!: Class[];
@@ -165,28 +165,28 @@ export class QuestionList {
   }
 
   /**
-   * Verifica se a lista usa pontuação por grupos
+   * Checks if the list uses group-based scoring
    */
   usesGroupScoring(): boolean {
     return this.scoringMode === 'groups';
   }
 
   /**
-   * Verifica se a lista usa pontuação simples
+   * Checks if the list uses simple scoring
    */
   usesSimpleScoring(): boolean {
     return this.scoringMode === 'simple';
   }
 
   /**
-   * Verifica se a lista está restrita a turmas específicas
+   * Checks if the list has class-specific restrictions
    */
   hasClassRestrictions(): boolean {
     return this.isRestricted;
   }
 
   /**
-   * Obtém o tempo restante em milissegundos
+   * Gets the remaining time in milliseconds
    */
   getTimeRemainingMs(): number {
     const now = new Date();
@@ -195,11 +195,11 @@ export class QuestionList {
   }
 
   /**
-   * Obtém o tempo restante formatado
+   * Gets the formatted remaining time
    */
   getTimeRemainingFormatted(): string {
     const ms = this.getTimeRemainingMs();
-    if (ms === 0) return 'Encerrada';
+    if (ms === 0) return 'Closed';
 
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));
     const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -211,23 +211,23 @@ export class QuestionList {
   }
 
   /**
-   * Verifica se a lista pode ser editada
-   * (Não pode editar listas que já fecharam)
+   * Checks if the list can be edited
+   * (Cannot edit lists that are already closed)
    */
   canBeEdited(): boolean {
     return !this.isClosed();
   }
 
   /**
-   * Verifica se a lista pode ser deletada
-   * (Não pode deletar listas abertas ou que já fecharam com submissões)
+   * Checks if the list can be deleted
+   * (Cannot delete open lists or lists with submissions)
    */
   canBeDeleted(): boolean {
     return this.isNotOpenYet();
   }
 
   /**
-   * Obtém o grupo de uma questão específica
+   * Gets the group for a specific question
    */
   getQuestionGroup(questionId: string): QuestionGroup | undefined {
     if (!this.questionGroups) return undefined;

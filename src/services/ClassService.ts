@@ -1,3 +1,10 @@
+/**
+ * @module services/ClassService
+ * @description Service to manage classes in the system.
+ * Provides operations to create, update, delete and retrieve classes,
+ * as well as manage students and teachers within a class.
+ * @class ClassService
+ */
 import { injectable, inject } from 'tsyringe';
 import { CreateClassDTO, ClassResponseDTO } from '../dtos';
 import { UserRole } from '../enums';
@@ -145,7 +152,7 @@ export class ClassService {
       if ('grades' in student && Array.isArray((student as any).grades)) {
         studentData.grades = (student as any).grades.map((grade: any) => ({
           id: grade.id,
-          listId: grade.listId,
+          questionListId: grade.questionListId,
           score: grade.score,
           createdAt: grade.createdAt.toISOString(),
           updatedAt: grade.updatedAt.toISOString()
@@ -236,7 +243,7 @@ export class ClassService {
           if ('grades' in student && Array.isArray((student as any).grades)) {
             studentData.grades = (student as any).grades.map((grade: any) => ({
               id: grade.id,
-              listId: grade.listId,
+              questionListId: grade.questionListId,
               score: grade.score,
               createdAt: grade.createdAt.toISOString(),
               updatedAt: grade.updatedAt.toISOString()

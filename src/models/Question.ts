@@ -135,38 +135,38 @@ export class Question {
   // ============================================================
 
   /**
-   * Verifica se a questão possui casos de teste
+   * Checks if the question has test cases
    */
   hasTestCases(): boolean {
     return this.testCases && this.testCases.length > 0;
   }
 
   /**
-   * Obtém o número de casos de teste
+   * Gets the number of test cases
    */
   getTestCaseCount(): number {
     return this.testCases ? this.testCases.length : 0;
   }
 
   /**
-   * Verifica se a questão pode ser editada
-   * Questões locais podem ser editadas, Codeforces não
+   * Checks if the question can be edited
+   * Local questions can be edited, Codeforces cannot
    */
   canBeEdited(): boolean {
     return this.isLocal();
   }
 
   /**
-   * Verifica se a questão pode ser deletada
-   * Não pode deletar se tiver submissões
+   * Checks if the question can be deleted
+   * Cannot delete if it has submissions
    */
   canBeDeleted(): boolean {
     return !this.submissions || this.submissions.length === 0;
   }
 
   /**
-   * Verifica se a questão está pronta para uso
-   * (tem todos os campos obrigatórios e pelo menos 1 test case)
+   * Checks if the question is ready for use
+   * (has all required fields and at least 1 test case)
    */
   isReady(): boolean {
     return !!(
@@ -177,14 +177,14 @@ export class Question {
   }
 
   /**
-   * Verifica se a questão tem exemplos
+   * Checks if the question has examples
    */
   hasExamples(): boolean {
     return this.examples && this.examples.length > 0;
   }
 
   /**
-   * Obtém os casos de teste públicos (is_sample = true)
+   * Gets public test cases (is_sample = true)
    */
   getPublicTestCases(): TestCase[] {
     if (!this.testCases) return [];
@@ -192,7 +192,7 @@ export class Question {
   }
 
   /**
-   * Obtém os casos de teste privados (is_sample = false)
+   * Gets private test cases (is_sample = false)
    */
   getPrivateTestCases(): TestCase[] {
     if (!this.testCases) return [];
@@ -200,7 +200,7 @@ export class Question {
   }
 
   /**
-   * Valida se a configuração do Codeforces está completa
+   * Validates if the Codeforces configuration is complete
    */
   isCodeforcesConfigComplete(): boolean {
     if (!this.isCodeforces()) return true;

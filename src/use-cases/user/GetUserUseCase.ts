@@ -38,8 +38,8 @@ export class GetUserUseCase implements IUseCase<string, UserResponseDTO> {
       const grades = await this.gradeRepository.findByStudent(userId);
       userDTO.grades = grades.map(grade => ({
         id: grade.id,
-        listId: grade.listId,
-        listTitle: grade.list?.title,
+        questionListId: grade.questionListId,
+        questionListTitle: grade.questionList?.title,
         score: grade.score,
         createdAt: grade.createdAt,
         updatedAt: grade.updatedAt

@@ -30,7 +30,7 @@ export class User {
     if (emailVO) {
       this._email = emailVO.getValue();
     } else {
-      this._email = value; // Permite temporariamente para validação posterior
+      this._email = value; // Allows temporarily for later validation
     }
   }
 
@@ -61,7 +61,7 @@ export class User {
   class?: Class;
 
   /**
-   * Define a senha do usuário usando Password Value Object
+   * Sets the user password using Password Value Object
    */
   async setPassword(password: string): Promise<void> {
     const passwordVO = await Password.create(password);
@@ -69,7 +69,7 @@ export class User {
   }
 
   /**
-   * Verifica se a senha está correta usando Password Value Object
+   * Checks if the password is correct using Password Value Object
    */
   async checkPassword(password: string): Promise<boolean> {
     if (!this.passwordHash) {
@@ -96,46 +96,46 @@ export class User {
   // ============================================================
 
   /**
-   * Verifica se o usuário possui uma role específica
+   * Checks if the user has a specific role
    */
   hasRole(role: UserRole): boolean {
     return this.role === role;
   }
 
   /**
-   * Verifica se o usuário pode gerenciar turmas
-   * (Professores e Assistentes podem)
+   * Checks if the user can manage classes
+   * (Professors and Assistants can)
    */
   canManageClasses(): boolean {
     return this.isProfessor() || this.isAssistant();
   }
 
   /**
-   * Verifica se o usuário pode criar questões
-   * (Professores e Assistentes podem)
+   * Checks if the user can create questions
+   * (Professors and Assistants can)
    */
   canCreateQuestions(): boolean {
     return this.isProfessor() || this.isAssistant();
   }
 
   /**
-   * Verifica se o usuário pode submeter código
-   * (Apenas estudantes podem submeter)
+   * Checks if the user can submit code
+   * (Only students can submit)
    */
   canSubmitCode(): boolean {
     return this.isStudent();
   }
 
   /**
-   * Verifica se o usuário pode avaliar submissões
-   * (Professores e Assistentes podem)
+   * Checks if the user can grade submissions
+   * (Professors and Assistants can)
    */
   canGradeSubmissions(): boolean {
     return this.isProfessor() || this.isAssistant();
   }
 
   /**
-   * Verifica se o usuário está ativo (possui último login nos últimos 90 dias)
+   * Checks if the user is active (has logged in within the last 90 days)
    */
   isActive(): boolean {
     if (!this.lastLogin) return false;
@@ -147,7 +147,7 @@ export class User {
   }
 
   /**
-   * Verifica se o usuário é um novo usuário (criado há menos de 7 dias)
+   * Checks if the user is a new user (created less than 7 days ago)
    */
   isNewUser(): boolean {
     const sevenDaysAgo = new Date();
@@ -157,14 +157,14 @@ export class User {
   }
 
   /**
-   * Atualiza o último login do usuário
+   * Updates the user's last login timestamp
    */
   updateLastLogin(): void {
     this.lastLogin = new Date();
   }
 
   /**
-   * Obtém o nome formatado (primeira letra maiúscula)
+   * Gets the formatted name (first letter uppercase)
    */
   getFormattedName(): string {
     return this.name
@@ -174,7 +174,7 @@ export class User {
   }
 
   /**
-   * Verifica se o usuário tem senha configurada
+   * Checks if the user has a password configured
    */
   hasPassword(): boolean {
     return !!this.passwordHash;

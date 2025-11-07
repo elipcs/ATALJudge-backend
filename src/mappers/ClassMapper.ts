@@ -1,13 +1,23 @@
+/**
+ * Class (Turma) Data Mapper
+ * 
+ * Maps between Class domain models and DTOs.
+ * Handles conversion of Class entities to data transfer objects for API responses.
+ * 
+ * @module mappers/ClassMapper
+ */
 import { Class } from '../models';
 import { ClassResponseDTO } from '../dtos';
 
 /**
- * Mapper: Class Entity ↔ DTOs
+ * Class Mapper Class
  * 
- * Responsabilidades:
- * - Converter entidade Class para ClassResponseDTO
- * - Garantir separação entre camada de domínio e apresentação
+ * Provides static methods for converting between Class domain objects and DTOs.
+ * Ensures separation between domain layer and presentation layer.
+ * 
+ * @class ClassMapper
  */
+
 export class ClassMapper {
   /**
    * Converte Class entity para ClassResponseDTO

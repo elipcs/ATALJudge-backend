@@ -1,8 +1,28 @@
+/**
+ * Request Validation Middleware Module
+ * 
+ * Provides DTO validation for request bodies.
+ * Uses class-validator for schema validation.
+ * 
+ * @module middlewares/validation
+ */
 import { Request, Response, NextFunction } from 'express';
 import { validateDto, ValidationException } from '../utils/validators';
 import { validationErrorResponse } from '../utils/responses';
 import { logger } from '../utils';
 
+/**
+ * Request body validation middleware factory
+ * 
+ * Creates middleware that validates request body against a DTO class.
+ * 
+ * @template T - The DTO class type
+ * @function validateBody
+ * @param {new () => T} dtoClass - The DTO class to validate against
+ * @returns {Function} Express middleware function
+ * @example
+ * router.post('/user', validateBody(UserRegisterDTO), handler);
+ */
 export function validateBody<T extends object>(dtoClass: new () => T) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

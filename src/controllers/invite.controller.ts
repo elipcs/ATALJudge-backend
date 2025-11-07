@@ -1,3 +1,9 @@
+/**
+ * @module controllers/invite
+ * @description REST API controller for invite endpoints
+ * Manages invite creation, validation, revocation, and deletion
+ * @class InviteController
+ */
 import { Router, Response } from 'express';
 import { 
   CreateInviteUseCase, 
@@ -29,7 +35,7 @@ router.post(
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     const invite = await createInviteUseCase.execute(req.body);
     
-    successResponse(res, { invite }, 'Convite criado com sucesso', 201);
+    successResponse(res, { invite }, 'Invite created successfully', 201);
   })
 );
 
@@ -41,7 +47,7 @@ router.post(
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     const invite = await createInviteUseCase.execute(req.body);
     
-    successResponse(res, { invite }, 'Convite criado com sucesso', 201);
+    successResponse(res, { invite }, 'Invite created successfully', 201);
   })
 );
 
@@ -52,32 +58,32 @@ router.get(
   asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
     const invites = await getAllInvitesUseCase.execute();
     
-    successResponse(res, invites, 'Lista de convites');
+    successResponse(res, invites, 'List of invites');
   })
 );
 
 router.post(
   '/verify',
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    logger.debug('[INVITE] Body recebido', { 
+    logger.debug('[INVITE] Body received', { 
       body: sanitizeForLog(req.body), 
       contentType: req.headers['content-type'] 
     });
     
     const { token } = req.body;
     
-    logger.debug('[INVITE] Verificando convite', { 
-      tokenPreview: token ? `${token.substring(0, 10)}...` : 'não fornecido' 
+    logger.debug('[INVITE] Verifying invite', { 
+      tokenPreview: token ? `${token.substring(0, 10)}...` : 'not provided' 
     });
     
     if (!token) {
-      logger.warn('[INVITE] Token não fornecido no body');
-      throw new ValidationError('Token é obrigatório', 'TOKEN_REQUIRED');
+      logger.warn('[INVITE] Token not provided in body');
+      throw new ValidationError('Token is required', 'TOKEN_REQUIRED');
     }
     
     const invite = await validateInviteUseCase.execute(token);
     
-    logger.info('[INVITE] Convite válido', { 
+    logger.info('[INVITE] Valid invite', { 
       id: invite.id, 
       role: invite.role, 
       currentUses: invite.currentUses,
@@ -98,7 +104,7 @@ router.post(
       creatorName: invite.creatorName
     };
     
-    successResponse(res, inviteData, 'Convite válido');
+    successResponse(res, inviteData, 'Valid invite');
   })
 );
 
@@ -109,7 +115,7 @@ router.delete(
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     await deleteInviteUseCase.execute(req.params.id);
     
-    successResponse(res, null, 'Convite deletado com sucesso');
+    successResponse(res, null, 'Invite deleted successfully');
   })
 );
 
@@ -120,7 +126,7 @@ router.post(
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     await revokeInviteUseCase.execute(req.params.id);
     
-    successResponse(res, null, 'Convite revogado com sucesso');
+    successResponse(res, null, 'Invite revoked successfully');
   })
 );
 

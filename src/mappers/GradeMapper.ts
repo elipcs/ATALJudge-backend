@@ -1,18 +1,34 @@
+/**
+ * Grade Data Mapper
+ * 
+ * Maps between Grade domain models and DTOs.
+ * Handles conversion of Grade entities to data transfer objects for API responses.
+ * 
+ * @module mappers/GradeMapper
+ */
 import { Grade } from '../models/Grade';
 import { GradeResponseDTO } from '../dtos/GradeDtos';
 
 /**
- * Mapper para transformação entre Grade (Domain) e DTOs
+ * Grade Mapper Class
+ * 
+ * Provides static methods for converting between Grade domain objects and DTOs.
+ * 
+ * @class GradeMapper
  */
 export class GradeMapper {
   /**
-   * Converte Grade (Domain) para GradeResponseDTO
+   * Converts a Grade domain model to GradeResponseDTO
+   * 
+   * @static
+   * @param {Grade} grade - The grade domain model
+   * @returns {GradeResponseDTO} The grade data transfer object
    */
   static toDTO(grade: Grade): GradeResponseDTO {
     return new GradeResponseDTO({
       id: grade.id,
       studentId: grade.studentId,
-      listId: grade.listId,
+      questionListId: grade.questionListId,
       score: grade.score,
       createdAt: grade.createdAt,
       updatedAt: grade.updatedAt
@@ -27,7 +43,7 @@ export class GradeMapper {
   }
 
   /**
-   * Cria um DTO enriquecido com informações de performance
+   * Creates a DTO enriched with performance information
    */
   static toDetailDTO(grade: Grade) {
     return {
@@ -40,12 +56,12 @@ export class GradeMapper {
   }
 
   /**
-   * Cria um DTO simplificado para listagem
+   * Creates a simplified DTO for listing
    */
-  static toListItemDTO(grade: Grade): Pick<GradeResponseDTO, 'id' | 'listId' | 'score'> {
+  static toListItemDTO(grade: Grade): Pick<GradeResponseDTO, 'id' | 'questionListId' | 'score'> {
     return {
       id: grade.id,
-      listId: grade.listId,
+      questionListId: grade.questionListId,
       score: grade.score
     };
   }

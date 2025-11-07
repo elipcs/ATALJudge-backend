@@ -1,3 +1,11 @@
+/**
+ * @module services/Judge0Service
+ * @description Service for integration with Judge0 API (Rapid API).
+ * Provides operations to submit code for compilation/execution,
+ * check submission status, retrieve execution results
+ * and parse Judge0 responses.
+ * @class Judge0Service
+ */
 import { injectable } from 'tsyringe';
 import axios, { AxiosInstance } from 'axios';
 import { config } from '../config';

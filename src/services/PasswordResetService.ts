@@ -1,3 +1,10 @@
+/**
+ * @module services/PasswordResetService
+ * @description Service to manage password reset tokens.
+ * Provides operations to create, validate and delete reset tokens,
+ * as well as manage token expiration.
+ * @class PasswordResetService
+ */
 import { injectable, inject } from 'tsyringe';
 import { PasswordResetTokenRepository } from '../repositories/PasswordResetTokenRepository';
 import { PasswordResetToken } from '../models/PasswordResetToken';
