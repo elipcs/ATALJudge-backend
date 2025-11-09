@@ -7,7 +7,7 @@ import { ValidationError } from '../../utils';
  */
 export class Password {
   private readonly hashedValue: string;
-  private static readonly MIN_LENGTH = 12;
+  private static readonly MIN_LENGTH = 8;
   private static readonly MAX_LENGTH = 128;
   private static readonly SALT_ROUNDS = 10;
 

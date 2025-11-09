@@ -31,6 +31,7 @@ export class RevokeInviteUseCase implements IUseCase<string, void> {
 
     // 3. Revoke (mark as expired)
     invite.expiresAt = new Date(Date.now() - 1000); // 1 second in the past
-    await this.inviteRepository.update(inviteId, invite);
+    invite.updatedAt = new Date();
+    await this.inviteRepository.save(invite);
   }
 }

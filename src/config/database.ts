@@ -104,3 +104,6 @@ export function isDatabaseConnected(): boolean {
   return AppDataSource.isInitialized;
 }
 
+// Export default for TypeORM CLI
+export default AppDataSource;
+

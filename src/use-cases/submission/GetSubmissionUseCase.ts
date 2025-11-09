@@ -10,7 +10,7 @@ import { SubmissionMapper } from '../../mappers';
  * 
  * Responsibilities:
  * - Find submission by ID
- * - Include test results
+ * - Include test results and question list information
  * - Convert to detailed DTO
  * - Validate existence
  */
@@ -21,7 +21,7 @@ export class GetSubmissionUseCase implements IUseCase<string, SubmissionDetailDT
   ) {}
 
   async execute(submissionId: string): Promise<SubmissionDetailDTO> {
-    // 1. Find submission with results and relationships
+    // 1. Find submission with results, question, and question list relationships
     const submission = await this.submissionRepository.findWithResults(submissionId);
 
     // 2. Validate existence
@@ -29,7 +29,15 @@ export class GetSubmissionUseCase implements IUseCase<string, SubmissionDetailDT
       throw new NotFoundError('Submission not found', 'SUBMISSION_NOT_FOUND');
     }
 
-    // 3. Convert to detailed DTO
+    // 3. Ensure question list is loaded
+    if (submission.question && !submission.question.questionList) {
+      const fullSubmission = await this.submissionRepository.findByIdWithListInfo(submissionId);
+      if (fullSubmission?.question?.questionList) {
+        submission.question.questionList = fullSubmission.question.questionList;
+      }
+    }
+
+    // 4. Convert to detailed DTO
     return SubmissionMapper.toDetailDTO(submission);
   }
 }

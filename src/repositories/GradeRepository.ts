@@ -11,21 +11,21 @@ export class GradeRepository extends BaseRepository<Grade> {
   async findById(id: string): Promise<Grade | null> {
     return this.repository.findOne({
       where: { id },
-      relations: ['student', 'question_list']
+      relations: ['student', 'questionList']
     });
   }
 
   async findByStudentAndList(studentId: string, questionListId: string): Promise<Grade | null> {
     return this.repository.findOne({
       where: { studentId, questionListId },
-      relations: ['student', 'question_list']
+      relations: ['student', 'questionList']
     });
   }
 
   async findByStudent(studentId: string): Promise<Grade[]> {
     return this.repository.find({
       where: { studentId },
-      relations: ['question_list'],
+      relations: ['questionList'],
       order: { createdAt: 'DESC' }
     });
   }

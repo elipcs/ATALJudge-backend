@@ -26,6 +26,8 @@ export class SubmissionMapper {
    * @returns {SubmissionResponseDTO} The submission data transfer object
    */
   static toDTO(submission: Submission): SubmissionResponseDTO {
+    const questionList = submission.question?.questionList;
+    
     return new SubmissionResponseDTO({
       id: submission.id,
       userId: submission.userId,
@@ -41,8 +43,21 @@ export class SubmissionMapper {
       verdict: submission.verdict,
       errorMessage: submission.errorMessage,
       createdAt: submission.createdAt,
-      updatedAt: submission.updatedAt
+      updatedAt: submission.updatedAt,
+      userName: submission.user?.name,
+      userEmail: submission.user?.email,
+      questionName: submission.question?.title,
+      questionListId: questionList?.id,
+      questionListTitle: questionList?.title
     });
+  }
+
+  /**
+   * Converts a Submission with additional metadata to SubmissionResponseDTO
+   * Used when question has questionList relation loaded
+   */
+  static toDTOWithListInfo(submission: Submission): SubmissionResponseDTO {
+    return this.toDTO(submission);
   }
 
   /**
@@ -61,6 +76,8 @@ export class SubmissionMapper {
         }))
       : [];
 
+    const questionList = submission.question?.questionList;
+
     return new SubmissionDetailDTO({
       id: submission.id,
       userId: submission.userId,
@@ -77,6 +94,9 @@ export class SubmissionMapper {
       errorMessage: submission.errorMessage,
       createdAt: submission.createdAt,
       updatedAt: submission.updatedAt,
+      questionName: submission.question?.title,
+      questionListId: questionList?.id,
+      questionListTitle: questionList?.title,
       testResults
     });
   }

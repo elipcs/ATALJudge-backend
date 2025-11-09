@@ -8,7 +8,9 @@
  */
 import { IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
 import { UserRole } from '../enums';
-import { IsStrongPassword, IsValidEmail, IsValidStudentRegistration } from '../utils/validators';
+import { IsStrongPassword, IsValidEmail } from '../utils/validators';
+import { IsValidStudentRegistrationForRole } from '../utils/validators-role';
+import { IsValidClassIdForRole } from '../utils/class-validators';
 
 /**
  * DTO for user registration request
@@ -37,12 +39,12 @@ export class UserRegisterDTO {
 
   /** Student registration number (if applicable) */
   @IsOptional()
-  @IsValidStudentRegistration()
+  @IsValidStudentRegistrationForRole()
   studentRegistration?: string;
 
-  /** ID of class to join (if applicable) */
+  /** ID of class to join (required for students) */
   @IsOptional()
-  @IsString()
+  @IsValidClassIdForRole()
   classId?: string;
 
   /** Invite token for registration (if using invite system) */
@@ -146,7 +148,7 @@ export class UpdateProfileDTO {
   email?: string;
 
   @IsOptional()
-  @IsValidStudentRegistration()
+  @IsValidStudentRegistrationForRole()
   studentRegistration?: string;
 }
 

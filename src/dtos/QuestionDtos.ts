@@ -90,11 +90,15 @@ export abstract class CreateQuestionDTO {
   @IsString()
   submissionType?: 'local' | 'codeforces';
 
-  @IsOptional()
   @IsString()
-  questionListId?: string;
+  @MinLength(1, { message: 'Question list ID is required' })
+  questionListId!: string;
 }
 
+/**
+ * DTO for updating question main content (part 1)
+ * Includes: title, statement, examples, time/memory limits, etc.
+ */
 export abstract class UpdateQuestionDTO {
   @IsOptional()
   @IsString()
@@ -150,11 +154,13 @@ export abstract class UpdateQuestionDTO {
   @ValidateNested({ each: true })
   @Type(() => QuestionExampleDTO)
   examples?: QuestionExampleDTO[];
+}
 
-  @IsOptional()
-  @IsEnum(JudgeType)
-  judgeType?: JudgeType;
-
+/**
+ * DTO for updating Codeforces-specific fields (part 2)
+ * Used for PUT /api/questions/:id/codeforces
+ */
+export class UpdateCodeforcesFieldsDTO {
   @IsOptional()
   @IsString()
   codeforcesContestId?: string;
@@ -166,14 +172,6 @@ export abstract class UpdateQuestionDTO {
   @IsOptional()
   @IsString()
   codeforcesLink?: string;
-
-  @IsOptional()
-  @IsString()
-  referenceCode?: string;
-
-  @IsOptional()
-  @IsString()
-  referenceLanguage?: string;
 }
 
 export class QuestionResponseDTO {
@@ -193,8 +191,6 @@ export class QuestionResponseDTO {
   codeforcesContestId?: string;
   codeforcesProblemIndex?: string;
   codeforcesLink?: string;
-  referenceCode?: string;
-  referenceLanguage?: string;
   authorId?: string;
   createdAt!: Date;
   updatedAt!: Date;

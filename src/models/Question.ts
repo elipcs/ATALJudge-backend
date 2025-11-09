@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { User } from './User';
 import { Submission } from './Submission';
 import { TestCase } from './TestCase';
+import { QuestionList } from './QuestionList';
 import { ValidationError } from '../utils';
 
 export interface QuestionExample {
@@ -64,6 +65,9 @@ export class Question {
   @Column({ name: 'codeforces_link', type: 'varchar', length: 500, nullable: true })
   codeforcesLink?: string;
 
+  @Column({ name: 'question_list_id', type: 'uuid', nullable: true })
+  questionListId?: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 
@@ -73,6 +77,10 @@ export class Question {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'author_id' })
   author?: User;
+
+  @ManyToOne(() => QuestionList, { nullable: true })
+  @JoinColumn({ name: 'question_list_id' })
+  questionList?: QuestionList;
 
   @OneToMany(() => TestCase, testCase => testCase.question, { cascade: true })
   testCases!: TestCase[];

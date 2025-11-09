@@ -17,7 +17,7 @@ export class Submission {
   questionId!: string;
 
   @Column({ type: 'text' })
-  private _code!: string;
+  code!: string;
 
   @Column({
     type: 'enum',
@@ -33,34 +33,7 @@ export class Submission {
   status!: SubmissionStatus;
 
   @Column({ type: 'int', default: 0 })
-  private _score!: number;
-
-  // Getters e setters para Value Objects
-  get code(): string {
-    return this._code;
-  }
-
-  set code(value: string) {
-    const codeVO = SubmissionCode.tryCreate(value);
-    if (codeVO) {
-      this._code = codeVO.getValue();
-    } else {
-      this._code = value; // Allows temporarily for later validation
-    }
-  }
-
-  get score(): number {
-    return this._score;
-  }
-
-  set score(value: number) {
-    const scoreVO = Score.tryCreate(value);
-    if (scoreVO) {
-      this._score = scoreVO.getValue();
-    } else {
-      this._score = value; // Allows temporarily for later validation
-    }
-  }
+  score!: number;
 
   @Column({ name: 'total_tests', type: 'int', default: 0 })
   totalTests!: number;
@@ -161,7 +134,7 @@ export class Submission {
     this.status = SubmissionStatus.COMPLETED;
     this.passedTests = passedTests;
     this.totalTests = totalTests;
-    this._score = this.calculateScore(passedTests, totalTests);
+    this.score = this.calculateScore(passedTests, totalTests);
   }
 
   /**
@@ -202,7 +175,7 @@ export class Submission {
    * Gets the code size in bytes
    */
   getCodeSizeInBytes(): number {
-    const codeVO = SubmissionCode.tryCreate(this._code);
+    const codeVO = SubmissionCode.tryCreate(this.code);
     return codeVO?.getSizeInBytes() || 0;
   }
 
@@ -210,7 +183,7 @@ export class Submission {
    * Gets the number of code lines
    */
   getCodeLineCount(): number {
-    const codeVO = SubmissionCode.tryCreate(this._code);
+    const codeVO = SubmissionCode.tryCreate(this.code);
     return codeVO?.getLineCount() || 0;
   }
 
@@ -218,7 +191,7 @@ export class Submission {
    * Gets a preview of the code (first N lines)
    */
   getCodePreview(lines: number = 10): string {
-    const codeVO = SubmissionCode.tryCreate(this._code);
-    return codeVO?.getPreview(lines) || this._code.substring(0, 500);
+    const codeVO = SubmissionCode.tryCreate(this.code);
+    return codeVO?.getPreview(lines) || this.code.substring(0, 500);
   }
 }

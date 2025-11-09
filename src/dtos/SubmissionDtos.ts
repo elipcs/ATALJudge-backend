@@ -94,6 +94,9 @@ export class SubmissionDetailDTO {
   errorMessage?: string;
   createdAt!: Date;
   updatedAt!: Date;
+  questionName?: string;
+  questionListId?: string;
+  questionListTitle?: string;
 
   testResults!: TestCaseResultDTO[];
 

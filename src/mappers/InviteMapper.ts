@@ -27,7 +27,7 @@ export class InviteMapper {
       id: invite.id,
       role: invite.role,
       token: invite.token,
-      link: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/register?invite=${invite.token}`,
+      link: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/cadastro?token=${invite.token}`,
       expiresAt: invite.expiresAt,
       currentUses: invite.currentUses,
       maxUses: invite.maxUses,

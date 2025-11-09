@@ -66,10 +66,7 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     const queryBuilder = this.repository.createQueryBuilder('submission')
       .leftJoinAndSelect('submission.user', 'user')
       .leftJoinAndSelect('submission.question', 'question')
-      .leftJoin('question_list_questions', 'qlq', 'qlq.question_id = question.id')
-      .leftJoin('question_lists', 'question_list', 'question_list.id = qlq.question_list_id')
-      .addSelect('question_list.id', 'question_list_id')
-      .addSelect('question_list.title', 'question_list_title');
+      .leftJoinAndSelect('question.questionList', 'questionList');
 
     if (filters.questionId) {
       queryBuilder.andWhere('submission.questionId = :questionId', { questionId: filters.questionId });
@@ -103,18 +100,18 @@ export class SubmissionRepository extends BaseRepository<Submission> {
 
     queryBuilder.skip(skip).take(limit);
 
-    const result = await queryBuilder.getRawAndEntities();
-    
-    const submissions = result.entities.map((entity, index) => {
-      const raw = result.raw[index];
-      return {
-        ...entity,
-        questionListId: raw.question_list_id,
-        questionListTitle: raw.question_list_title
-      };
-    });
+    const submissions = await queryBuilder.getMany();
 
     return { submissions, total };
   }
-}
 
+  /**
+   * Find submission by ID with associated question list information
+   */
+  async findByIdWithListInfo(id: string): Promise<Submission | null> {
+    return this.repository.findOne({
+      where: { id },
+      relations: ['user', 'question', 'question.questionList']
+    });
+  }
+}

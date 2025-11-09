@@ -2,7 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import { IUseCase } from '../interfaces/IUseCase';
 import { TestCaseRepository } from '../../repositories';
 import { UpdateTestCaseDTO, TestCaseResponseDTO } from '../../dtos';
-import { NotFoundError, InternalServerError } from '../../utils';
+import { NotFoundError, InternalServerError, ConflictError } from '../../utils';
 import { TestCaseMapper } from '../../mappers';
 import { DeepPartial } from 'typeorm';
 import { TestCase } from '../../models';
@@ -25,6 +25,30 @@ export class UpdateTestCaseUseCase implements IUseCase<UpdateTestCaseInput, Test
     
     if (!testCase) {
       throw new NotFoundError('Test case not found', 'TESTCASE_NOT_FOUND');
+    }
+    
+    // Check if input or output is being updated
+    const inputChanged = data.input !== undefined && data.input !== testCase.input;
+    const outputChanged = data.expectedOutput !== undefined && data.expectedOutput !== testCase.expectedOutput;
+
+    // If either input or output is changing, check for duplicates
+    if (inputChanged || outputChanged) {
+      const newInput = data.input ?? testCase.input;
+      const newOutput = data.expectedOutput ?? testCase.expectedOutput;
+
+      const duplicate = await this.testCaseRepository.findByInputOutput(
+        testCase.questionId,
+        newInput,
+        newOutput,
+        id // Exclude current test case
+      );
+
+      if (duplicate) {
+        throw new ConflictError(
+          'Test case with this input/output combination already exists',
+          'TESTCASE_DUPLICATE'
+        );
+      }
     }
     
     const updateData: DeepPartial<TestCase> = {};

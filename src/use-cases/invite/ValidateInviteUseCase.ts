@@ -40,7 +40,11 @@ export class ValidateInviteUseCase implements IUseCase<string, InviteResponseDTO
       throw new ValidationError('Invite has reached maximum uses', 'INVITE_MAX_USES_REACHED');
     }
 
-    // 5. Return DTO
+    // 5. Update last used timestamp
+    invite.updatedAt = new Date();
+    await this.inviteRepository.save(invite);
+
+    // 6. Return DTO
     return InviteMapper.toDTO(invite);
   }
 }

@@ -85,6 +85,10 @@ export class CreateQuestionListDTO {
   isRestricted?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  countTowardScore?: boolean;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true})
   classIds?: string[];
@@ -121,6 +125,10 @@ export class UpdateQuestionListDTO {
   @IsOptional()
   @IsBoolean()
   isRestricted?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  countTowardScore?: boolean;
 }
 
 export class UpdateQuestionListScoringDTO {

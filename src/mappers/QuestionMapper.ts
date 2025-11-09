@@ -78,6 +78,8 @@ export class QuestionMapper {
 
   /**
    * Aplica dados de UpdateQuestionDTO ao Question (Domain)
+   * Apenas campos da parte 1: título, enunciado, exemplos, limites, etc.
+   * NÃO inclui campos Codeforces (vide UpdateCodeforcesFieldsDTO)
    */
   static applyUpdateDTO(question: Question, dto: UpdateQuestionDTO): void {
     if (dto.title !== undefined) question.title = dto.title;
@@ -91,7 +93,18 @@ export class QuestionMapper {
     if (dto.memoryLimitKb !== undefined) question.memoryLimitKb = dto.memoryLimitKb;
     if (dto.wallTimeLimitSeconds !== undefined) question.wallTimeLimitSeconds = dto.wallTimeLimitSeconds;
     if (dto.examples !== undefined) question.examples = dto.examples;
+  }
+
+  /**
+   * Aplica campos Codeforces ao Question (Domain)
+   * Apenas campos de Codeforces (parte 2 da edição)
+   */
+  static applyCodeforcesUpdate(question: Question, dto: any): void {
+    if (dto.codeforcesContestId !== undefined) question.contestId = dto.codeforcesContestId;
+    if (dto.codeforcesProblemIndex !== undefined) question.problemIndex = dto.codeforcesProblemIndex;
+    if (dto.codeforcesLink !== undefined) question.codeforcesLink = dto.codeforcesLink;
     
+    // Regenera link se for tipo codeforces
     if (question.isCodeforces()) {
       question.generateCodeforcesLink();
     }

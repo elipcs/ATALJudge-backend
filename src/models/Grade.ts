@@ -15,24 +15,10 @@ export class Grade {
   questionListId!: string;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: false, default: 0 })
-  private _score!: number;
+  score!: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
-
-  // Getter e setter para Score Value Object
-  get score(): number {
-    return this._score;
-  }
-
-  set score(value: number) {
-    const scoreVO = Score.tryCreate(value);
-    if (scoreVO) {
-      this._score = scoreVO.getValue();
-    } else {
-      this._score = value; // Allows temporarily for later validation
-    }
-  }
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
@@ -53,7 +39,7 @@ export class Grade {
    * Checks if the grade is passing (>= 60)
    */
   isPassing(_passingScore: number = 60): boolean {
-    const scoreVO = Score.tryCreate(this._score);
+    const scoreVO = Score.tryCreate(this.score);
     return scoreVO?.isPassing() || false;
   }
 
@@ -61,7 +47,7 @@ export class Grade {
    * Checks if the grade is perfect (100)
    */
   isPerfectScore(): boolean {
-    const scoreVO = Score.tryCreate(this._score);
+    const scoreVO = Score.tryCreate(this.score);
     return scoreVO?.isPerfect() || false;
   }
 
@@ -69,7 +55,7 @@ export class Grade {
    * Gets the grade percentage (already 0-100)
    */
   getPercentage(): number {
-    return this._score;
+    return this.score;
   }
 
   /**
@@ -77,7 +63,7 @@ export class Grade {
    * (Grades cannot be reduced, only increased)
    */
   canBeUpdated(newScore: number): boolean {
-    const currentScoreVO = Score.tryCreate(this._score);
+    const currentScoreVO = Score.tryCreate(this.score);
     const newScoreVO = Score.tryCreate(newScore);
     
     if (!currentScoreVO || !newScoreVO) return false;
@@ -90,7 +76,7 @@ export class Grade {
    */
   updateScore(newScore: number): boolean {
     if (this.canBeUpdated(newScore)) {
-      this._score = newScore;
+      this.score = newScore;
       return true;
     }
     return false;

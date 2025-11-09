@@ -23,6 +23,7 @@ export {
   QuestionExampleDTO,
   CreateQuestionDTO,
   UpdateQuestionDTO,
+  UpdateCodeforcesFieldsDTO,
   QuestionResponseDTO
 } from './QuestionDtos';
 

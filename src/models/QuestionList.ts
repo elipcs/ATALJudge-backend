@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinColumn, JoinTable, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinColumn, JoinTable, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { User } from './User';
 import { Question } from './Question';
 import { Class } from './Class';
@@ -47,6 +47,9 @@ export class QuestionList {
   @Column({ name: 'is_restricted', type: 'boolean', default: false })
   isRestricted!: boolean;
 
+  @Column({ name: 'count_toward_score', type: 'boolean', default: true })
+  countTowardScore!: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 
@@ -57,12 +60,7 @@ export class QuestionList {
   @JoinColumn({ name: 'author_id' })
   author?: User;
 
-  @ManyToMany(() => Question)
-  @JoinTable({
-    name: 'question_list_questions',
-    joinColumn: { name: 'question_list_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'question_id', referencedColumnName: 'id' }
-  })
+  @OneToMany(() => Question, question => question.questionList)
   questions!: Question[];
 
   @ManyToMany(() => Class)

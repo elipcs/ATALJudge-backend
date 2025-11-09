@@ -15,22 +15,20 @@ export class User {
   name!: string;
 
   @Column({ length: 255, nullable: false, unique: true })
-  private _email!: string;
+  email!: string;
 
   @Column({ name: 'password_hash', length: 255, nullable: true })
   passwordHash?: string;
 
-  // Getter e setter para Email Value Object
-  get email(): string {
-    return this._email;
-  }
-
-  set email(value: string) {
+  /**
+   * Sets the email using Email Value Object
+   */
+  setEmail(value: string): void {
     const emailVO = Email.tryCreate(value);
     if (emailVO) {
-      this._email = emailVO.getValue();
+      this.email = emailVO.getValue();
     } else {
-      this._email = value; // Allows temporarily for later validation
+      this.email = value;
     }
   }
 
@@ -187,16 +185,16 @@ export class User {
       throw new ValidationError('Name cannot be empty', 'NAME_REQUIRED');
     }
     
-    if (!this._email || !this._email.trim()) {
+    if (!this.email || !this.email.trim()) {
       throw new ValidationError('Email cannot be empty', 'EMAIL_REQUIRED');
     }
     
     // Validates and normalizes using Email Value Object
-    const emailVO = Email.tryCreate(this._email);
+    const emailVO = Email.tryCreate(this.email);
     if (!emailVO) {
       throw new ValidationError('Email must have a valid format', 'INVALID_EMAIL_FORMAT');
     }
-    this._email = emailVO.getValue();
+    this.email = emailVO.getValue();
   }
 
 }

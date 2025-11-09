@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { UserRole } from '../enums';
 import { User } from './User';
 import { Class } from './Class';
@@ -47,6 +47,9 @@ export class Invite {
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
+  updatedAt!: Date;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'created_by_id' })

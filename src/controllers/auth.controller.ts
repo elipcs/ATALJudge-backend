@@ -123,7 +123,7 @@ router.post(
       tokenStart: refreshToken?.substring(0, 20)
     });
     
-    const result = await refreshTokenUseCase.execute(refreshToken);
+    const result = await refreshTokenUseCase.execute({ refreshToken });
     
     logger.info('[REFRESH] Tokens renewed successfully');
     successResponse(res, result, 'Tokens renewed successfully');

@@ -1,10 +1,10 @@
 import { injectable, inject } from 'tsyringe';
 import { IUseCase } from '../interfaces/IUseCase';
 import { CreateQuestionDTO, QuestionResponseDTO } from '../../dtos';
-import { QuestionRepository } from '../../repositories';
+import { QuestionRepository, QuestionListRepository } from '../../repositories';
 import { Question } from '../../models/Question';
 import { QuestionMapper } from '../../mappers';
-import { logger } from '../../utils';
+import { logger, NotFoundError } from '../../utils';
 
 export interface CreateQuestionUseCaseInput {
   dto: CreateQuestionDTO;
@@ -24,7 +24,8 @@ export interface CreateQuestionUseCaseInput {
 @injectable()
 export class CreateQuestionUseCase implements IUseCase<CreateQuestionUseCaseInput, QuestionResponseDTO> {
   constructor(
-    @inject(QuestionRepository) private questionRepository: QuestionRepository
+    @inject(QuestionRepository) private questionRepository: QuestionRepository,
+    @inject(QuestionListRepository) private questionListRepository: QuestionListRepository
   ) {}
 
   async execute(input: CreateQuestionUseCaseInput): Promise<QuestionResponseDTO> {
@@ -48,7 +49,29 @@ export class CreateQuestionUseCase implements IUseCase<CreateQuestionUseCaseInpu
       authorId 
     });
 
-    // 5. Return DTO
+    // 5. Add to question list
+    const questionList = await this.questionListRepository.findByIdWithRelations(dto.questionListId, true);
+    
+    if (!questionList) {
+      throw new NotFoundError('Question list not found', 'LIST_NOT_FOUND');
+    }
+
+    if (!questionList.questions) {
+      questionList.questions = [];
+    }
+
+    const alreadyAdded = questionList.questions.some(q => q.id === savedQuestion.id);
+    if (!alreadyAdded) {
+      questionList.questions.push(savedQuestion);
+      await this.questionListRepository.save(questionList);
+      
+      logger.info('[CreateQuestionUseCase] Question added to list', {
+        questionId: savedQuestion.id,
+        questionListId: dto.questionListId
+      });
+    }
+
+    // 6. Return DTO
     return QuestionMapper.toDTO(savedQuestion);
   }
 }

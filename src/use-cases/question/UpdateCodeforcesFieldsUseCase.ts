@@ -1,33 +1,33 @@
 import { injectable, inject } from 'tsyringe';
 import { IUseCase } from '../interfaces/IUseCase';
-import { UpdateQuestionDTO, QuestionResponseDTO } from '../../dtos';
+import { UpdateCodeforcesFieldsDTO, QuestionResponseDTO } from '../../dtos';
 import { QuestionRepository } from '../../repositories';
 import { QuestionMapper } from '../../mappers';
 import { logger, NotFoundError, ForbiddenError } from '../../utils';
 
-export interface UpdateQuestionUseCaseInput {
+export interface UpdateCodeforcesFieldsUseCaseInput {
   questionId: string;
-  dto: UpdateQuestionDTO;
+  dto: UpdateCodeforcesFieldsDTO;
   userId: string;
 }
 
 /**
- * Use Case: Update existing question
+ * Use Case: Update Codeforces-specific fields (part 2 of question editing)
  * 
  * Responsibilities:
  * - Find question by ID
  * - Check if user is author (authorization)
- * - Apply DTO updates
+ * - Apply DTO updates to Codeforces fields only
  * - Save changes
  * - Return updated DTO
  */
 @injectable()
-export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInput, QuestionResponseDTO> {
+export class UpdateCodeforcesFieldsUseCase implements IUseCase<UpdateCodeforcesFieldsUseCaseInput, QuestionResponseDTO> {
   constructor(
     @inject(QuestionRepository) private questionRepository: QuestionRepository
   ) {}
 
-  async execute(input: UpdateQuestionUseCaseInput): Promise<QuestionResponseDTO> {
+  async execute(input: UpdateCodeforcesFieldsUseCaseInput): Promise<QuestionResponseDTO> {
     const { questionId, dto, userId } = input;
 
     // 1. Find question
@@ -46,23 +46,11 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       throw new ForbiddenError('This question can no longer be edited', 'CANNOT_EDIT_QUESTION');
     }
 
-    // 4. Apply updates
-    QuestionMapper.applyUpdateDTO(question, dto);
+    // 4. Apply updates to Codeforces fields only
+    QuestionMapper.applyCodeforcesUpdate(question, dto);
 
-    // 5. Save changes - Create a plain object excluding relations
+    // 5. Save changes - Create a plain object with only Codeforces fields
     const updateData = {
-      title: question.title,
-      statement: question.statement,
-      inputFormat: question.inputFormat,
-      outputFormat: question.outputFormat,
-      constraints: question.constraints,
-      notes: question.notes,
-      tags: question.tags,
-      timeLimitMs: question.timeLimitMs,
-      memoryLimitKb: question.memoryLimitKb,
-      wallTimeLimitSeconds: question.wallTimeLimitSeconds,
-      examples: question.examples,
-      submissionType: question.submissionType,
       contestId: question.contestId,
       problemIndex: question.problemIndex,
       codeforcesLink: question.codeforcesLink,
@@ -75,7 +63,7 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       throw new NotFoundError('Error updating question', 'UPDATE_FAILED');
     }
 
-    logger.info('[UpdateQuestionUseCase] Question updated', { 
+    logger.info('[UpdateCodeforcesFieldsUseCase] Codeforces fields updated', { 
       questionId, 
       userId 
     });

@@ -6,9 +6,9 @@ import { ValidationError } from '../../utils';
  */
 export class StudentRegistration {
   private readonly value: string;
-  private static readonly REGISTRATION_REGEX = /^[0-9]{9,11}$/;
-  private static readonly MIN_LENGTH = 6;
-  private static readonly MAX_LENGTH = 20;
+  private static readonly REGISTRATION_REGEX = /^[0-9]{9}$|^[0-9]{11}$/;
+  private static readonly MIN_LENGTH = 9;
+  private static readonly MAX_LENGTH = 11;
 
   constructor(registration: string) {
     if (!registration) {
