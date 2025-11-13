@@ -68,15 +68,10 @@ function parseMemoryLimit(limit: string | number): number {
 
 export function convertQuestionPayload(req: Request, _res: Response, next: NextFunction): void {
   if (req.body) {
-    
-    if (req.body.input_format !== undefined) {
-      req.body.inputFormat = req.body.input_format;
-      delete req.body.input_format;
-    }
-    
-    if (req.body.output_format !== undefined) {
-      req.body.outputFormat = req.body.output_format;
-      delete req.body.output_format;
+    // Convert statement to text for backward compatibility
+    if (req.body.statement !== undefined && req.body.text === undefined) {
+      req.body.text = req.body.statement;
+      delete req.body.statement;
     }
 
     if (req.body.timeLimit !== undefined) {
@@ -123,10 +118,6 @@ export function convertQuestionResponse(data: any): any {
   
   return {
     ...data,
-    
-    input_format: data.inputFormat,
-    output_format: data.outputFormat,
-    
     timeLimit: data.timeLimitMs ? `${data.timeLimitMs}ms` : undefined,
     memoryLimit: data.memoryLimitKb ? `${data.memoryLimitKb}KB` : undefined
   };

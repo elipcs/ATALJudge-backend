@@ -10,6 +10,22 @@ export class ClassRepository extends BaseRepository<Class> {
     super(Class);
   }
 
+  // Override findAll to always include professor relation
+  async findAll(): Promise<Class[]> {
+    return this.repository.find({
+      relations: ['professor'],
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  // Override findById to always include professor relation
+  async findById(id: string): Promise<Class | null> {
+    return this.repository.findOne({
+      where: { id },
+      relations: ['professor']
+    });
+  }
+
   async findByIdWithRelations(id: string, includeStudents: boolean = false, includeProfessor: boolean = false): Promise<Class | null> {
     const queryBuilder = this.repository
       .createQueryBuilder('class')

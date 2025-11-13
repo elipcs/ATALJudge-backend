@@ -1,37 +1,23 @@
-/**
- * Test Case Data Transfer Objects (DTOs)
- * 
- * Defines request/response data structures for test case management.
- * Test cases are used to validate code submissions against expected outputs.
- * 
- * @module dtos/TestCaseDtos
- */
-import { IsString, IsBoolean, IsInt, Min, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsBoolean, IsInt, Min, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 /**
  * DTO for creating a test case
- * 
- * @class CreateTestCaseDTO
  */
 export class CreateTestCaseDTO {
-  /** UUID of the question this test case belongs to */
-  @IsUUID('4')
+  @IsString()
   questionId!: string;
 
-  /** Input data for the test case */
   @IsString()
   input!: string;
 
-  /** Expected output for this test case */
   @IsString()
   expectedOutput!: string;
 
-  /** Whether this is a sample test case shown to users */
   @IsOptional()
   @IsBoolean()
   isSample?: boolean;
 
-  /** Weight/importance of this test case in scoring */
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -40,16 +26,12 @@ export class CreateTestCaseDTO {
 
 /**
  * DTO for updating a test case
- * 
- * @class UpdateTestCaseDTO
  */
 export class UpdateTestCaseDTO {
-  /** Updated input (optional) */
   @IsOptional()
   @IsString()
   input?: string;
 
-  /** Updated expected output (optional) */
   @IsOptional()
   @IsString()
   expectedOutput?: string;
@@ -62,6 +44,39 @@ export class UpdateTestCaseDTO {
   @IsInt()
   @Min(0)
   weight?: number;
+}
+
+/**
+ * DTO for a single test case in bulk operations
+ */
+export class TestCaseDTO {
+  @IsOptional()
+  @IsString()
+  id?: string; // Se tem ID = update, se não tem = create
+
+  @IsString()
+  input!: string;
+
+  @IsString()
+  expectedOutput!: string;
+
+  @IsBoolean()
+  isSample!: boolean;
+
+  @IsInt()
+  @Min(0)
+  weight!: number;
+}
+
+/**
+ * DTO for bulk update of test cases
+ * Used in PUT /api/questions/:id/testcases/bulk
+ */
+export class BulkUpdateTestCasesDTO {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TestCaseDTO)
+  testCases!: TestCaseDTO[];
 }
 
 export class TestCaseResponseDTO {
@@ -77,4 +92,3 @@ export class TestCaseResponseDTO {
     Object.assign(this, partial);
   }
 }
-

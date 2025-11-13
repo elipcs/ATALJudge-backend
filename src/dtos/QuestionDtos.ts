@@ -38,33 +38,10 @@ export abstract class CreateQuestionDTO {
   @MinLength(3, { message: 'Title must be at least 3 characters' })
   title!: string;
 
-  /** Problem statement/description */
+  /** Question text/content */
   @IsString()
-  @MinLength(10, { message: 'Statement must be at least 10 characters' })
-  statement!: string;
-
-  /** Input format specification */
-  @IsOptional()
-  @IsString()
-  inputFormat?: string;
-
-  /** Output format specification */
-  @IsOptional()
-  @IsString()
-  outputFormat?: string;
-
-  @IsOptional()
-  @IsString()
-  constraints?: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags?: string[];
+  @MinLength(10, { message: 'Text must be at least 10 characters' })
+  text!: string;
 
   @IsInt()
   @Min(100)
@@ -90,6 +67,16 @@ export abstract class CreateQuestionDTO {
   @IsString()
   submissionType?: 'local' | 'codeforces';
 
+  /** Codeforces Contest ID (required if submissionType is 'codeforces') */
+  @IsOptional()
+  @IsString()
+  contestId?: string;
+
+  /** Codeforces Problem Index (e.g., 'A', 'B', 'C1') (required if submissionType is 'codeforces') */
+  @IsOptional()
+  @IsString()
+  problemIndex?: string;
+
   @IsString()
   @MinLength(1, { message: 'Question list ID is required' })
   questionListId!: string;
@@ -97,7 +84,10 @@ export abstract class CreateQuestionDTO {
 
 /**
  * DTO for updating question main content (part 1)
- * Includes: title, statement, examples, time/memory limits, etc.
+ * Includes: title, statement, examples, time/memory limits, submission type
+ * 
+ * NOTE: Codeforces fields (contestId, problemIndex) should be updated
+ * using the separate endpoint: PUT /api/questions/:id/codeforces
  */
 export abstract class UpdateQuestionDTO {
   @IsOptional()
@@ -108,28 +98,7 @@ export abstract class UpdateQuestionDTO {
   @IsOptional()
   @IsString()
   @MinLength(10)
-  statement?: string;
-
-  @IsOptional()
-  @IsString()
-  inputFormat?: string;
-
-  @IsOptional()
-  @IsString()
-  outputFormat?: string;
-
-  @IsOptional()
-  @IsString()
-  constraints?: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags?: string[];
+  text?: string;
 
   @IsOptional()
   @IsInt()
@@ -154,43 +123,41 @@ export abstract class UpdateQuestionDTO {
   @ValidateNested({ each: true })
   @Type(() => QuestionExampleDTO)
   examples?: QuestionExampleDTO[];
+
+  /** Update submission type ('local' or 'codeforces') */
+  @IsOptional()
+  @IsString()
+  submissionType?: 'local' | 'codeforces';
 }
 
 /**
- * DTO for updating Codeforces-specific fields (part 2)
+ * DTO for updating Codeforces-specific fields (part 2 of question editing)
  * Used for PUT /api/questions/:id/codeforces
+ * 
+ * This is a SEPARATE endpoint from PUT /api/questions/:id
+ * Used specifically for managing Codeforces integration fields
  */
 export class UpdateCodeforcesFieldsDTO {
   @IsOptional()
   @IsString()
-  codeforcesContestId?: string;
+  contestId?: string;
 
   @IsOptional()
   @IsString()
-  codeforcesProblemIndex?: string;
-
-  @IsOptional()
-  @IsString()
-  codeforcesLink?: string;
+  problemIndex?: string;
 }
 
 export class QuestionResponseDTO {
   id!: string;
   title!: string;
-  statement!: string;
-  inputFormat!: string;
-  outputFormat!: string;
-  constraints!: string;
-  notes!: string;
-  tags!: string[];
+  text!: string;
   timeLimitMs!: number;
   memoryLimitKb!: number;
   examples!: QuestionExample[];
   judgeType!: JudgeType;
   submissionType?: 'local' | 'codeforces';
-  codeforcesContestId?: string;
-  codeforcesProblemIndex?: string;
-  codeforcesLink?: string;
+  contestId?: string;
+  problemIndex?: string;
   authorId?: string;
   createdAt!: Date;
   updatedAt!: Date;

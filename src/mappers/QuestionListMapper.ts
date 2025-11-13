@@ -53,9 +53,8 @@ export class QuestionListMapper {
           createdAt: q.createdAt,
           updatedAt: q.updatedAt,
           ...(q.submissionType === 'codeforces' && {
-            codeforcesContestId: q.contestId,
-            codeforcesProblemIndex: q.problemIndex,
-            codeforcesLink: q.codeforcesLink
+            contestId: q.contestId,
+            problemIndex: q.problemIndex
           })
         };
       });
@@ -72,6 +71,7 @@ export class QuestionListMapper {
       minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
       questionGroups: questionList.questionGroups,
       isRestricted: questionList.isRestricted,
+      countTowardScore: questionList.countTowardScore,
       classIds,
       questions,
       questionCount: questions.length,

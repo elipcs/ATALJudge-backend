@@ -6,6 +6,8 @@
  */
 import { Router, Response } from 'express';
 import { CreateTestCaseDTO, UpdateTestCaseDTO } from '../dtos';
+import { BulkUpdateTestCasesDTO } from '../dtos/TestCaseDtos';
+import { GenerateTestCasesDTO } from '../dtos/TestCaseGeneratorDtos';
 import { validateBody, authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -16,6 +18,8 @@ import {
   UpdateTestCaseUseCase,
   DeleteTestCaseUseCase
 } from '../use-cases/testcase';
+import { BulkUpdateTestCasesUseCase } from '../use-cases/testcase/BulkUpdateTestCasesUseCase';
+import { GenerateTestCasesUseCase } from '../use-cases/testcase/GenerateTestCasesUseCase';
 
 /**
  * Test Case Controller
@@ -50,7 +54,9 @@ function createTestCaseController(
   getTestCasesByQuestionUseCase: GetTestCasesByQuestionUseCase,
   getTestCaseByIdUseCase: GetTestCaseByIdUseCase,
   updateTestCaseUseCase: UpdateTestCaseUseCase,
-  deleteTestCaseUseCase: DeleteTestCaseUseCase
+  deleteTestCaseUseCase: DeleteTestCaseUseCase,
+  bulkUpdateTestCasesUseCase: BulkUpdateTestCasesUseCase,
+  generateTestCasesUseCase: GenerateTestCasesUseCase
 ): Router {
   const router = Router();
 
@@ -65,6 +71,26 @@ router.get(
     const testCases = await getTestCasesByQuestionUseCase.execute(req.params.questionId);
     
     successResponse(res, testCases, 'Test cases');
+  })
+);
+
+/**
+ * PUT /questions/:questionId/testcases/bulk
+ * Bulk update all test cases for a question (create, update, delete)
+ * Accepts an array of test cases with optional IDs
+ */
+router.put(
+  '/questions/:questionId/testcases/bulk',
+  authenticate,
+  requireTeacher,
+  validateBody(BulkUpdateTestCasesDTO),
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    const testCases = await bulkUpdateTestCasesUseCase.execute({
+      questionId: req.params.questionId,
+      dto: req.body
+    });
+    
+    successResponse(res, testCases, 'Test cases updated successfully');
   })
 );
 
@@ -104,10 +130,10 @@ router.get(
 );
 
 /**
- * PUT /testcases/:id
+ * POST /testcases/:id
  * Update an existing test case
  */
-router.put(
+router.post(
   '/testcases/:id',
   authenticate,
   requireTeacher,
@@ -134,6 +160,33 @@ router.delete(
     await deleteTestCaseUseCase.execute(req.params.id);
     
     successResponse(res, null, 'Test case deleted successfully');
+  })
+);
+
+/**
+ * POST /questions/:questionId/testcases/generate
+ * Generate test cases automatically using oracle code via microservice
+ */
+router.post(
+  '/questions/:questionId/testcases/generate',
+  authenticate,
+  requireTeacher,
+  validateBody(GenerateTestCasesDTO),
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    // Extract JWT token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('Authorization header is required');
+    }
+    const jwtToken = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    const result = await generateTestCasesUseCase.execute({
+      questionId: req.params.questionId,
+      dto: req.body,
+      jwtToken: jwtToken
+    });
+    
+    successResponse(res, result, 'Test cases generated and saved successfully');
   })
 );
 

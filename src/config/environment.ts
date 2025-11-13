@@ -74,7 +74,14 @@ export const config = {
   },
 
   codeforces: {
-    apiUrl: process.env.CODEFORCES_API_URL || 'https://codeforces.com/api'
+    apiUrl: process.env.CODEFORCES_API_URL || 'https://codeforces.com/api',
+    pythonApiUrl: process.env.CODEFORCES_PYTHON_API_URL || 'http://localhost:8000',
+    pythonApiTimeout: parseInt(process.env.CODEFORCES_PYTHON_API_TIMEOUT || '120000', 10) // 120 seconds (2 minutos) - submissão pode demorar
+  },
+
+  testCaseGenerator: {
+    apiUrl: process.env.TEST_CASE_GENERATOR_API_URL || 'http://localhost:9000',
+    timeout: parseInt(process.env.TEST_CASE_GENERATOR_TIMEOUT || '300000', 10) // 300 seconds (5 minutos) - geração pode demorar
   },
 
   limits: {

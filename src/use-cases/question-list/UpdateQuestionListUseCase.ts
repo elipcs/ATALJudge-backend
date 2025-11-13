@@ -87,6 +87,7 @@ export class UpdateQuestionListUseCase implements IUseCase<UpdateQuestionListUse
       minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
       questionGroups: questionList.questionGroups,
       isRestricted: questionList.isRestricted,
+      countTowardScore: questionList.countTowardScore,
       calculatedStatus: questionList.getCalculatedStatus(),
       createdAt: questionList.createdAt,
       updatedAt: questionList.updatedAt,

@@ -20,7 +20,7 @@ export class GetClassByIdUseCase implements IUseCase<GetClassByIdInput, ClassRes
     const { classId, includeRelations = false } = input;
 
     const classEntity = includeRelations
-      ? await this.classRepository.findByIdWithRelations(classId)
+      ? await this.classRepository.findByIdWithRelations(classId, true, true) // includeStudents: true, includeProfessor: true
       : await this.classRepository.findById(classId);
 
     if (!classEntity) {

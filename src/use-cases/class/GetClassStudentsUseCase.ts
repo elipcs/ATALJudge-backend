@@ -12,14 +12,21 @@ export class GetClassStudentsUseCase implements IUseCase<string, UserResponseDTO
   ) {}
 
   async execute(classId: string): Promise<UserResponseDTO[]> {
-    // Find class with students
-    const classEntity = await this.classRepository.findByIdWithRelations(classId);
+    // Find class with students - IMPORTANT: pass includeStudents: true
+    const classEntity = await this.classRepository.findByIdWithRelations(classId, true, false);
     
     if (!classEntity) {
       throw new NotFoundError('Class not found', 'CLASS_NOT_FOUND');
     }
 
-    const students = classEntity.students || [];
+    // If students are not loaded via relation, fetch them directly
+    let students = classEntity.students || [];
+    
+    // Fallback: if relation didn't load students, use findStudents method
+    if (students.length === 0) {
+      students = await this.classRepository.findStudents(classId);
+    }
+
     return students.map(s => UserMapper.toDTO(s));
   }
 }

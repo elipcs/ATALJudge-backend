@@ -9,6 +9,7 @@ export interface UpdateCodeforcesFieldsUseCaseInput {
   questionId: string;
   dto: UpdateCodeforcesFieldsDTO;
   userId: string;
+  userRole: string;
 }
 
 /**
@@ -16,8 +17,9 @@ export interface UpdateCodeforcesFieldsUseCaseInput {
  * 
  * Responsibilities:
  * - Find question by ID
- * - Check if user is author (authorization)
+ * - Check authorization (author, assistant, or professor can edit)
  * - Apply DTO updates to Codeforces fields only
+ * - Automatically set submissionType to 'codeforces'
  * - Save changes
  * - Return updated DTO
  */
@@ -28,7 +30,7 @@ export class UpdateCodeforcesFieldsUseCase implements IUseCase<UpdateCodeforcesF
   ) {}
 
   async execute(input: UpdateCodeforcesFieldsUseCaseInput): Promise<QuestionResponseDTO> {
-    const { questionId, dto, userId } = input;
+    const { questionId, dto, userId, userRole } = input;
 
     // 1. Find question
     const question = await this.questionRepository.findById(questionId);
@@ -36,8 +38,12 @@ export class UpdateCodeforcesFieldsUseCase implements IUseCase<UpdateCodeforcesF
       throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
     }
 
-    // 2. Check authorization (only author can edit)
-    if (question.authorId !== userId) {
+    // 2. Check authorization (author, assistant, or professor can edit)
+    const canEdit = question.authorId === userId || 
+                     userRole === 'professor' || 
+                     userRole === 'assistant';
+    
+    if (!canEdit) {
       throw new ForbiddenError('You do not have permission to edit this question', 'FORBIDDEN');
     }
 
@@ -49,11 +55,14 @@ export class UpdateCodeforcesFieldsUseCase implements IUseCase<UpdateCodeforcesF
     // 4. Apply updates to Codeforces fields only
     QuestionMapper.applyCodeforcesUpdate(question, dto);
 
-    // 5. Save changes - Create a plain object with only Codeforces fields
+    // 4.1. Automatically set submissionType to 'codeforces' when configuring Codeforces fields
+    question.submissionType = 'codeforces';
+
+    // 5. Save changes - Create a plain object with Codeforces fields + submissionType
     const updateData = {
+      submissionType: question.submissionType,
       contestId: question.contestId,
       problemIndex: question.problemIndex,
-      codeforcesLink: question.codeforcesLink,
     };
     
     await this.questionRepository.update(question.id, updateData);

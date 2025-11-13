@@ -97,6 +97,7 @@ function createConfigController(
         resetMonitors: req.body.resetMonitors || false,
         resetProfessors: req.body.resetProfessors || false,
         resetInvites: req.body.resetInvites || false,
+        resetAllowedIPs: req.body.resetAllowedIPs || false,
       };
 
       const result = await performSystemResetUseCase.execute({

@@ -16,6 +16,7 @@ import { SubmissionRepository, SubmissionResultRepository, QuestionRepository, T
 import { CreateSubmissionDTO, SubmissionResponseDTO, SubmissionDetailDTO, TestCaseResultDTO } from '../dtos';
 import { SubmissionStatus, JudgeVerdict, ProgrammingLanguage } from '../enums';
 import { Judge0Service } from './Judge0Service';
+import { CodeForcesService } from './CodeForcesService';
 import { SubmissionQueueService } from './SubmissionQueueService';
 import { GradeService } from './GradeService';
 import { logger, NotFoundError, ValidationError } from '../utils';
@@ -28,6 +29,7 @@ import { logger, NotFoundError, ValidationError } from '../utils';
 export class SubmissionService {
   constructor(
     @inject(SubmissionRepository) private submissionRepository: SubmissionRepository,
+    @inject(CodeForcesService) private codeForcesService: CodeForcesService,
     @inject(SubmissionResultRepository) private submissionResultRepository: SubmissionResultRepository,
     @inject(QuestionRepository) private questionRepository: QuestionRepository,
     @inject(TestCaseRepository) private testCaseRepository: TestCaseRepository,
@@ -280,9 +282,14 @@ export class SubmissionService {
         throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
       }
 
-      if (question.submissionType !== 'local') {
+      // Route to appropriate judge based on question type
+      if (question.submissionType === 'codeforces') {
+        logger.info('Processing Codeforces submission', { submissionId, problemIndex: question.problemIndex });
+        await this.processCodeforcesSubmission(submissionId, submission, question);
+        return;
+      } else if (question.submissionType !== 'local') {
         logger.warn('Unsupported question type', { submissionId, submissionType: question.submissionType });
-        throw new ValidationError('Only local questions can be processed', 'INVALID_QUESTION_TYPE');
+        throw new ValidationError('Unsupported question type', 'INVALID_QUESTION_TYPE');
       }
 
       logger.debug('Fetching test cases', { submissionId, questionId: question.id });
@@ -485,6 +492,125 @@ export class SubmissionService {
         logger.debug('Submission updated with ERROR status', { submissionId });
       } catch (updateError) {
         logger.error('Failed to update submission with ERROR status', {
+          submissionId,
+          updateError: updateError instanceof Error ? updateError.message : String(updateError)
+        });
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Process a submission for a Codeforces problem
+   * @private
+   */
+  private async processCodeforcesSubmission(submissionId: string, submission: any, question: any): Promise<void> {
+    try {
+      logger.info('[Codeforces] Starting submission processing', {
+        submissionId,
+        problemIndex: question.problemIndex,
+        contestId: question.contestId
+      });
+
+      // Submit to Codeforces via Python API
+      const codeforcesSubmission = await this.codeForcesService.submitProblem({
+        problemId: question.problemIndex || '',
+        sourceCode: submission.code,
+        language: submission.language,
+        contestId: question.contestId
+      });
+
+      logger.info('[Codeforces] Submission created', {
+        submissionId,
+        codeforcesSubmissionId: codeforcesSubmission.submissionId
+      });
+
+      // Update status to running
+      await this.submissionRepository.update(submissionId, {
+        status: SubmissionStatus.RUNNING
+      });
+
+      // Wait for result
+      const result = await this.codeForcesService.waitForSubmission(
+        codeforcesSubmission.submissionId,
+        60, // max attempts
+        2000 // 2 seconds between attempts
+      );
+
+      logger.info('[Codeforces] Submission completed', {
+        submissionId,
+        verdict: result.verdict,
+        executionTimeMs: result.executionTimeMs,
+        memoryUsedKb: result.memoryUsedKb
+      });
+
+      // Determine final status based on verdict
+      const finalStatus = result.passed ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER;
+      const score = result.passed ? 100 : 0;
+
+      // Update submission with results
+      await this.submissionRepository.update(submissionId, {
+        status: finalStatus,
+        verdict: result.verdict,
+        executionTimeMs: result.executionTimeMs || 0,
+        memoryUsedKb: result.memoryUsedKb || 0,
+        score,
+        totalTests: 1, // Codeforces returns overall result
+        passedTests: result.passed ? 1 : 0,
+        errorMessage: result.errorMessage
+      });
+
+      logger.info('[Codeforces] Submission processing completed', {
+        submissionId,
+        status: finalStatus,
+        score
+      });
+
+      // Update grades
+      try {
+        const questionList = await this.questionListRepository.findByQuestionId(question.id);
+        if (questionList) {
+          await this.gradeService.recalculateAndUpsertGrade(
+            submission.userId,
+            questionList.id
+          );
+          
+          logger.info('[Codeforces] Grade updated', {
+            submissionId,
+            studentId: submission.userId,
+            questionListId: questionList.id
+          });
+        } else {
+          logger.warn('[Codeforces] Question not associated with list', { 
+            submissionId, 
+            questionId: question.id 
+          });
+        }
+      } catch (gradeError) {
+        logger.error('[Codeforces] Error updating grade', {
+          submissionId,
+          studentId: submission.userId,
+          error: gradeError instanceof Error ? gradeError.message : String(gradeError)
+        });
+      }
+
+    } catch (error) {
+      logger.error('[Codeforces] Submission processing failed', {
+        submissionId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+
+      // Update submission with error status
+      try {
+        await this.submissionRepository.update(submissionId, {
+          status: SubmissionStatus.ERROR,
+          verdict: JudgeVerdict.INTERNAL_ERROR,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        });
+      } catch (updateError) {
+        logger.error('[Codeforces] Failed to update submission with ERROR status', {
           submissionId,
           updateError: updateError instanceof Error ? updateError.message : String(updateError)
         });

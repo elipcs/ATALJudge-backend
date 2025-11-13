@@ -43,9 +43,9 @@ import {
   RequestPasswordResetUseCase,
   ResetPasswordUseCase
 } from './use-cases/auth';
-import { GetUserUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from './use-cases/user';
+import { GetUserUseCase, GetUsersByRoleUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from './use-cases/user';
 import { CreateQuestionUseCase, UpdateQuestionUseCase, UpdateCodeforcesFieldsUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase } from './use-cases/question';
-import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase } from './use-cases/submission';
+import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase } from './use-cases/submission';
 import { GetGradeUseCase, CalculateGradeUseCase, GetStudentGradesUseCase, GetListGradesUseCase, GetGradeByStudentAndListUseCase } from './use-cases/grade';
 import { CreateQuestionListUseCase, GetQuestionListUseCase, UpdateQuestionListUseCase, DeleteQuestionListUseCase, GetAllQuestionListsUseCase, UpdateListScoringUseCase, AddQuestionToListUseCase, RemoveQuestionFromListUseCase } from './use-cases/question-list';
 import { CreateInviteUseCase, GetAllInvitesUseCase, ValidateInviteUseCase, DeleteInviteUseCase, RevokeInviteUseCase } from './use-cases/invite';
@@ -66,6 +66,8 @@ import {
   UpdateTestCaseUseCase,
   DeleteTestCaseUseCase
 } from './use-cases/testcase';
+import { BulkUpdateTestCasesUseCase } from './use-cases/testcase/BulkUpdateTestCasesUseCase';
+import { GenerateTestCasesUseCase } from './use-cases/testcase/GenerateTestCasesUseCase';
 import {
   GetAllAllowedIPsUseCase,
   GetAllowedIPByIdUseCase,
@@ -174,6 +176,7 @@ export function createApp(): Application {
   const requestPasswordResetUseCase = container.resolve(RequestPasswordResetUseCase);
   const resetPasswordUseCase = container.resolve(ResetPasswordUseCase);
   const getUserUseCase = container.resolve(GetUserUseCase);
+  const getUsersByRoleUseCase = container.resolve(GetUsersByRoleUseCase);
   const updateProfileUseCase = container.resolve(UpdateProfileUseCase);
   const changePasswordUseCase = container.resolve(ChangePasswordUseCase);
   const createQuestionUseCase = container.resolve(CreateQuestionUseCase);
@@ -186,6 +189,7 @@ export function createApp(): Application {
   const getSubmissionUseCase = container.resolve(GetSubmissionUseCase);
   const getAllSubmissionsUseCase = container.resolve(GetAllSubmissionsUseCase);
   const getSubmissionWithResultsUseCase = container.resolve(GetSubmissionWithResultsUseCase);
+  const resubmitSubmissionUseCase = container.resolve(ResubmitSubmissionUseCase);
   const getGradeUseCase = container.resolve(GetGradeUseCase);
   const calculateGradeUseCase = container.resolve(CalculateGradeUseCase);
   const getStudentGradesUseCase = container.resolve(GetStudentGradesUseCase);
@@ -217,6 +221,8 @@ export function createApp(): Application {
   const getTestCaseByIdUseCase = container.resolve(GetTestCaseByIdUseCase);
   const updateTestCaseUseCase = container.resolve(UpdateTestCaseUseCase);
   const deleteTestCaseUseCase = container.resolve(DeleteTestCaseUseCase);
+  const bulkUpdateTestCasesUseCase = container.resolve(BulkUpdateTestCasesUseCase);
+  const generateTestCasesUseCase = container.resolve(GenerateTestCasesUseCase);
   const getAllAllowedIPsUseCase = container.resolve(GetAllAllowedIPsUseCase);
   const getAllowedIPByIdUseCase = container.resolve(GetAllowedIPByIdUseCase);
   const createAllowedIPUseCase = container.resolve(CreateAllowedIPUseCase);
@@ -237,6 +243,7 @@ export function createApp(): Application {
   ));
   app.use('/api/users', createUserController(
     getUserUseCase,
+    getUsersByRoleUseCase,
     updateProfileUseCase,
     changePasswordUseCase
   ));
@@ -247,6 +254,19 @@ export function createApp(): Application {
     deleteInviteUseCase,
     revokeInviteUseCase
   ));
+  // Registrar testCaseController ANTES do questionController
+  // para que rotas mais específicas como /questions/:questionId/testcases
+  // sejam capturadas antes de rotas genéricas como /questions/:id
+  app.use('/api', createTestCaseController(
+    createTestCaseUseCase,
+    getTestCasesByQuestionUseCase,
+    getTestCaseByIdUseCase,
+    updateTestCaseUseCase,
+    deleteTestCaseUseCase,
+    bulkUpdateTestCasesUseCase,
+    generateTestCasesUseCase
+  ));
+  
   app.use('/api/questions', createQuestionController(
     createQuestionUseCase,
     updateQuestionUseCase,
@@ -270,7 +290,8 @@ export function createApp(): Application {
     createSubmissionUseCase,
     getSubmissionUseCase,
     getAllSubmissionsUseCase,
-    getSubmissionWithResultsUseCase
+    getSubmissionWithResultsUseCase,
+    resubmitSubmissionUseCase
   ));
   app.use('/api/lists', createQuestionListController(
     createQuestionListUseCase,
@@ -296,13 +317,6 @@ export function createApp(): Application {
     toggleAllowedIPStatusUseCase,
     deleteAllowedIPUseCase,
     performSystemResetUseCase
-  ));
-  app.use('/api', createTestCaseController(
-    createTestCaseUseCase,
-    getTestCasesByQuestionUseCase,
-    getTestCaseByIdUseCase,
-    updateTestCaseUseCase,
-    deleteTestCaseUseCase
   ));
 
   app.use(notFoundHandler);

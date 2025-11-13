@@ -65,7 +65,8 @@ router.put(
     const question = await updateQuestionUseCase.execute({
       questionId: req.params.id,
       dto: req.body,
-      userId: req.user!.sub
+      userId: req.user!.sub,
+      userRole: req.user!.role
     });
     
     successResponse(res, question, 'Question updated successfully');
@@ -74,8 +75,8 @@ router.put(
 
 /**
  * PUT /api/questions/:id/codeforces
- * Update Codeforces-specific fields (part 2 of question editing)
- * Body: { codeforcesContestId?, codeforcesProblemIndex?, codeforcesLink? }
+ * Update Codeforces-specific fields (separate from main question update)
+ * Body: { contestId?, problemIndex? }
  */
 router.put(
   '/:id/codeforces',
@@ -85,7 +86,8 @@ router.put(
     const question = await updateCodeforcesFieldsUseCase.execute({
       questionId: req.params.id,
       dto: req.body,
-      userId: req.user!.sub
+      userId: req.user!.sub,
+      userRole: req.user!.role
     });
     
     successResponse(res, question, 'Codeforces fields updated successfully');

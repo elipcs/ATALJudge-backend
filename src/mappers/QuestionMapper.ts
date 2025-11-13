@@ -28,19 +28,13 @@ export class QuestionMapper {
     return new QuestionResponseDTO({
       id: question.id,
       title: question.title,
-      statement: question.statement,
-      inputFormat: question.inputFormat,
-      outputFormat: question.outputFormat,
-      constraints: question.constraints,
-      notes: question.notes,
-      tags: question.tags,
+      text: question.text,
       timeLimitMs: question.timeLimitMs,
       memoryLimitKb: question.memoryLimitKb,
       examples: question.examples,
       submissionType: question.submissionType,
-      codeforcesContestId: question.contestId,
-      codeforcesProblemIndex: question.problemIndex,
-      codeforcesLink: question.codeforcesLink,
+      contestId: question.contestId,
+      problemIndex: question.problemIndex,
       authorId: question.authorId,
       createdAt: question.createdAt,
       updatedAt: question.updatedAt
@@ -59,65 +53,53 @@ export class QuestionMapper {
    */
   static applyCreateDTO(question: Question, dto: CreateQuestionDTO): void {
     question.title = dto.title;
-    question.statement = dto.statement;
-    question.inputFormat = dto.inputFormat || '';
-    question.outputFormat = dto.outputFormat || '';
-    question.constraints = dto.constraints || '';
-    question.notes = dto.notes || '';
-    question.tags = dto.tags || [];
+    question.text = dto.text;
     question.timeLimitMs = dto.timeLimitMs || 1000;
     question.memoryLimitKb = dto.memoryLimitKb || 64000;
     question.examples = dto.examples || [];
     question.submissionType = dto.submissionType || 'local';
     
-    // Gera link do codeforces se for tipo codeforces
-    if (question.isCodeforces()) {
-      question.generateCodeforcesLink();
-    }
+    // Mapeia campos do Codeforces se fornecidos
+    if (dto.contestId !== undefined) question.contestId = dto.contestId;
+    if (dto.problemIndex !== undefined) question.problemIndex = dto.problemIndex;
   }
 
   /**
    * Aplica dados de UpdateQuestionDTO ao Question (Domain)
-   * Apenas campos da parte 1: título, enunciado, exemplos, limites, etc.
-   * NÃO inclui campos Codeforces (vide UpdateCodeforcesFieldsDTO)
+   * Inclui campos principais: título, enunciado, exemplos, limites, submission type
+   * NÃO inclui campos Codeforces (contestId, problemIndex) - use applyCodeforcesUpdate
    */
   static applyUpdateDTO(question: Question, dto: UpdateQuestionDTO): void {
     if (dto.title !== undefined) question.title = dto.title;
-    if (dto.statement !== undefined) question.statement = dto.statement;
-    if (dto.inputFormat !== undefined) question.inputFormat = dto.inputFormat;
-    if (dto.outputFormat !== undefined) question.outputFormat = dto.outputFormat;
-    if (dto.constraints !== undefined) question.constraints = dto.constraints;
-    if (dto.notes !== undefined) question.notes = dto.notes;
-    if (dto.tags !== undefined) question.tags = dto.tags;
+    if (dto.text !== undefined) question.text = dto.text;
     if (dto.timeLimitMs !== undefined) question.timeLimitMs = dto.timeLimitMs;
     if (dto.memoryLimitKb !== undefined) question.memoryLimitKb = dto.memoryLimitKb;
     if (dto.wallTimeLimitSeconds !== undefined) question.wallTimeLimitSeconds = dto.wallTimeLimitSeconds;
     if (dto.examples !== undefined) question.examples = dto.examples;
+    
+    // Apenas submission type (os campos contestId/problemIndex vão via endpoint separado)
+    if (dto.submissionType !== undefined) question.submissionType = dto.submissionType;
   }
 
   /**
    * Aplica campos Codeforces ao Question (Domain)
-   * Apenas campos de Codeforces (parte 2 da edição)
+   * Usado pelo endpoint separado PUT /api/questions/:id/codeforces
+   * 
+   * @param question - Question entity to update
+   * @param dto - UpdateCodeforcesFieldsDTO with contestId, problemIndex
    */
   static applyCodeforcesUpdate(question: Question, dto: any): void {
-    if (dto.codeforcesContestId !== undefined) question.contestId = dto.codeforcesContestId;
-    if (dto.codeforcesProblemIndex !== undefined) question.problemIndex = dto.codeforcesProblemIndex;
-    if (dto.codeforcesLink !== undefined) question.codeforcesLink = dto.codeforcesLink;
-    
-    // Regenera link se for tipo codeforces
-    if (question.isCodeforces()) {
-      question.generateCodeforcesLink();
-    }
+    if (dto.contestId !== undefined) question.contestId = dto.contestId;
+    if (dto.problemIndex !== undefined) question.problemIndex = dto.problemIndex;
   }
 
   /**
    * Creates a simplified DTO for listing
    */
-  static toListItemDTO(question: Question): Pick<QuestionResponseDTO, 'id' | 'title' | 'tags' | 'submissionType'> {
+  static toListItemDTO(question: Question): Pick<QuestionResponseDTO, 'id' | 'title' | 'submissionType'> {
     return {
       id: question.id,
       title: question.title,
-      tags: question.tags,
       submissionType: question.submissionType
     };
   }

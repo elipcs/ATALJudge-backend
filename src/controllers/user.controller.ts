@@ -10,7 +10,7 @@ import { validateBody, authenticate, requireProfessor, AuthRequest } from '../mi
 import { successResponse } from '../utils/responses';
 import { UnauthorizedError } from '../utils';
 import { asyncHandler } from '../utils/asyncHandler';
-import { GetUserUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from '../use-cases';
+import { GetUserUseCase, GetUsersByRoleUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from '../use-cases';
 
 /**
  * User Controller
@@ -39,6 +39,7 @@ import { GetUserUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from '../
  */
 function createUserController(
   getUserUseCase: GetUserUseCase,
+  getUsersByRoleUseCase: GetUsersByRoleUseCase,
   updateProfileUseCase: UpdateProfileUseCase,
   changePasswordUseCase: ChangePasswordUseCase
 ): Router {
@@ -103,6 +104,21 @@ router.post(
     });
     
     successResponse(res, null, 'Password changed successfully');
+  })
+);
+
+/**
+ * GET /role/:role
+ * Get users by role (professor only)
+ */
+router.get(
+  '/role/:role',
+  authenticate,
+  requireProfessor,
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    const users = await getUsersByRoleUseCase.execute(req.params.role);
+    
+    successResponse(res, users, 'Users by role');
   })
 );
 

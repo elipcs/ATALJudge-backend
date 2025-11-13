@@ -21,22 +21,7 @@ export class Question {
   title!: string;
 
   @Column({ type: 'text', nullable: false })
-  statement!: string;
-
-  @Column({ name: 'input_format', type: 'text', default: '' })
-  inputFormat!: string;
-
-  @Column({ name: 'output_format', type: 'text', default: '' })
-  outputFormat!: string;
-
-  @Column({ type: 'text', default: '' })
-  constraints!: string;
-
-  @Column({ type: 'text', default: '' })
-  notes!: string;
-
-  @Column({ type: 'simple-array', default: '' })
-  tags!: string[];
+  text!: string;
 
   @Column({ name: 'author_id', type: 'uuid', nullable: true })
   authorId?: string;
@@ -61,9 +46,6 @@ export class Question {
 
   @Column({ name: 'problem_index', type: 'varchar', length: 10, nullable: true })
   problemIndex?: string;
-
-  @Column({ name: 'codeforces_link', type: 'varchar', length: 500, nullable: true })
-  codeforcesLink?: string;
 
   @Column({ name: 'question_list_id', type: 'uuid', nullable: true })
   questionListId?: string;
@@ -95,8 +77,8 @@ export class Question {
       throw new ValidationError('Title cannot be empty', 'TITLE_REQUIRED');
     }
 
-    if (!this.statement || !this.statement.trim()) {
-      throw new ValidationError('Statement cannot be empty', 'STATEMENT_REQUIRED');
+    if (!this.text || !this.text.trim()) {
+      throw new ValidationError('Text cannot be empty', 'TEXT_REQUIRED');
     }
 
     if (this.timeLimitMs < 100 || this.timeLimitMs > 30000) {
@@ -130,12 +112,6 @@ export class Question {
 
   isCodeforces(): boolean {
     return this.submissionType === 'codeforces';
-  }
-
-  generateCodeforcesLink(): void {
-    if (this.isCodeforces() && this.contestId && this.problemIndex) {
-      this.codeforcesLink = `https://codeforces.com/contest/${this.contestId}/problem/${this.problemIndex}`;
-    }
   }
 
   // ============================================================
@@ -179,7 +155,7 @@ export class Question {
   isReady(): boolean {
     return !!(
       this.title?.trim() &&
-      this.statement?.trim() &&
+      this.text?.trim() &&
       this.hasTestCases()
     );
   }
@@ -212,6 +188,6 @@ export class Question {
    */
   isCodeforcesConfigComplete(): boolean {
     if (!this.isCodeforces()) return true;
-    return !!(this.contestId && this.problemIndex && this.codeforcesLink);
+    return !!(this.contestId && this.problemIndex);
   }
 }

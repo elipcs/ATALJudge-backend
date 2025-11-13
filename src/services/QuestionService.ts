@@ -72,12 +72,7 @@ export class QuestionService {
     if (!questionListId) {
       const question = new Question();
       question.title = data.title;
-      question.statement = data.statement;
-      question.inputFormat = data.inputFormat || '';
-      question.outputFormat = data.outputFormat || '';
-      question.constraints = data.constraints || '';
-      question.notes = data.notes || '';
-      question.tags = data.tags || [];
+      question.text = data.text;
       question.timeLimitMs = data.timeLimitMs || 1000;
       question.memoryLimitKb = data.memoryLimitKb || 64000;
       question.examples = data.examples || [];
@@ -119,12 +114,7 @@ export class QuestionService {
 
       const question = new Question();
       question.title = data.title;
-      question.statement = data.statement;
-      question.inputFormat = data.inputFormat || '';
-      question.outputFormat = data.outputFormat || '';
-      question.constraints = data.constraints || '';
-      question.notes = data.notes || '';
-      question.tags = data.tags || [];
+      question.text = data.text;
       question.timeLimitMs = data.timeLimitMs || 1000;
       question.memoryLimitKb = data.memoryLimitKb || 64000;
       question.examples = data.examples || [];
@@ -200,12 +190,7 @@ export class QuestionService {
 
     const question = new Question();
     question.title = data.title;
-    question.statement = data.statement;
-    question.inputFormat = data.inputFormat || '';
-    question.outputFormat = data.outputFormat || '';
-    question.constraints = data.constraints || '';
-    question.notes = data.notes || '';
-    question.tags = data.tags || [];
+    question.text = data.text;
     question.timeLimitMs = data.timeLimitMs || 1000;
     question.memoryLimitKb = data.memoryLimitKb || 64000;
     question.wallTimeLimitSeconds = data.wallTimeLimitSeconds;
@@ -216,7 +201,6 @@ export class QuestionService {
     if (submissionType === 'codeforces') {
       question.contestId = data.contestId;
       question.problemIndex = data.problemIndex;
-      question.generateCodeforcesLink();
     }
 
     const saved = await this.questionRepository.save(question);
@@ -250,12 +234,7 @@ export class QuestionService {
 
       const question = new Question();
       question.title = data.title;
-      question.statement = data.statement;
-      question.inputFormat = data.inputFormat || '';
-      question.outputFormat = data.outputFormat || '';
-      question.constraints = data.constraints || '';
-      question.notes = data.notes || '';
-      question.tags = data.tags || [];
+      question.text = data.text;
       question.timeLimitMs = data.timeLimitMs || 1000;
       question.memoryLimitKb = data.memoryLimitKb || 64000;
       question.wallTimeLimitSeconds = data.wallTimeLimitSeconds;
@@ -266,7 +245,6 @@ export class QuestionService {
       if (submissionType === 'codeforces') {
         question.contestId = data.contestId;
         question.problemIndex = data.problemIndex;
-        question.generateCodeforcesLink();
       }
 
       const savedQuestion = await queryRunner.manager.save(question);
@@ -339,12 +317,7 @@ export class QuestionService {
     });
 
     question.title = data.title || question.title;
-    question.statement = data.statement || question.statement;
-    question.inputFormat = data.inputFormat !== undefined ? data.inputFormat : question.inputFormat;
-    question.outputFormat = data.outputFormat !== undefined ? data.outputFormat : question.outputFormat;
-    question.constraints = data.constraints !== undefined ? data.constraints : question.constraints;
-    question.notes = data.notes !== undefined ? data.notes : question.notes;
-    question.tags = data.tags || question.tags;
+    question.text = data.text || question.text;
     question.timeLimitMs = data.timeLimitMs || question.timeLimitMs;
     question.memoryLimitKb = data.memoryLimitKb || question.memoryLimitKb;
     question.wallTimeLimitSeconds = data.wallTimeLimitSeconds || question.wallTimeLimitSeconds;
@@ -385,7 +358,6 @@ export class QuestionService {
       if (question.submissionType === 'codeforces') {
         question.contestId = data.contestId;
         question.problemIndex = data.problemIndex;
-        question.generateCodeforcesLink();
       }
 
       if (data.wallTimeLimitSeconds) {
@@ -464,12 +436,7 @@ export class QuestionService {
     const baseDTO: Partial<QuestionResponseDTO> = {
       id: question.id,
       title: question.title,
-      statement: question.statement,
-      inputFormat: question.inputFormat,
-      outputFormat: question.outputFormat,
-      constraints: question.constraints,
-      notes: question.notes,
-      tags: question.tags,
+      text: question.text,
       timeLimitMs: question.timeLimitMs,
       memoryLimitKb: question.memoryLimitKb,
       examples: question.examples,
@@ -481,9 +448,8 @@ export class QuestionService {
 
     if (question.isCodeforces()) {
       baseDTO.judgeType = JudgeType.CODEFORCES;
-      baseDTO.codeforcesContestId = question.contestId;
-      baseDTO.codeforcesProblemIndex = question.problemIndex;
-      baseDTO.codeforcesLink = question.codeforcesLink;
+      baseDTO.contestId = question.contestId;
+      baseDTO.problemIndex = question.problemIndex;
     } else {
       baseDTO.judgeType = JudgeType.LOCAL;
     }

@@ -165,6 +165,7 @@ export class QuestionListResponseDTO {
   minQuestionsForMaxScore?: number;
   questionGroups?: any[];
   isRestricted!: boolean;
+  countTowardScore!: boolean;
   classIds?: string[];
   questions?: any[];
   questionCount?: number;

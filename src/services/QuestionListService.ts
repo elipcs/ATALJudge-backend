@@ -216,12 +216,7 @@ export class QuestionListService {
         return {
           id: q.id,
           title: q.title,
-          statement: q.statement,
-          inputFormat: q.inputFormat,
-          outputFormat: q.outputFormat,
-          constraints: q.constraints,
-          notes: q.notes,
-          tags: q.tags,
+          text: q.text,
           timeLimitMs: q.timeLimitMs,
           memoryLimitKb: q.memoryLimitKb,
           examples: q.examples,
@@ -230,9 +225,8 @@ export class QuestionListService {
           createdAt: q.createdAt,
           updatedAt: q.updatedAt,
           ...(q.submissionType === 'codeforces' && {
-            codeforcesContestId: q.contestId,
-            codeforcesProblemIndex: q.problemIndex,
-            codeforcesLink: q.codeforcesLink
+            contestId: q.contestId,
+            problemIndex: q.problemIndex
           })
         };
       });
@@ -249,6 +243,7 @@ export class QuestionListService {
       minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,
       questionGroups: questionList.questionGroups,
       isRestricted: questionList.isRestricted,
+      countTowardScore: questionList.countTowardScore,
       classIds,
       questions,
       questionCount: questions.length,

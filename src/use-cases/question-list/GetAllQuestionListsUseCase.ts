@@ -58,6 +58,7 @@ export class GetAllQuestionListsUseCase implements IUseCase<GetAllQuestionListsF
       startDate: questionList.startDate.toISOString(),
       endDate: questionList.endDate.toISOString(),
       isRestricted: questionList.isRestricted,
+      countTowardScore: questionList.countTowardScore,
       scoringMode: questionList.scoringMode,
       maxScore: questionList.maxScore,
       minQuestionsForMaxScore: questionList.minQuestionsForMaxScore,

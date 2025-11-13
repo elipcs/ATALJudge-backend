@@ -18,7 +18,7 @@ export class GetAllClassesUseCase implements IUseCase<GetAllClassesInput, ClassR
     const { includeRelations = false } = input;
 
     const classes = includeRelations
-      ? await this.classRepository.findAllWithRelations()
+      ? await this.classRepository.findAllWithRelations(true, true) // includeStudents: true, includeProfessor: true
       : await this.classRepository.findAll();
 
     return classes.map(c => ClassMapper.toDTO(c));

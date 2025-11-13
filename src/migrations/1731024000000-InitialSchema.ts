@@ -101,12 +101,7 @@ export class InitialSchema1731024000000 implements MigrationInterface {
       CREATE TABLE "questions" (
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "title" varchar(500) NOT NULL,
-        "statement" text NOT NULL,
-        "input_format" text DEFAULT '',
-        "output_format" text DEFAULT '',
-        "constraints" text DEFAULT '',
-        "notes" text DEFAULT '',
-        "tags" text DEFAULT '',
+        "text" text NOT NULL,
         "question_list_id" uuid ,
         "author_id" uuid,
         "time_limit_ms" int NOT NULL DEFAULT 1000,
@@ -116,7 +111,6 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "submission_type" varchar(20) DEFAULT 'local',
         "contest_id" varchar(50),
         "problem_index" varchar(10),
-        "codeforces_link" varchar(500),
         "created_at" timestamp with time zone NOT NULL DEFAULT now(),
         "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
         CONSTRAINT "fk_questions_author" FOREIGN KEY ("author_id") 

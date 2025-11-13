@@ -70,3 +70,10 @@ export {
   UpdateAllowedIPDTO
 } from './AllowedIPDtos';
 
+export {
+  SubmitCodeForcesProblemDTO,
+  CodeForcesSubmissionResponseDTO,
+  BatchSubmitCodeForcesDTO,
+  CodeForcesProblemDTO
+} from './CodeForcesDtos';
+

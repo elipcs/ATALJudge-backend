@@ -32,4 +32,5 @@ export {
 } from './errors';
 export { sanitizeForLog, sanitizeUserForLog, sanitizeHeaders } from './sanitize';
 export { asyncHandler } from './asyncHandler';
+export { ConstraintParser, ParsedConstraints, VariableConstraint } from './ConstraintParser';
 

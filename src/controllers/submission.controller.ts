@@ -6,9 +6,9 @@
  */
 import { Router, Response } from 'express';
 import { SubmissionService } from '../services/SubmissionService';
-import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase } from '../use-cases/submission';
+import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase } from '../use-cases/submission';
 import { CreateSubmissionDTO } from '../dtos';
-import { validateBody, authenticate, AuthRequest } from '../middlewares';
+import { validateBody, authenticate, AuthRequest, requireTeacher } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { SubmissionStatus, UserRole } from '../enums';
 import { UnauthorizedError, ValidationError } from '../utils';
@@ -19,7 +19,8 @@ function createSubmissionController(
   createSubmissionUseCase: CreateSubmissionUseCase,
   getSubmissionUseCase: GetSubmissionUseCase,
   getAllSubmissionsUseCase: GetAllSubmissionsUseCase,
-  getSubmissionWithResultsUseCase: GetSubmissionWithResultsUseCase
+  getSubmissionWithResultsUseCase: GetSubmissionWithResultsUseCase,
+  resubmitSubmissionUseCase: ResubmitSubmissionUseCase
 ): Router {
   const router = Router();
 
@@ -113,6 +114,30 @@ router.get(
     });
     
     successResponse(res, submissionDetail, 'Submission results');
+  })
+);
+
+/**
+ * POST /api/submissions/:id/resubmit
+ * Resubmit an existing submission (professors and assistants only)
+ * Creates a new submission with the same code, language, and original user
+ */
+router.post(
+  '/:id/resubmit',
+  authenticate,
+  requireTeacher,
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new UnauthorizedError('User not authenticated', 'UNAUTHORIZED');
+    }
+    
+    const newSubmission = await resubmitSubmissionUseCase.execute({
+      submissionId: req.params.id,
+      requestUserId: req.user.sub,
+      requestUserRole: req.user.role
+    });
+    
+    successResponse(res, newSubmission, 'Submission resubmitted successfully', 201);
   })
 );
 
