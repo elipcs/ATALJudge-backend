@@ -47,6 +47,12 @@ export class Question {
   @Column({ name: 'problem_index', type: 'varchar', length: 10, nullable: true })
   problemIndex?: string;
 
+  @Column({ name: 'oracle_code', type: 'text', nullable: true })
+  oracleCode?: string;
+
+  @Column({ name: 'oracle_language', type: 'varchar', length: 20, nullable: true })
+  oracleLanguage?: string;
+
   @Column({ name: 'question_list_id', type: 'uuid', nullable: true })
   questionListId?: string;
 
@@ -167,21 +173,6 @@ export class Question {
     return this.examples && this.examples.length > 0;
   }
 
-  /**
-   * Gets public test cases (is_sample = true)
-   */
-  getPublicTestCases(): TestCase[] {
-    if (!this.testCases) return [];
-    return this.testCases.filter(tc => tc.isSample);
-  }
-
-  /**
-   * Gets private test cases (is_sample = false)
-   */
-  getPrivateTestCases(): TestCase[] {
-    if (!this.testCases) return [];
-    return this.testCases.filter(tc => !tc.isSample);
-  }
 
   /**
    * Validates if the Codeforces configuration is complete

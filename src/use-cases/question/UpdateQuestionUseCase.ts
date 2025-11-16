@@ -79,6 +79,8 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       submissionType: question.submissionType,
       contestId: question.contestId,
       problemIndex: question.problemIndex,
+      oracleCode: question.oracleCode,
+      oracleLanguage: question.oracleLanguage,
     };
     
     await this.questionRepository.update(question.id, updateData);

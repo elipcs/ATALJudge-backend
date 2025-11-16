@@ -25,14 +25,14 @@ export class TestCaseMapper {
    * @returns {TestCaseResponseDTO} The test case data transfer object
    */
   static toDTO(testCase: TestCase): TestCaseResponseDTO {
+    // Garantir que todos os campos sejam válidos (não null/undefined)
     return new TestCaseResponseDTO({
-      id: testCase.id,
-      questionId: testCase.questionId,
-      input: testCase.input,
-      expectedOutput: testCase.expectedOutput,
-      isSample: testCase.isSample,
-      weight: testCase.weight,
-      createdAt: testCase.createdAt
+      id: testCase.id || '',
+      questionId: testCase.questionId || '',
+      input: testCase.input || '',
+      expectedOutput: testCase.expectedOutput || '',
+      weight: testCase.weight ?? 0,
+      createdAt: testCase.createdAt || new Date()
     });
   }
 }

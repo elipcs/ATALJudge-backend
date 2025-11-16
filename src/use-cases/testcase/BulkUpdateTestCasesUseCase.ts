@@ -53,7 +53,6 @@ export class BulkUpdateTestCasesUseCase implements IUseCase<BulkUpdateTestCasesU
         if (existing) {
           existing.input = tcDto.input;
           existing.expectedOutput = tcDto.expectedOutput;
-          existing.isSample = tcDto.isSample;
           existing.weight = tcDto.weight;
           testCasesToUpdate.push(existing);
           submittedIds.add(tcDto.id);
@@ -64,7 +63,6 @@ export class BulkUpdateTestCasesUseCase implements IUseCase<BulkUpdateTestCasesU
         newTestCase.questionId = questionId;
         newTestCase.input = tcDto.input;
         newTestCase.expectedOutput = tcDto.expectedOutput;
-        newTestCase.isSample = tcDto.isSample;
         newTestCase.weight = tcDto.weight;
         testCasesToCreate.push(newTestCase);
       }
@@ -94,7 +92,6 @@ export class BulkUpdateTestCasesUseCase implements IUseCase<BulkUpdateTestCasesU
       await this.testCaseRepository.update(tc.id, {
         input: tc.input,
         expectedOutput: tc.expectedOutput,
-        isSample: tc.isSample,
         weight: tc.weight
       });
       results.push(tc);
@@ -116,7 +113,6 @@ export class BulkUpdateTestCasesUseCase implements IUseCase<BulkUpdateTestCasesU
       questionId: tc.questionId,
       input: tc.input,
       expectedOutput: tc.expectedOutput,
-      isSample: tc.isSample,
       weight: tc.weight,
       createdAt: tc.createdAt
     }));

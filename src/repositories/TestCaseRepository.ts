@@ -15,13 +15,6 @@ export class TestCaseRepository extends BaseRepository<TestCase> {
     });
   }
 
-  async findSamplesByQuestion(questionId: string): Promise<TestCase[]> {
-    return this.repository.find({
-      where: { questionId, isSample: true},
-      order: { createdAt: 'ASC' }
-    });
-  }
-
   async countByQuestion(questionId: string): Promise<number> {
     return this.repository.count({ where: { questionId } });
   }

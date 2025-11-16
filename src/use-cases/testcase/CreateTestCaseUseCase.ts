@@ -30,7 +30,6 @@ export class CreateTestCaseUseCase implements IUseCase<CreateTestCaseDTO, TestCa
       questionId: data.questionId,
       input: data.input,
       expectedOutput: data.expectedOutput,
-      isSample: data.isSample ?? false,
       weight: data.weight ?? 1
     });
     

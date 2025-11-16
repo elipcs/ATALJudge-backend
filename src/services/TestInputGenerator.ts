@@ -2,45 +2,75 @@
  * @module services/TestInputGenerator
  * @description Service for generating test inputs based on algorithm type and constraints
  * Provides different strategies for different algorithm categories
+ * Supports generic input formats by analyzing question examples
  */
 
 import { ParsedConstraints, ConstraintParser } from '../utils/ConstraintParser';
 import { AlgorithmType } from '../dtos/TestCaseGeneratorDtos';
+import { InputFormatAnalyzer, InputFormatPattern } from '../utils/InputFormatAnalyzer';
 
 export interface GenerationConfig {
   count: number;
   algorithmType: AlgorithmType;
   constraints: ParsedConstraints;
   questionStatement?: string;
+  examples?: Array<{ input: string; output?: string }>; // Question examples for format detection
 }
 
 export class TestInputGenerator {
+  private static detectedFormat: InputFormatPattern | null = null;
+
   /**
    * Generates test inputs based on algorithm type and constraints
+   * Now supports generic formats by analyzing question examples
    */
   static generate(config: GenerationConfig): string[] {
-    const { count, algorithmType, constraints } = config;
+    const { count, algorithmType, constraints, examples } = config;
+
+    // Detect input format from examples if provided
+    if (examples && examples.length > 0) {
+      this.detectedFormat = InputFormatAnalyzer.analyze(examples);
+    } else {
+      this.detectedFormat = null;
+    }
+
+    let inputs: string[];
 
     switch (algorithmType) {
       case 'backtracking':
-        return this.generateBacktrackingInputs(count, constraints);
+        inputs = this.generateBacktrackingInputs(count, constraints);
+        break;
       case 'graph':
-        return this.generateGraphInputs(count, constraints);
+        inputs = this.generateGraphInputs(count, constraints);
+        break;
       case 'divide-conquer':
-        return this.generateDivideConquerInputs(count, constraints);
+        inputs = this.generateDivideConquerInputs(count, constraints);
+        break;
       case 'brute-force':
-        return this.generateBruteForceInputs(count, constraints);
+        inputs = this.generateBruteForceInputs(count, constraints);
+        break;
       case 'greedy':
-        return this.generateGreedyInputs(count, constraints);
+        inputs = this.generateGreedyInputs(count, constraints);
+        break;
       case 'dynamic-programming':
-        return this.generateDynamicProgrammingInputs(count, constraints);
+        inputs = this.generateDynamicProgrammingInputs(count, constraints);
+        break;
       case 'math':
-        return this.generateMathInputs(count, constraints);
+        inputs = this.generateMathInputs(count, constraints);
+        break;
       case 'string':
-        return this.generateStringInputs(count, constraints);
+        inputs = this.generateStringInputs(count, constraints);
+        break;
       default:
-        return this.generateDefaultInputs(count, constraints);
+        inputs = this.generateDefaultInputs(count, constraints);
     }
+
+    // Apply format transformation if format was detected
+    if (this.detectedFormat) {
+      inputs = inputs.map(input => this.applyFormat(input, this.detectedFormat!));
+    }
+
+    return inputs;
   }
 
   /**
@@ -148,28 +178,28 @@ export class TestInputGenerator {
     for (let i = 0; i < sortedAscCount; i++) {
       const n = this.randomInt(nMin, nMax);
       const arr = this.generateSortedArray(n, valueMin, valueMax, true);
-      inputs.push(this.formatArrayInput(n, arr, constraints));
+      inputs.push(this.formatArrayInput(n, arr));
     }
 
     // Sorted descending
     for (let i = 0; i < sortedDescCount; i++) {
       const n = this.randomInt(nMin, nMax);
       const arr = this.generateSortedArray(n, valueMin, valueMax, false);
-      inputs.push(this.formatArrayInput(n, arr, constraints));
+      inputs.push(this.formatArrayInput(n, arr));
     }
 
     // Random
     for (let i = 0; i < randomCount; i++) {
       const n = this.randomInt(nMin, nMax);
       const arr = this.generateRandomArray(n, valueMin, valueMax);
-      inputs.push(this.formatArrayInput(n, arr, constraints));
+      inputs.push(this.formatArrayInput(n, arr));
     }
 
     // With duplicates
     for (let i = 0; i < duplicatesCount; i++) {
       const n = this.randomInt(nMin, nMax);
       const arr = this.generateArrayWithDuplicates(n, valueMin, valueMax);
-      inputs.push(this.formatArrayInput(n, arr, constraints));
+      inputs.push(this.formatArrayInput(n, arr));
     }
 
     return inputs;
@@ -419,7 +449,7 @@ export class TestInputGenerator {
       const valueMax = ConstraintParser.getMaxValue(constraints, arrayVar.name, 10**9);
       const valueMin = ConstraintParser.getMinValue(constraints, arrayVar.name, -(10**9));
       const arr = this.generateRandomArray(n, valueMin, valueMax);
-      return this.formatArrayInput(n, arr, constraints);
+      return this.formatArrayInput(n, arr);
     }
 
     // Simple case: just n
@@ -655,15 +685,73 @@ export class TestInputGenerator {
   }
 
   /**
-   * Formats array input based on constraints
+   * Formats array input based on constraints and detected format
    */
   private static formatArrayInput(
     n: number,
-    arr: number[],
-    _constraints: ParsedConstraints
+    arr: number[]
   ): string {
-    // Common format: first line has n, second line has array
+    // If format was detected, use it
+    if (this.detectedFormat && this.detectedFormat.type === 'array') {
+      return InputFormatAnalyzer.generateInput(this.detectedFormat, {
+        n,
+        array: arr
+      });
+    }
+
+    // Default format: first line has n, second line has array
     return `${n}\n${arr.join(' ')}`;
+  }
+
+  /**
+   * Applies detected format to generated input
+   */
+  private static applyFormat(input: string, format: InputFormatPattern): string {
+    // If input already matches the format, return as is
+    if (!format.structure) {
+      return input;
+    }
+
+    const lines = input.trim().split('\n').filter(l => l.trim().length > 0);
+    if (lines.length === 0) {
+      return input;
+    }
+
+    // Parse the generated input
+    const firstLine = lines[0].trim().split(/\s+/);
+    const values: any = {};
+
+    // Extract values from first line
+    if (format.structure.firstLine) {
+      format.structure.firstLine.variables?.forEach((varName, index) => {
+        if (index < firstLine.length) {
+          values[varName] = parseInt(firstLine[index]) || firstLine[index];
+        }
+      });
+    }
+
+    // Extract data lines based on format type
+    if (format.type === 'array' && lines.length >= 2) {
+      values.array = lines[1].trim().split(/\s+/).map(v => parseInt(v) || v);
+    } else if (format.type === 'matrix' && lines.length > 1) {
+      values.matrix = lines.slice(1).map(line => 
+        line.trim().split(/\s+/).map(v => parseInt(v) || v)
+      );
+    } else if (format.type === 'graph' && lines.length > 1) {
+      values.edges = lines.slice(1).map(line => {
+        const parts = line.trim().split(/\s+/);
+        return [parseInt(parts[0]) || parts[0], parseInt(parts[1]) || parts[1]];
+      });
+    } else if (format.type === 'string' && lines.length > 1) {
+      values.strings = lines.slice(1).map(line => line.trim());
+    } else if (format.structure.dataLines && lines.length > 1) {
+      values.dataLines = lines.slice(1).map(line => 
+        line.trim().split(/\s+/).map(v => parseInt(v) || v)
+      );
+    }
+
+    // Generate input following the detected format
+    return InputFormatAnalyzer.generateInput(format, values);
   }
 
   /**

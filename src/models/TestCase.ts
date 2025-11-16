@@ -15,9 +15,6 @@ export class TestCase {
   @Column({ name: 'expected_output', type: 'text' })
   expectedOutput!: string;
 
-  @Column({ name: 'is_sample', type: 'boolean', default: false })
-  isSample!: boolean;
-
   @Column({ type: 'int', default: 0 })
   weight!: number;
 

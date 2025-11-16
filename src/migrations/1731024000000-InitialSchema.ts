@@ -96,6 +96,36 @@ export class InitialSchema1731024000000 implements MigrationInterface {
       FOREIGN KEY ("class_id") REFERENCES "classes"("id") ON DELETE SET NULL
     `);
 
+    // Create question_lists table (must be created before questions)
+    await queryRunner.query(`
+      CREATE TABLE "question_lists" (
+        "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        "title" varchar(500) NOT NULL,
+        "description" text,
+        "author_id" uuid,
+        "start_date" timestamp with time zone NOT NULL,
+        "end_date" timestamp with time zone NOT NULL,
+        "scoring_mode" varchar(20) DEFAULT 'simple',
+        "max_score" int DEFAULT 10,
+        "min_questions_for_max_score" int,
+        "question_groups" jsonb DEFAULT '[]',
+        "is_restricted" boolean DEFAULT false,
+        "count_toward_score" boolean DEFAULT true,
+        "created_at" timestamp with time zone NOT NULL DEFAULT now(),
+        "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
+        CONSTRAINT "fk_question_lists_author" FOREIGN KEY ("author_id") 
+          REFERENCES "users"("id") ON DELETE SET NULL
+      )
+    `);
+
+    await queryRunner.query(`
+      CREATE INDEX "idx_question_lists_author_id" ON "question_lists" ("author_id")
+    `);
+
+    await queryRunner.query(`
+      CREATE INDEX "idx_question_lists_dates" ON "question_lists" ("start_date", "end_date")
+    `);
+
     // Create questions table
     await queryRunner.query(`
       CREATE TABLE "questions" (
@@ -111,6 +141,8 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "submission_type" varchar(20) DEFAULT 'local',
         "contest_id" varchar(50),
         "problem_index" varchar(10),
+        "oracle_code" text,
+        "oracle_language" varchar(20),
         "created_at" timestamp with time zone NOT NULL DEFAULT now(),
         "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
         CONSTRAINT "fk_questions_author" FOREIGN KEY ("author_id") 
@@ -139,7 +171,6 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "question_id" uuid NOT NULL,
         "input" text NOT NULL,
         "expected_output" text NOT NULL,
-        "is_sample" boolean DEFAULT false,
         "weight" int DEFAULT 0,
         "created_at" timestamp with time zone NOT NULL DEFAULT now(),
         "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
@@ -216,36 +247,6 @@ export class InitialSchema1731024000000 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE INDEX "idx_submission_results_test_case_id" ON "submission_results" ("test_case_id")
-    `);
-
-    // Create question_lists table
-    await queryRunner.query(`
-      CREATE TABLE "question_lists" (
-        "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-        "title" varchar(500) NOT NULL,
-        "description" text,
-        "author_id" uuid,
-        "start_date" timestamp with time zone NOT NULL,
-        "end_date" timestamp with time zone NOT NULL,
-        "scoring_mode" varchar(20) DEFAULT 'simple',
-        "max_score" int DEFAULT 10,
-        "min_questions_for_max_score" int,
-        "question_groups" jsonb DEFAULT '[]',
-        "is_restricted" boolean DEFAULT false,
-        "count_toward_score" boolean DEFAULT true,
-        "created_at" timestamp with time zone NOT NULL DEFAULT now(),
-        "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
-        CONSTRAINT "fk_question_lists_author" FOREIGN KEY ("author_id") 
-          REFERENCES "users"("id") ON DELETE SET NULL
-      )
-    `);
-
-    await queryRunner.query(`
-      CREATE INDEX "idx_question_lists_author_id" ON "question_lists" ("author_id")
-    `);
-
-    await queryRunner.query(`
-      CREATE INDEX "idx_question_lists_dates" ON "question_lists" ("start_date", "end_date")
     `);
 
     // Create question_list_classes junction table

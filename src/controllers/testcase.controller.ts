@@ -11,6 +11,7 @@ import { GenerateTestCasesDTO } from '../dtos/TestCaseGeneratorDtos';
 import { validateBody, authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { asyncHandler } from '../utils/asyncHandler';
+import logger from '../utils/logger';
 import {
   CreateTestCaseUseCase,
   GetTestCasesByQuestionUseCase,
@@ -68,9 +69,18 @@ router.get(
   '/questions/:questionId/testcases',
   authenticate,
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const testCases = await getTestCasesByQuestionUseCase.execute(req.params.questionId);
-    
-    successResponse(res, testCases, 'Test cases');
+    try {
+      const testCases = await getTestCasesByQuestionUseCase.execute(req.params.questionId);
+      
+      // Garantir que sempre retornamos um array, mesmo se vazio
+      const safeTestCases = Array.isArray(testCases) ? testCases : [];
+      
+      successResponse(res, safeTestCases, 'Test cases');
+    } catch (error: any) {
+      // Em caso de erro, retornar array vazio para não quebrar o frontend
+      logger.error(`Erro ao buscar casos de teste para questão ${req.params.questionId}:`, error);
+      successResponse(res, [], 'Test cases');
+    }
   })
 );
 

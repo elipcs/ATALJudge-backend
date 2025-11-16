@@ -17,7 +17,7 @@ export default new DataSource({
   port: parseInt(process.env.DB_PORT || '5432'),
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'ataljudge',
+  database: process.env.DB_DATABASE || 'postgres',
 
   synchronize: false,
 
@@ -34,10 +34,16 @@ export default new DataSource({
     max: 10,
     min: 2,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000
+    connectionTimeoutMillis: 10000,
+    // Only use SSL if explicitly enabled via environment variable
+    ...(process.env.DB_SSL === 'true' ? {
+      ssl: {
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+      }
+    } : {})
   },
 
-  connectTimeoutMS: 5000,
+  connectTimeoutMS: 10000,
 
   cache: {
     duration: 30000

@@ -128,6 +128,16 @@ export abstract class UpdateQuestionDTO {
   @IsOptional()
   @IsString()
   submissionType?: 'local' | 'codeforces';
+
+  /** Oracle code for test case generation */
+  @IsOptional()
+  @IsString()
+  oracleCode?: string;
+
+  /** Oracle code language (e.g., 'python', 'java') */
+  @IsOptional()
+  @IsString()
+  oracleLanguage?: string;
 }
 
 /**
@@ -158,6 +168,8 @@ export class QuestionResponseDTO {
   submissionType?: 'local' | 'codeforces';
   contestId?: string;
   problemIndex?: string;
+  oracleCode?: string;
+  oracleLanguage?: string;
   authorId?: string;
   createdAt!: Date;
   updatedAt!: Date;

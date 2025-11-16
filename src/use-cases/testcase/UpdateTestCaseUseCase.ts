@@ -54,7 +54,6 @@ export class UpdateTestCaseUseCase implements IUseCase<UpdateTestCaseInput, Test
     const updateData: DeepPartial<TestCase> = {};
     if (data.input !== undefined) updateData.input = data.input;
     if (data.expectedOutput !== undefined) updateData.expectedOutput = data.expectedOutput;
-    if (data.isSample !== undefined) updateData.isSample = data.isSample;
     if (data.weight !== undefined) updateData.weight = data.weight;
     
     const updated = await this.testCaseRepository.update(id, updateData);

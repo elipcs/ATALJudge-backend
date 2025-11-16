@@ -35,6 +35,8 @@ export class QuestionMapper {
       submissionType: question.submissionType,
       contestId: question.contestId,
       problemIndex: question.problemIndex,
+      oracleCode: question.oracleCode,
+      oracleLanguage: question.oracleLanguage,
       authorId: question.authorId,
       createdAt: question.createdAt,
       updatedAt: question.updatedAt
@@ -79,6 +81,10 @@ export class QuestionMapper {
     
     // Apenas submission type (os campos contestId/problemIndex vão via endpoint separado)
     if (dto.submissionType !== undefined) question.submissionType = dto.submissionType;
+    
+    // Oracle code fields
+    if (dto.oracleCode !== undefined) question.oracleCode = dto.oracleCode;
+    if (dto.oracleLanguage !== undefined) question.oracleLanguage = dto.oracleLanguage;
   }
 
   /**

@@ -92,7 +92,6 @@ export function createApp(): Application {
 
       if (!origin) {
         if (isProduction) {
-          logger.warn('[CORS] Requisição sem origin bloqueada em produção');
           return callback(new Error('Origem não permitida'), false);
         }
         return callback(null, true);
@@ -168,7 +167,6 @@ export function createApp(): Application {
     });
   });
 
-  // Resolve Use Cases
   const loginUseCase = container.resolve(LoginUseCase);
   const registerUserUseCase = container.resolve(RegisterUserUseCase);
   const refreshTokenUseCase = container.resolve(RefreshTokenUseCase);
@@ -230,7 +228,6 @@ export function createApp(): Application {
   const deleteAllowedIPUseCase = container.resolve(DeleteAllowedIPUseCase);
   const performSystemResetUseCase = container.resolve(PerformSystemResetUseCase);
 
-  // Resolve Services (temporary - for controllers not yet refactored)
   const submissionService = container.resolve(SubmissionService);
 
   app.use('/api/auth', createAuthController(
@@ -241,12 +238,14 @@ export function createApp(): Application {
     requestPasswordResetUseCase,
     resetPasswordUseCase
   ));
+
   app.use('/api/users', createUserController(
     getUserUseCase,
     getUsersByRoleUseCase,
     updateProfileUseCase,
     changePasswordUseCase
   ));
+
   app.use('/api/invites', createInviteController(
     createInviteUseCase,
     getAllInvitesUseCase,
@@ -254,9 +253,7 @@ export function createApp(): Application {
     deleteInviteUseCase,
     revokeInviteUseCase
   ));
-  // Registrar testCaseController ANTES do questionController
-  // para que rotas mais específicas como /questions/:questionId/testcases
-  // sejam capturadas antes de rotas genéricas como /questions/:id
+  
   app.use('/api', createTestCaseController(
     createTestCaseUseCase,
     getTestCasesByQuestionUseCase,

@@ -16,21 +16,6 @@ export class SubmissionResultRepository extends BaseRepository<SubmissionResult>
     });
   }
 
-  async findBySubmissionWithSamples(submissionId: string): Promise<{
-    sampleResults: SubmissionResult[];
-    hiddenResults: SubmissionResult[];
-  }> {
-    const results = await this.repository.find({
-      where: { submissionId },
-      relations: ['testCase'],
-      order: { createdAt: 'ASC' }
-    });
-
-    const sampleResults = results.filter(r => r.testCase?.isSample);
-    const hiddenResults = results.filter(r => !r.testCase?.isSample);
-
-    return { sampleResults, hiddenResults };
-  }
 
   async countPassedBySubmission(submissionId: string): Promise<number> {
     return this.repository.count({

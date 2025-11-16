@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsInt, Min, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsInt, Min, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
@@ -13,10 +13,6 @@ export class CreateTestCaseDTO {
 
   @IsString()
   expectedOutput!: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isSample?: boolean;
 
   @IsOptional()
   @IsInt()
@@ -37,10 +33,6 @@ export class UpdateTestCaseDTO {
   expectedOutput?: string;
 
   @IsOptional()
-  @IsBoolean()
-  isSample?: boolean;
-
-  @IsOptional()
   @IsInt()
   @Min(0)
   weight?: number;
@@ -59,9 +51,6 @@ export class TestCaseDTO {
 
   @IsString()
   expectedOutput!: string;
-
-  @IsBoolean()
-  isSample!: boolean;
 
   @IsInt()
   @Min(0)
@@ -84,7 +73,6 @@ export class TestCaseResponseDTO {
   questionId!: string;
   input!: string;
   expectedOutput!: string;
-  isSample!: boolean;
   weight!: number;
   createdAt!: Date;
 

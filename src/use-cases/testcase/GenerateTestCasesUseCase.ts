@@ -87,7 +87,6 @@ export class GenerateTestCasesUseCase implements IUseCase<GenerateTestCasesUseCa
           questionId: questionId,
           input: testCase.input,
           expectedOutput: testCase.output,
-          isSample: false, // Generated test cases are not samples by default
           weight: 1 // Default weight
         });
 

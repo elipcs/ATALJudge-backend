@@ -24,6 +24,7 @@ export interface GenerationOptions {
   algorithmType: AlgorithmType;
   constraints: string;
   questionStatement?: string;
+  examples?: Array<{ input: string; output?: string }>; // Question examples for format detection
 }
 
 @injectable()
@@ -35,9 +36,21 @@ export class TestCaseGeneratorService {
   /**
    * Generates test cases by:
    * 1. Parsing constraints
-   * 2. Generating inputs based on algorithm type
-   * 3. Executing oracle code for each input
-   * 4. Returning test cases with inputs and expected outputs
+   * 2. Analyzing input format from question examples (if provided)
+   * 3. Generating inputs based on algorithm type and detected format
+   * 4. Executing oracle code for each input
+   * 5. Returning test cases with inputs and expected outputs
+   * 
+   * Note: The system is generic and supports various input formats:
+   * - Single-line inputs (n)
+   * - Multi-line inputs (n m, then data)
+   * - Array inputs (n, then array)
+   * - Matrix inputs (n, then n lines)
+   * - Graph inputs (n m, then m edges)
+   * - String inputs (single string or n strings)
+   * - Mixed formats
+   * 
+   * The format is automatically detected from question examples.
    */
   async generateTestCases(options: GenerationOptions): Promise<GeneratedTestCase[]> {
     logger.info('[TestCaseGenerator] Iniciando geração de casos de teste', {
@@ -55,12 +68,13 @@ export class TestCaseGeneratorService {
         hasZero: parsedConstraints.hasZero
       });
 
-      // 2. Generate inputs
+      // 2. Generate inputs (with examples for format detection)
       const inputs = TestInputGenerator.generate({
         count: options.count,
         algorithmType: options.algorithmType,
         constraints: parsedConstraints,
-        questionStatement: options.questionStatement
+        questionStatement: options.questionStatement,
+        examples: options.examples // Pass examples to detect input format
       });
 
       logger.info('[TestCaseGenerator] Entradas geradas', {
@@ -170,4 +184,6 @@ export class TestCaseGeneratorService {
     return 'default';
   }
 }
+
+
 

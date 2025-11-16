@@ -46,7 +46,6 @@ export class TestCaseService {
       questionId: tc.questionId,
       input: tc.input,
       expectedOutput: tc.expectedOutput,
-      isSample: tc.isSample,
       weight: tc.weight,
       createdAt: tc.createdAt
     }));
@@ -72,7 +71,6 @@ export class TestCaseService {
       questionId: testCase.questionId,
       input: testCase.input,
       expectedOutput: testCase.expectedOutput,
-      isSample: testCase.isSample,
       weight: testCase.weight,
       createdAt: testCase.createdAt
     });
@@ -82,7 +80,7 @@ export class TestCaseService {
    * Creates a new test case.
    * 
    * @async
-   * @param {CreateTestCaseDTO} data - Test case data (questionId, input, expectedOutput, isSample, weight)
+   * @param {CreateTestCaseDTO} data - Test case data (questionId, input, expectedOutput, weight)
    * @returns {Promise<TestCaseResponseDTO>} Created test case
    */
   async createTestCase(data: CreateTestCaseDTO): Promise<TestCaseResponseDTO> {
@@ -90,7 +88,6 @@ export class TestCaseService {
       questionId: data.questionId,
       input: data.input,
       expectedOutput: data.expectedOutput,
-      isSample: data.isSample ?? false,
       weight: data.weight ?? 1
     });
     
@@ -99,7 +96,6 @@ export class TestCaseService {
       questionId: testCase.questionId,
       input: testCase.input,
       expectedOutput: testCase.expectedOutput,
-      isSample: testCase.isSample,
       weight: testCase.weight,
       createdAt: testCase.createdAt
     });
@@ -125,7 +121,6 @@ export class TestCaseService {
     const updateData: DeepPartial<typeof testCase> = {};
     if (data.input !== undefined) updateData.input = data.input;
     if (data.expectedOutput !== undefined) updateData.expectedOutput = data.expectedOutput;
-    if (data.isSample !== undefined) updateData.isSample = data.isSample;
     if (data.weight !== undefined) updateData.weight = data.weight;
     
     const updated = await this.testCaseRepository.update(id, updateData);
@@ -139,7 +134,6 @@ export class TestCaseService {
       questionId: updated.questionId,
       input: updated.input,
       expectedOutput: updated.expectedOutput,
-      isSample: updated.isSample,
       weight: updated.weight,
       createdAt: updated.createdAt
     });
