@@ -6,7 +6,7 @@
  */
 import { Router, Response } from 'express';
 import { SubmissionService } from '../services/SubmissionService';
-import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase } from '../use-cases/submission';
+import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase, SearchSubmissionsUseCase } from '../use-cases/submission';
 import { CreateSubmissionDTO } from '../dtos';
 import { validateBody, authenticate, AuthRequest, requireTeacher } from '../middlewares';
 import { successResponse } from '../utils/responses';
@@ -20,7 +20,8 @@ function createSubmissionController(
   getSubmissionUseCase: GetSubmissionUseCase,
   getAllSubmissionsUseCase: GetAllSubmissionsUseCase,
   getSubmissionWithResultsUseCase: GetSubmissionWithResultsUseCase,
-  resubmitSubmissionUseCase: ResubmitSubmissionUseCase
+  resubmitSubmissionUseCase: ResubmitSubmissionUseCase,
+  searchSubmissionsUseCase: SearchSubmissionsUseCase
 ): Router {
   const router = Router();
 
@@ -48,6 +49,36 @@ router.get(
     const result = await getAllSubmissionsUseCase.execute(filters);
     
     successResponse(res, result, 'List of submissions');
+  })
+);
+
+/**
+ * GET /api/submissions/search/global
+ * Search submissions globally by multiple fields
+ * Query params: q (search term), verdict (optional), status (optional), page, limit
+ */
+router.get(
+  '/search/global',
+  authenticate,
+  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+    const searchTerm = req.query.q as string;
+    
+    if (!searchTerm) {
+      throw new ValidationError('Search term is required', 'SEARCH_TERM_REQUIRED');
+    }
+    
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+    
+    const result = await searchSubmissionsUseCase.execute({
+      searchTerm,
+      verdict: req.query.verdict as string,
+      status: req.query.status as SubmissionStatus,
+      page,
+      limit
+    });
+    
+    successResponse(res, result, 'Search results');
   })
 );
 

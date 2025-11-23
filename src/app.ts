@@ -45,7 +45,7 @@ import {
 } from './use-cases/auth';
 import { GetUserUseCase, GetUsersByRoleUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from './use-cases/user';
 import { CreateQuestionUseCase, UpdateQuestionUseCase, UpdateCodeforcesFieldsUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from './use-cases/question';
-import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase } from './use-cases/submission';
+import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase, SearchSubmissionsUseCase } from './use-cases/submission';
 import { GetGradeUseCase, CalculateGradeUseCase, GetStudentGradesUseCase, GetListGradesUseCase, GetGradeByStudentAndListUseCase } from './use-cases/grade';
 import { CreateQuestionListUseCase, GetQuestionListUseCase, UpdateQuestionListUseCase, DeleteQuestionListUseCase, GetAllQuestionListsUseCase, UpdateListScoringUseCase, AddQuestionToListUseCase, RemoveQuestionFromListUseCase } from './use-cases/question-list';
 import { CreateInviteUseCase, GetAllInvitesUseCase, ValidateInviteUseCase, DeleteInviteUseCase, RevokeInviteUseCase } from './use-cases/invite';
@@ -190,6 +190,7 @@ export function createApp(): Application {
   const getAllSubmissionsUseCase = container.resolve(GetAllSubmissionsUseCase);
   const getSubmissionWithResultsUseCase = container.resolve(GetSubmissionWithResultsUseCase);
   const resubmitSubmissionUseCase = container.resolve(ResubmitSubmissionUseCase);
+  const searchSubmissionsUseCase = container.resolve(SearchSubmissionsUseCase);
   const getGradeUseCase = container.resolve(GetGradeUseCase);
   const calculateGradeUseCase = container.resolve(CalculateGradeUseCase);
   const getStudentGradesUseCase = container.resolve(GetStudentGradesUseCase);
@@ -292,7 +293,8 @@ export function createApp(): Application {
     getSubmissionUseCase,
     getAllSubmissionsUseCase,
     getSubmissionWithResultsUseCase,
-    resubmitSubmissionUseCase
+    resubmitSubmissionUseCase,
+    searchSubmissionsUseCase
   ));
   app.use('/api/lists', createQuestionListController(
     createQuestionListUseCase,

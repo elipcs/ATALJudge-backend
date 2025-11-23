@@ -77,9 +77,10 @@ export abstract class CreateQuestionDTO {
   @IsString()
   problemIndex?: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(1, { message: 'Question list ID is required' })
-  questionListId!: string;
+  @MinLength(1, { message: 'Question list ID must be valid if provided' })
+  questionListId?: string;
 
   @IsOptional()
   @IsString()

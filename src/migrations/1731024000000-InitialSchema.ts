@@ -149,8 +149,6 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
         CONSTRAINT "fk_questions_author" FOREIGN KEY ("author_id") 
           REFERENCES "users"("id") ON DELETE SET NULL,
-        CONSTRAINT "fk_questions_question_list" FOREIGN KEY ("question_list_id") 
-          REFERENCES "question_lists"("id") ON DELETE SET NULL
       )
     `);
 
@@ -250,6 +248,20 @@ export class InitialSchema1731024000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE INDEX "idx_submission_results_test_case_id" ON "submission_results" ("test_case_id")
     `);
+
+    await queryRunner.query(`
+      CREATE TABLE question_list_questions (
+      "question_list_id" uuid NOT NULL,
+      "question_id" uuid NOT NULL,
+      PRIMARY KEY ("question_list_id", "question_id"),
+      CONSTRAINT "fk_question_list_questions_question_list" FOREIGN KEY ("question_list_id") REFERENCES "question_lists"("id") ON DELETE CASCADE,
+      CONSTRAINT "fk_question_list_questions_question" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE CASCADE
+            )
+        `);
+
+    await queryRunner.query(`
+      CREATE INDEX idx_question_list_questions_question_id ON question_list_questions(question_id)
+    `);        
 
     // Create question_list_classes junction table
     await queryRunner.query(`

@@ -81,7 +81,7 @@ export class QuestionRepository extends BaseRepository<Question> {
       .leftJoinAndSelect('question.author', 'author')
       .where('LOWER(question.title) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
       .orWhere('LOWER(question.source) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
-      .orWhere('question.tags @> :tagsArray', { tagsArray: JSON.stringify([searchTerm]) });
+      .orWhere('question.tags IS NOT NULL AND LOWER(question.tags::text) LIKE LOWER(:tagsSearch)', { tagsSearch: `%${searchTerm}%` });
 
     query.orderBy('question.createdAt', 'DESC');
 

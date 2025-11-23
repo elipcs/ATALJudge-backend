@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinColumn, JoinTable, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinColumn, JoinTable, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { User } from './User';
 import { Question } from './Question';
 import { Class } from './Class';
@@ -60,7 +60,12 @@ export class QuestionList {
   @JoinColumn({ name: 'author_id' })
   author?: User;
 
-  @OneToMany(() => Question, question => question.questionList)
+  @ManyToMany(() => Question, question => question.questionLists)
+  @JoinTable({
+    name: 'question_list_questions',
+    joinColumn: { name: 'question_list_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'question_id', referencedColumnName: 'id' }
+  })
   questions!: Question[];
 
   @ManyToMany(() => Class)

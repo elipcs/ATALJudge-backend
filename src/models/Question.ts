@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { User } from './User';
 import { Submission } from './Submission';
 import { TestCase } from './TestCase';
@@ -53,9 +53,6 @@ export class Question {
   @Column({ name: 'oracle_language', type: 'varchar', length: 20, nullable: true })
   oracleLanguage?: string;
 
-  @Column({ name: 'question_list_id', type: 'uuid', nullable: true })
-  questionListId?: string;
-
   @Column({ type: 'varchar', length: 200, nullable: true })
   source?: string;
 
@@ -72,9 +69,8 @@ export class Question {
   @JoinColumn({ name: 'author_id' })
   author?: User;
 
-  @ManyToOne(() => QuestionList, { nullable: true })
-  @JoinColumn({ name: 'question_list_id' })
-  questionList?: QuestionList;
+  @ManyToMany(() => QuestionList, questionList => questionList.questions)
+  questionLists!: QuestionList[];
 
   @OneToMany(() => TestCase, testCase => testCase.question, { cascade: true })
   testCases!: TestCase[];

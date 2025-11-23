@@ -49,26 +49,28 @@ export class CreateQuestionUseCase implements IUseCase<CreateQuestionUseCaseInpu
       authorId 
     });
 
-    // 5. Add to question list
-    const questionList = await this.questionListRepository.findByIdWithRelations(dto.questionListId, true);
-    
-    if (!questionList) {
-      throw new NotFoundError('Question list not found', 'LIST_NOT_FOUND');
-    }
-
-    if (!questionList.questions) {
-      questionList.questions = [];
-    }
-
-    const alreadyAdded = questionList.questions.some(q => q.id === savedQuestion.id);
-    if (!alreadyAdded) {
-      questionList.questions.push(savedQuestion);
-      await this.questionListRepository.save(questionList);
+    // 5. Optionally add to question list if provided
+    if (dto.questionListId) {
+      const questionList = await this.questionListRepository.findByIdWithRelations(dto.questionListId, true);
       
-      logger.info('[CreateQuestionUseCase] Question added to list', {
-        questionId: savedQuestion.id,
-        questionListId: dto.questionListId
-      });
+      if (!questionList) {
+        throw new NotFoundError('Question list not found', 'LIST_NOT_FOUND');
+      }
+
+      if (!questionList.questions) {
+        questionList.questions = [];
+      }
+
+      const alreadyAdded = questionList.questions.some(q => q.id === savedQuestion.id);
+      if (!alreadyAdded) {
+        questionList.questions.push(savedQuestion);
+        await this.questionListRepository.save(questionList);
+        
+        logger.info('[CreateQuestionUseCase] Question added to list', {
+          questionId: savedQuestion.id,
+          questionListId: dto.questionListId
+        });
+      }
     }
 
     // 6. Return DTO

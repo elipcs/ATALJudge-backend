@@ -114,4 +114,60 @@ export class SubmissionRepository extends BaseRepository<Submission> {
       relations: ['user', 'question', 'question.questionList']
     });
   }
+
+  /**
+   * Search submissions globally by question, list, student, or language
+   */
+  async searchGlobal(
+    searchTerm: string,
+    filters?: {
+      verdict?: string;
+      status?: SubmissionStatus;
+      page?: number;
+      limit?: number;
+    }
+  ): Promise<{ submissions: any[]; total: number }> {
+    const queryBuilder = this.repository.createQueryBuilder('submission')
+      .leftJoinAndSelect('submission.user', 'user')
+      .leftJoinAndSelect('submission.question', 'question')
+      .leftJoinAndSelect('question.questionList', 'questionList');
+
+    // Buscar por título da questão, nome da lista, nome do estudante ou linguagem
+    const searchLower = `%${searchTerm.toLowerCase()}%`;
+    queryBuilder.where(
+      'LOWER(question.title) LIKE LOWER(:searchTerm) OR ' +
+      'LOWER(questionList.title) LIKE LOWER(:searchTerm) OR ' +
+      'LOWER(user.name) LIKE LOWER(:searchTerm) OR ' +
+      'LOWER(submission.language) LIKE LOWER(:searchTerm)',
+      { searchTerm: searchLower }
+    );
+
+    if (filters?.verdict) {
+      if (filters.verdict.toLowerCase() === 'failed') {
+        queryBuilder.andWhere('(submission.verdict IS NULL OR submission.verdict != :accepted)', { accepted: 'Accepted' });
+      } else if (filters.verdict.toLowerCase() === 'accepted') {
+        queryBuilder.andWhere('submission.verdict = :verdict', { verdict: 'Accepted' });
+      } else {
+        queryBuilder.andWhere('submission.verdict = :verdict', { verdict: filters.verdict });
+      }
+    }
+
+    if (filters?.status) {
+      queryBuilder.andWhere('submission.status = :status', { status: filters.status });
+    }
+
+    queryBuilder.orderBy('submission.createdAt', 'DESC');
+
+    const total = await queryBuilder.getCount();
+
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const skip = (page - 1) * limit;
+
+    queryBuilder.skip(skip).take(limit);
+
+    const submissions = await queryBuilder.getMany();
+
+    return { submissions, total };
+  }
 }

@@ -26,7 +26,7 @@ export class SubmissionMapper {
    * @returns {SubmissionResponseDTO} The submission data transfer object
    */
   static toDTO(submission: Submission): SubmissionResponseDTO {
-    const questionList = submission.question?.questionList;
+    const questionList = submission.question?.questionLists?.[0];
     
     return new SubmissionResponseDTO({
       id: submission.id,
@@ -76,7 +76,7 @@ export class SubmissionMapper {
         }))
       : [];
 
-    const questionList = submission.question?.questionList;
+    const questionList = submission.question?.questionLists?.[0];
 
     return new SubmissionDetailDTO({
       id: submission.id,

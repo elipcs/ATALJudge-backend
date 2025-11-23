@@ -29,11 +29,11 @@ export class GetSubmissionUseCase implements IUseCase<string, SubmissionDetailDT
       throw new NotFoundError('Submission not found', 'SUBMISSION_NOT_FOUND');
     }
 
-    // 3. Ensure question list is loaded
-    if (submission.question && !submission.question.questionList) {
+    // 3. Ensure question lists are loaded
+    if (submission.question && (!submission.question.questionLists || submission.question.questionLists.length === 0)) {
       const fullSubmission = await this.submissionRepository.findByIdWithListInfo(submissionId);
-      if (fullSubmission?.question?.questionList) {
-        submission.question.questionList = fullSubmission.question.questionList;
+      if (fullSubmission?.question?.questionLists) {
+        submission.question.questionLists = fullSubmission.question.questionLists;
       }
     }
 
