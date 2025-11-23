@@ -80,6 +80,15 @@ export abstract class CreateQuestionDTO {
   @IsString()
   @MinLength(1, { message: 'Question list ID is required' })
   questionListId!: string;
+
+  @IsOptional()
+  @IsString()
+  source?: string | null;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[] | null;
 }
 
 /**
@@ -138,6 +147,15 @@ export abstract class UpdateQuestionDTO {
   @IsOptional()
   @IsString()
   oracleLanguage?: string;
+
+  @IsOptional()
+  @IsString()
+  source?: string | null;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[] | null;
 }
 
 /**
@@ -171,6 +189,8 @@ export class QuestionResponseDTO {
   oracleCode?: string;
   oracleLanguage?: string;
   authorId?: string;
+  source?: string;
+  tags!: string[];
   createdAt!: Date;
   updatedAt!: Date;
 
@@ -179,3 +199,12 @@ export class QuestionResponseDTO {
   }
 }
 
+export class PaginatedQuestionResponseDTO {
+  questions!: QuestionResponseDTO[];
+  pagination!: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}

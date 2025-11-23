@@ -143,6 +143,8 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "problem_index" varchar(10),
         "oracle_code" text,
         "oracle_language" varchar(20),
+        "source" varchar(200),
+        "tags" jsonb DEFAULT '[]',
         "created_at" timestamp with time zone NOT NULL DEFAULT now(),
         "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
         CONSTRAINT "fk_questions_author" FOREIGN KEY ("author_id") 

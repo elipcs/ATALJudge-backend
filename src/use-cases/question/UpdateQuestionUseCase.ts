@@ -46,29 +46,18 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       throw new ForbiddenError('You do not have permission to edit this question', 'FORBIDDEN');
     }
 
-    // 3. Check if question can be edited (business rule)
-    // Allow editing if:
-    // - Question is local (can always be edited)
-    // - OR we're changing from codeforces to local (allow this specific change)
-    const isChangingToLocal = dto.submissionType === 'local' && question.submissionType === 'codeforces';
-    const canBeEdited = question.canBeEdited() || isChangingToLocal;
-    
-    if (!canBeEdited) {
-      throw new ForbiddenError('This question can no longer be edited', 'CANNOT_EDIT_QUESTION');
-    }
-
-    // 4. Apply updates
+    // 3. Apply updates
     QuestionMapper.applyUpdateDTO(question, dto);
 
-    // 4.1. If changing from codeforces to local, clear codeforces fields
+    // 3.1. If changing from codeforces to local, clear codeforces fields
+    const isChangingToLocal = dto.submissionType === 'local' && question.submissionType === 'codeforces';
     if (isChangingToLocal) {
       question.contestId = undefined;
       question.problemIndex = undefined;
       logger.info('[UpdateQuestionUseCase] Clearing Codeforces fields when changing to local', { questionId });
     }
 
-    // 5. Save changes - Create a plain object excluding relations
-    // Note: Codeforces fields (contestId, problemIndex) are cleared if changing to local
+    // 4. Save changes - Create a plain object excluding relations
     const updateData = {
       title: question.title,
       text: question.text,
@@ -81,6 +70,8 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       problemIndex: question.problemIndex,
       oracleCode: question.oracleCode,
       oracleLanguage: question.oracleLanguage,
+      source: question.source,
+      tags: question.tags,
     };
     
     await this.questionRepository.update(question.id, updateData);
@@ -95,7 +86,7 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       userId 
     });
 
-    // 6. Return DTO
+    // 5. Return DTO
     return QuestionMapper.toDTO(updatedQuestion);
   }
 }

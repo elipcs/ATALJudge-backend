@@ -47,18 +47,13 @@ export class UpdateCodeforcesFieldsUseCase implements IUseCase<UpdateCodeforcesF
       throw new ForbiddenError('You do not have permission to edit this question', 'FORBIDDEN');
     }
 
-    // 3. Check if question can be edited (business rule)
-    if (!question.canBeEdited()) {
-      throw new ForbiddenError('This question can no longer be edited', 'CANNOT_EDIT_QUESTION');
-    }
-
-    // 4. Apply updates to Codeforces fields only
+    // 3. Apply updates to Codeforces fields only
     QuestionMapper.applyCodeforcesUpdate(question, dto);
 
-    // 4.1. Automatically set submissionType to 'codeforces' when configuring Codeforces fields
+    // 3.1. Automatically set submissionType to 'codeforces' when configuring Codeforces fields
     question.submissionType = 'codeforces';
 
-    // 5. Save changes - Create a plain object with Codeforces fields + submissionType
+    // 4. Save changes - Create a plain object with Codeforces fields + submissionType
     const updateData = {
       submissionType: question.submissionType,
       contestId: question.contestId,

@@ -56,6 +56,12 @@ export class Question {
   @Column({ name: 'question_list_id', type: 'uuid', nullable: true })
   questionListId?: string;
 
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  source?: string;
+
+  @Column({ type: 'jsonb', default: [] })
+  tags!: string[];
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 
@@ -136,14 +142,6 @@ export class Question {
    */
   getTestCaseCount(): number {
     return this.testCases ? this.testCases.length : 0;
-  }
-
-  /**
-   * Checks if the question can be edited
-   * Local questions can be edited, Codeforces cannot
-   */
-  canBeEdited(): boolean {
-    return this.isLocal();
   }
 
   /**

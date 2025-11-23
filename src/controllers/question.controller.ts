@@ -5,7 +5,7 @@
  * @class QuestionController
  */
 import { Router, Response } from 'express';
-import { CreateQuestionUseCase, UpdateQuestionUseCase, UpdateCodeforcesFieldsUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase } from '../use-cases/question';
+import { CreateQuestionUseCase, UpdateQuestionUseCase, UpdateCodeforcesFieldsUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from '../use-cases/question';
 import { authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { convertQuestionPayload } from '../middlewares/payload-converter.middleware';
@@ -17,96 +17,147 @@ function createQuestionController(
   updateCodeforcesFieldsUseCase: UpdateCodeforcesFieldsUseCase,
   deleteQuestionUseCase: DeleteQuestionUseCase,
   getQuestionByIdUseCase: GetQuestionByIdUseCase,
-  getAllQuestionsUseCase: GetAllQuestionsUseCase
+  getAllQuestionsUseCase: GetAllQuestionsUseCase,
+  getQuestionsByAuthorUseCase: GetQuestionsByAuthorUseCase,
+  searchQuestionsUseCase: SearchQuestionsUseCase
 ): Router {
   const router = Router();
 
-router.post(
-  '/',
-  authenticate,
-  requireTeacher,
-  convertQuestionPayload,
-  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const question = await createQuestionUseCase.execute({
-      dto: req.body,
-      authorId: req.user!.sub
-    });
-    
-    successResponse(res, question, 'Question created successfully', 201);
-  })
-);
+  router.post(
+    '/',
+    authenticate,
+    requireTeacher,
+    convertQuestionPayload,
+    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+      const question = await createQuestionUseCase.execute({
+        dto: req.body,
+        authorId: req.user!.sub
+      });
 
-router.get(
-  '/',
-  authenticate,
-  asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
-    const questions = await getAllQuestionsUseCase.execute();
-    
-    successResponse(res, { questions }, 'List of questions');
-  })
-);
+      successResponse(res, question, 'Question created successfully', 201);
+    })
+  );
 
-router.get(
-  '/:id',
-  authenticate,
-  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const question = await getQuestionByIdUseCase.execute(req.params.id);
-    
-    successResponse(res, question, 'Question data');
-  })
-);
+  router.get(
+    '/',
+    authenticate,
+    asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
+      const questions = await getAllQuestionsUseCase.execute();
 
-router.put(
-  '/:id',
-  authenticate,
-  requireTeacher,
-  convertQuestionPayload,
-  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const question = await updateQuestionUseCase.execute({
-      questionId: req.params.id,
-      dto: req.body,
-      userId: req.user!.sub,
-      userRole: req.user!.role
-    });
-    
-    successResponse(res, question, 'Question updated successfully');
-  })
-);
+      successResponse(res, { questions }, 'List of questions');
+    })
+  );
 
-/**
- * PUT /api/questions/:id/codeforces
- * Update Codeforces-specific fields (separate from main question update)
- * Body: { contestId?, problemIndex? }
- */
-router.put(
-  '/:id/codeforces',
-  authenticate,
-  requireTeacher,
-  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    const question = await updateCodeforcesFieldsUseCase.execute({
-      questionId: req.params.id,
-      dto: req.body,
-      userId: req.user!.sub,
-      userRole: req.user!.role
-    });
-    
-    successResponse(res, question, 'Codeforces fields updated successfully');
-  })
-);
+  router.get(
+    '/my-questions',
+    authenticate,
+    requireTeacher,
+    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+      const source = req.query.source as string | undefined;
+      const tagsParam = req.query.tags as string | undefined;
+      const tags = tagsParam ? tagsParam.split(',') : undefined;
 
-router.delete(
-  '/:id',
-  authenticate,
-  requireTeacher,
-  asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-    await deleteQuestionUseCase.execute({
-      questionId: req.params.id,
-      userId: req.user!.sub
-    });
-    
-    successResponse(res, null, 'Question deleted successfully');
-  })
-);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      const result = await getQuestionsByAuthorUseCase.execute({
+        authorId: req.user!.sub,
+        filters: {
+          source,
+          tags
+        },
+        page,
+        limit
+      });
+
+      successResponse(res, result, 'User questions');
+    })
+  );
+
+  router.get(
+    '/search/global',
+    authenticate,
+    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+      const searchTerm = req.query.q as string;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      if (!searchTerm || searchTerm.trim().length === 0) {
+        successResponse(res, { questions: [], total: 0, page, limit }, 'No search term provided');
+        return;
+      }
+
+      const result = await searchQuestionsUseCase.execute({
+        searchTerm: searchTerm.trim(),
+        page,
+        limit
+      });
+
+      successResponse(res, result, 'Search results');
+    })
+  );
+
+  router.get(
+    '/:id',
+    authenticate,
+    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+      const question = await getQuestionByIdUseCase.execute(req.params.id);
+
+      successResponse(res, question, 'Question data');
+    })
+  );
+
+  router.put(
+    '/:id',
+    authenticate,
+    requireTeacher,
+    convertQuestionPayload,
+    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+      const question = await updateQuestionUseCase.execute({
+        questionId: req.params.id,
+        dto: req.body,
+        userId: req.user!.sub,
+        userRole: req.user!.role
+      });
+
+      successResponse(res, question, 'Question updated successfully');
+    })
+  );
+
+  /**
+   * PUT /api/questions/:id/codeforces
+   * Update Codeforces-specific fields (separate from main question update)
+   * Body: { contestId?, problemIndex? }
+   */
+  router.put(
+    '/:id/codeforces',
+    authenticate,
+    requireTeacher,
+    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+      const question = await updateCodeforcesFieldsUseCase.execute({
+        questionId: req.params.id,
+        dto: req.body,
+        userId: req.user!.sub,
+        userRole: req.user!.role
+      });
+
+      successResponse(res, question, 'Codeforces fields updated successfully');
+    })
+  );
+
+  router.delete(
+    '/:id',
+    authenticate,
+    requireTeacher,
+    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+      await deleteQuestionUseCase.execute({
+        questionId: req.params.id,
+        userId: req.user!.sub
+      });
+
+      successResponse(res, null, 'Question deleted successfully');
+    })
+  );
 
   return router;
 }

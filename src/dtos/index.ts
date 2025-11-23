@@ -24,7 +24,8 @@ export {
   CreateQuestionDTO,
   UpdateQuestionDTO,
   UpdateCodeforcesFieldsDTO,
-  QuestionResponseDTO
+  QuestionResponseDTO,
+  PaginatedQuestionResponseDTO
 } from './QuestionDtos';
 
 export {

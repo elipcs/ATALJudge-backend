@@ -38,6 +38,8 @@ export class QuestionMapper {
       oracleCode: question.oracleCode,
       oracleLanguage: question.oracleLanguage,
       authorId: question.authorId,
+      source: question.source ?? undefined,
+      tags: question.tags ?? [],
       createdAt: question.createdAt,
       updatedAt: question.updatedAt
     });
@@ -60,10 +62,14 @@ export class QuestionMapper {
     question.memoryLimitKb = dto.memoryLimitKb || 64000;
     question.examples = dto.examples || [];
     question.submissionType = dto.submissionType || 'local';
-    
+
     // Mapeia campos do Codeforces se fornecidos
     if (dto.contestId !== undefined) question.contestId = dto.contestId;
     if (dto.problemIndex !== undefined) question.problemIndex = dto.problemIndex;
+
+    // Mapeia source e tags
+    if (dto.source !== undefined && dto.source !== null) question.source = dto.source;
+    if (dto.tags !== undefined && dto.tags !== null) question.tags = dto.tags;
   }
 
   /**
@@ -78,13 +84,17 @@ export class QuestionMapper {
     if (dto.memoryLimitKb !== undefined) question.memoryLimitKb = dto.memoryLimitKb;
     if (dto.wallTimeLimitSeconds !== undefined) question.wallTimeLimitSeconds = dto.wallTimeLimitSeconds;
     if (dto.examples !== undefined) question.examples = dto.examples;
-    
+
     // Apenas submission type (os campos contestId/problemIndex vão via endpoint separado)
     if (dto.submissionType !== undefined) question.submissionType = dto.submissionType;
-    
+
     // Oracle code fields
     if (dto.oracleCode !== undefined) question.oracleCode = dto.oracleCode;
     if (dto.oracleLanguage !== undefined) question.oracleLanguage = dto.oracleLanguage;
+
+    // Source and tags fields
+    if (dto.source !== undefined && dto.source !== null) question.source = dto.source;
+    if (dto.tags !== undefined && dto.tags !== null) question.tags = dto.tags;
   }
 
   /**

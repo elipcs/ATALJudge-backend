@@ -2,7 +2,7 @@
  * @module dtos/TestCaseGeneratorDtos
  * @description DTOs for test case generation requests
  */
-import { IsString, IsEnum, IsInt, Min, Max, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsInt, Min, Max, IsOptional, IsBoolean } from 'class-validator';
 import { ProgrammingLanguage } from '../enums/ProgrammingLanguage';
 
 export type AlgorithmType = 
@@ -34,6 +34,10 @@ export class GenerateTestCasesDTO {
   @IsString()
   @IsOptional()
   algorithmType?: AlgorithmType;
+
+  @IsBoolean()
+  @IsOptional()
+  use_supervision?: boolean;
 }
 
 /**

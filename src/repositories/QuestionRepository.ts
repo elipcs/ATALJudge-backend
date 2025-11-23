@@ -24,11 +24,31 @@ export class QuestionRepository extends BaseRepository<Question> {
     });
   }
 
-  async findByAuthor(authorId: string): Promise<Question[]> {
-    return this.repository.find({
-      where: { authorId },
-      relations: ['author', 'testCases']
-    });
+  async findByAuthor(
+    authorId: string,
+    filters?: { source?: string; tags?: string[] },
+    skip?: number,
+    take?: number
+  ): Promise<[Question[], number]> {
+    const query = this.repository.createQueryBuilder('question')
+      .leftJoinAndSelect('question.author', 'author')
+      .leftJoinAndSelect('question.testCases', 'testCases')
+      .where('question.authorId = :authorId', { authorId });
+
+    if (filters?.source) {
+      query.andWhere('question.source = :source', { source: filters.source });
+    }
+
+    if (filters?.tags && filters.tags.length > 0) {
+      query.andWhere("question.tags ?| array[:...tags]", { tags: filters.tags });
+    }
+
+    query.orderBy('question.createdAt', 'DESC');
+
+    if (skip !== undefined) query.skip(skip);
+    if (take !== undefined) query.take(take);
+
+    return query.getManyAndCount();
   }
 
   async findByJudgeType(judgeType: string): Promise<Question[]> {
@@ -50,6 +70,25 @@ export class QuestionRepository extends BaseRepository<Question> {
       .createQueryBuilder('question')
       .where('question.tags && :tags', { tags })
       .getMany();
+  }
+
+  async searchGlobal(
+    searchTerm: string,
+    skip?: number,
+    take?: number
+  ): Promise<[Question[], number]> {
+    const query = this.repository.createQueryBuilder('question')
+      .leftJoinAndSelect('question.author', 'author')
+      .where('LOWER(question.title) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
+      .orWhere('LOWER(question.source) LIKE LOWER(:searchTerm)', { searchTerm: `%${searchTerm}%` })
+      .orWhere('question.tags @> :tagsArray', { tagsArray: JSON.stringify([searchTerm]) });
+
+    query.orderBy('question.createdAt', 'DESC');
+
+    if (skip !== undefined) query.skip(skip);
+    if (take !== undefined) query.take(take);
+
+    return query.getManyAndCount();
   }
 }
 

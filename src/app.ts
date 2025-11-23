@@ -35,29 +35,29 @@ import createConfigController from './controllers/config.controller';
 import { SubmissionService } from './services/SubmissionService';
 
 // Use Cases
-import { 
-  LoginUseCase, 
-  RegisterUserUseCase, 
-  RefreshTokenUseCase, 
+import {
+  LoginUseCase,
+  RegisterUserUseCase,
+  RefreshTokenUseCase,
   LogoutUseCase,
   RequestPasswordResetUseCase,
   ResetPasswordUseCase
 } from './use-cases/auth';
 import { GetUserUseCase, GetUsersByRoleUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from './use-cases/user';
-import { CreateQuestionUseCase, UpdateQuestionUseCase, UpdateCodeforcesFieldsUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase } from './use-cases/question';
+import { CreateQuestionUseCase, UpdateQuestionUseCase, UpdateCodeforcesFieldsUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from './use-cases/question';
 import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase } from './use-cases/submission';
 import { GetGradeUseCase, CalculateGradeUseCase, GetStudentGradesUseCase, GetListGradesUseCase, GetGradeByStudentAndListUseCase } from './use-cases/grade';
 import { CreateQuestionListUseCase, GetQuestionListUseCase, UpdateQuestionListUseCase, DeleteQuestionListUseCase, GetAllQuestionListsUseCase, UpdateListScoringUseCase, AddQuestionToListUseCase, RemoveQuestionFromListUseCase } from './use-cases/question-list';
 import { CreateInviteUseCase, GetAllInvitesUseCase, ValidateInviteUseCase, DeleteInviteUseCase, RevokeInviteUseCase } from './use-cases/invite';
-import { 
-  CreateClassUseCase, 
-  GetAllClassesUseCase, 
-  GetClassByIdUseCase, 
-  UpdateClassUseCase, 
-  DeleteClassUseCase, 
-  GetClassStudentsUseCase, 
-  AddStudentToClassUseCase, 
-  RemoveStudentFromClassUseCase 
+import {
+  CreateClassUseCase,
+  GetAllClassesUseCase,
+  GetClassByIdUseCase,
+  UpdateClassUseCase,
+  DeleteClassUseCase,
+  GetClassStudentsUseCase,
+  AddStudentToClassUseCase,
+  RemoveStudentFromClassUseCase
 } from './use-cases/class';
 import {
   CreateTestCaseUseCase,
@@ -87,7 +87,7 @@ export function createApp(): Application {
 
   app.use(cors({
     origin: function (origin, callback) {
-      
+
       const isProduction = config.nodeEnv === 'production';
 
       if (!origin) {
@@ -98,19 +98,19 @@ export function createApp(): Application {
       }
 
       const allowedOrigins = config.allowedOrigins.length > 0
-        ? config.allowedOrigins 
-        : [ 
-            config.frontendUrl,
-            ...(!isProduction ? [
-              'http://localhost:3000',
-              'http://localhost:5173',
-              'http://localhost:5174',
-              'http://127.0.0.1:3000',
-              'http://127.0.0.1:5173',
-              'http://127.0.0.1:5174'
-            ] : [])
-          ].filter(Boolean);
-      
+        ? config.allowedOrigins
+        : [
+          config.frontendUrl,
+          ...(!isProduction ? [
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://localhost:5174',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173',
+            'http://127.0.0.1:5174'
+          ] : [])
+        ].filter(Boolean);
+
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -118,7 +118,7 @@ export function createApp(): Application {
         if (isProduction) {
           callback(new Error('Origem não permitida'), false);
         } else {
-          
+
           callback(null, true);
         }
       }
@@ -127,7 +127,7 @@ export function createApp(): Application {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
-    maxAge: 86400 
+    maxAge: 86400
   }));
 
   app.use(express.json({ limit: '10mb' }));
@@ -136,8 +136,8 @@ export function createApp(): Application {
   app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (err instanceof SyntaxError && 'body' in err) {
       logger.error('[JSON] Invalid JSON received', { error: err });
-      return res.status(400).json({ 
-        success: false, 
+      return res.status(400).json({
+        success: false,
         message: 'Invalid data - Malformed JSON',
         error: 'INVALID_JSON'
       });
@@ -146,8 +146,8 @@ export function createApp(): Application {
   });
 
   const generalLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, 
-    max: 100, 
+    windowMs: 1 * 60 * 1000,
+    max: 100,
     message: 'Too many requests from this IP, try again later.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -183,6 +183,8 @@ export function createApp(): Application {
   const deleteQuestionUseCase = container.resolve(DeleteQuestionUseCase);
   const getQuestionByIdUseCase = container.resolve(GetQuestionByIdUseCase);
   const getAllQuestionsUseCase = container.resolve(GetAllQuestionsUseCase);
+  const getQuestionsByAuthorUseCase = container.resolve(GetQuestionsByAuthorUseCase);
+  const searchQuestionsUseCase = container.resolve(SearchQuestionsUseCase);
   const createSubmissionUseCase = container.resolve(CreateSubmissionUseCase);
   const getSubmissionUseCase = container.resolve(GetSubmissionUseCase);
   const getAllSubmissionsUseCase = container.resolve(GetAllSubmissionsUseCase);
@@ -253,7 +255,7 @@ export function createApp(): Application {
     deleteInviteUseCase,
     revokeInviteUseCase
   ));
-  
+
   app.use('/api', createTestCaseController(
     createTestCaseUseCase,
     getTestCasesByQuestionUseCase,
@@ -263,14 +265,16 @@ export function createApp(): Application {
     bulkUpdateTestCasesUseCase,
     generateTestCasesUseCase
   ));
-  
+
   app.use('/api/questions', createQuestionController(
     createQuestionUseCase,
     updateQuestionUseCase,
     updateCodeforcesFieldsUseCase,
     deleteQuestionUseCase,
     getQuestionByIdUseCase,
-    getAllQuestionsUseCase
+    getAllQuestionsUseCase,
+    getQuestionsByAuthorUseCase,
+    searchQuestionsUseCase
   ));
   app.use('/api/classes', createClassController(
     createClassUseCase,

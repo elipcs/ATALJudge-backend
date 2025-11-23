@@ -14,6 +14,7 @@ export interface GenerateTestCasesRequest {
   oracle_code: string;
   count?: number;
   use_gemini?: boolean;
+  use_supervision?: boolean;
 }
 
 export interface TestCaseResponse {
@@ -83,7 +84,8 @@ export class TestCaseGeneratorMicroservice {
           question_id: request.question_id,
           oracle_code: request.oracle_code,
           count: request.count || 20,
-          use_gemini: request.use_gemini !== undefined ? request.use_gemini : true
+          use_gemini: request.use_gemini !== undefined ? request.use_gemini : true,
+          use_supervision: request.use_supervision !== undefined ? request.use_supervision : false
         },
         {
           headers: {
@@ -140,6 +142,8 @@ export class TestCaseGeneratorMicroservice {
     }
   }
 }
+
+
 
 
 

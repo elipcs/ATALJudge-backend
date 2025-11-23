@@ -63,7 +63,8 @@ export class GenerateTestCasesUseCase implements IUseCase<GenerateTestCasesUseCa
         question_id: questionId,
         oracle_code: dto.oracleCode,
         count: dto.count,
-        use_gemini: true
+        use_gemini: true,
+        use_supervision: dto.use_supervision !== undefined ? dto.use_supervision : false
       },
       jwtToken
     );
