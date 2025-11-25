@@ -16,7 +16,6 @@ import { SubmissionRepository, SubmissionResultRepository, QuestionRepository, T
 import { CreateSubmissionDTO, SubmissionResponseDTO, SubmissionDetailDTO, TestCaseResultDTO } from '../dtos';
 import { SubmissionStatus, JudgeVerdict, ProgrammingLanguage } from '../enums';
 import { Judge0Service } from './Judge0Service';
-import { CodeForcesService } from './CodeForcesService';
 import { SubmissionQueueService } from './SubmissionQueueService';
 import { GradeService } from './GradeService';
 import { logger, NotFoundError, ValidationError } from '../utils';
@@ -29,7 +28,6 @@ import { logger, NotFoundError, ValidationError } from '../utils';
 export class SubmissionService {
   constructor(
     @inject(SubmissionRepository) private submissionRepository: SubmissionRepository,
-    @inject(CodeForcesService) private codeForcesService: CodeForcesService,
     @inject(SubmissionResultRepository) private submissionResultRepository: SubmissionResultRepository,
     @inject(QuestionRepository) private questionRepository: QuestionRepository,
     @inject(TestCaseRepository) private testCaseRepository: TestCaseRepository,
@@ -37,31 +35,31 @@ export class SubmissionService {
     @inject(GradeService) private gradeService: GradeService,
     @inject(QuestionListRepository) private questionListRepository: QuestionListRepository,
     @inject('SubmissionQueueService') private queueService?: SubmissionQueueService
-  ) {}
+  ) { }
 
 
   private async enqueueOrProcessSubmission(submissionId: string): Promise<SubmissionStatus> {
     if (this.queueService) {
       logger.info('Adicionando submissão à fila', { submissionId });
-      
+
       await this.submissionRepository.update(submissionId, {
         status: SubmissionStatus.IN_QUEUE
       });
 
       await this.queueService.addSubmissionToQueue(submissionId);
-      
+
       logger.info('Submission added to queue', { submissionId });
       return SubmissionStatus.IN_QUEUE;
     } else {
       logger.warn('Queue system not available, processing directly', { submissionId });
-      
+
       this.processSubmission(submissionId).catch(error => {
-        logger.error('Error processing submission in background', { 
-          submissionId, 
-          error: error instanceof Error ? error.message : String(error) 
+        logger.error('Error processing submission in background', {
+          submissionId,
+          error: error instanceof Error ? error.message : String(error)
         });
       });
-      
+
       return SubmissionStatus.PENDING;
     }
   }
@@ -90,11 +88,11 @@ export class SubmissionService {
       page: filters.page || 1,
       limit: filters.limit || 20
     });
-    
+
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const totalPages = Math.ceil(total / limit);
-    
+
     const submissionsDTO = submissions.map(sub => new SubmissionResponseDTO({
       id: sub.id,
       userId: sub.userId,
@@ -132,20 +130,20 @@ export class SubmissionService {
 
   async getSubmissionById(id: string, requestUserId?: string): Promise<SubmissionResponseDTO> {
     const submission = await this.submissionRepository.findById(id);
-    
+
     if (!submission) {
       logger.warn('Submission not found', { submissionId: id });
       throw new NotFoundError('Submission not found', 'SUBMISSION_NOT_FOUND');
     }
-    
+
     if (requestUserId && submission.userId !== requestUserId) {
-      logger.warn('Access denied to another user\'s submission', { 
-        submissionId: id, 
-        requestUserId 
+      logger.warn('Access denied to another user\'s submission', {
+        submissionId: id,
+        requestUserId
       });
       throw new NotFoundError('Submission not found', 'SUBMISSION_NOT_FOUND');
     }
-    
+
     return new SubmissionResponseDTO({
       id: submission.id,
       userId: submission.userId,
@@ -180,7 +178,7 @@ export class SubmissionService {
     logger.info('Submission created', { submissionId: submission.id, userId, questionId: data.questionId });
 
     const finalStatus = await this.enqueueOrProcessSubmission(submission.id);
-    
+
     return new SubmissionResponseDTO({
       id: submission.id,
       userId: submission.userId,
@@ -206,13 +204,13 @@ export class SubmissionService {
     language: string;
     userId: string;
   }): Promise<any> {
-    logger.info('Starting code submission', { 
-      userId: data.userId, 
-      questionId: data.questionId, 
+    logger.info('Starting code submission', {
+      userId: data.userId,
+      questionId: data.questionId,
       language: data.language,
-      codeLength: data.code.length 
+      codeLength: data.code.length
     });
-    
+
     if (!Object.values(ProgrammingLanguage).includes(data.language as ProgrammingLanguage)) {
       logger.warn('Invalid programming language', { language: data.language });
       throw new ValidationError('Invalid programming language', 'INVALID_LANGUAGE');
@@ -282,12 +280,8 @@ export class SubmissionService {
         throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
       }
 
-      // Route to appropriate judge based on question type
-      if (question.submissionType === 'codeforces') {
-        logger.info('Processing Codeforces submission', { submissionId, problemIndex: question.problemIndex });
-        await this.processCodeforcesSubmission(submissionId, submission, question);
-        return;
-      } else if (question.submissionType !== 'local') {
+      // Only local submissions are supported
+      if (question.submissionType !== 'local') {
         logger.warn('Unsupported question type', { submissionId, submissionType: question.submissionType });
         throw new ValidationError('Unsupported question type', 'INVALID_QUESTION_TYPE');
       }
@@ -299,8 +293,8 @@ export class SubmissionService {
         throw new ValidationError('Question does not have test cases', 'NO_TEST_CASES');
       }
 
-      logger.info('Test cases loaded', { 
-        submissionId, 
+      logger.info('Test cases loaded', {
+        submissionId,
         totalTestCases: testCases.length,
         testCaseIds: testCases.map(tc => tc.id)
       });
@@ -318,8 +312,8 @@ export class SubmissionService {
         expectedOutput: testCase.expectedOutput
       }));
 
-      logger.info('Sending submission to Judge0', { 
-        submissionId, 
+      logger.info('Sending submission to Judge0', {
+        submissionId,
         testCases: batchSubmissions.length
       });
 
@@ -338,9 +332,9 @@ export class SubmissionService {
         }
       );
 
-      logger.info('Judge0 results received', { 
-        submissionId, 
-        resultCount: results.length 
+      logger.info('Judge0 results received', {
+        submissionId,
+        resultCount: results.length
       });
 
       const submissionResults: Array<{
@@ -450,16 +444,16 @@ export class SubmissionService {
             submission.userId,
             questionList.id
           );
-          
+
           logger.info('Grade updated', {
             submissionId,
             studentId: submission.userId,
             questionListId: questionList.id
           });
         } else {
-          logger.warn('Question not associated with list', { 
-            submissionId, 
-            questionId: submission.questionId 
+          logger.warn('Question not associated with list', {
+            submissionId,
+            questionId: submission.questionId
           });
         }
       } catch (gradeError) {
@@ -479,8 +473,8 @@ export class SubmissionService {
       });
 
     } catch (error) {
-      logger.error('Error processing submission', { 
-        submissionId, 
+      logger.error('Error processing submission', {
+        submissionId,
         error: error instanceof Error ? error.message : String(error)
       });
 
@@ -501,128 +495,11 @@ export class SubmissionService {
     }
   }
 
-  /**
-   * Process a submission for a Codeforces problem
-   * @private
-   */
-  private async processCodeforcesSubmission(submissionId: string, submission: any, question: any): Promise<void> {
-    try {
-      logger.info('[Codeforces] Starting submission processing', {
-        submissionId,
-        problemIndex: question.problemIndex,
-        contestId: question.contestId
-      });
 
-      // Submit to Codeforces via Python API
-      const codeforcesSubmission = await this.codeForcesService.submitProblem({
-        problemId: question.problemIndex || '',
-        sourceCode: submission.code,
-        language: submission.language,
-        contestId: question.contestId
-      });
-
-      logger.info('[Codeforces] Submission created', {
-        submissionId,
-        codeforcesSubmissionId: codeforcesSubmission.submissionId
-      });
-
-      // Update status to running
-      await this.submissionRepository.update(submissionId, {
-        status: SubmissionStatus.RUNNING
-      });
-
-      // Wait for result
-      const result = await this.codeForcesService.waitForSubmission(
-        codeforcesSubmission.submissionId,
-        60, // max attempts
-        2000 // 2 seconds between attempts
-      );
-
-      logger.info('[Codeforces] Submission completed', {
-        submissionId,
-        verdict: result.verdict,
-        executionTimeMs: result.executionTimeMs,
-        memoryUsedKb: result.memoryUsedKb
-      });
-
-      // Determine final status based on verdict
-      const finalStatus = result.passed ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER;
-      const score = result.passed ? 100 : 0;
-
-      // Update submission with results
-      await this.submissionRepository.update(submissionId, {
-        status: finalStatus,
-        verdict: result.verdict,
-        executionTimeMs: result.executionTimeMs || 0,
-        memoryUsedKb: result.memoryUsedKb || 0,
-        score,
-        totalTests: 1, // Codeforces returns overall result
-        passedTests: result.passed ? 1 : 0,
-        errorMessage: result.errorMessage
-      });
-
-      logger.info('[Codeforces] Submission processing completed', {
-        submissionId,
-        status: finalStatus,
-        score
-      });
-
-      // Update grades
-      try {
-        const questionList = await this.questionListRepository.findByQuestionId(question.id);
-        if (questionList) {
-          await this.gradeService.recalculateAndUpsertGrade(
-            submission.userId,
-            questionList.id
-          );
-          
-          logger.info('[Codeforces] Grade updated', {
-            submissionId,
-            studentId: submission.userId,
-            questionListId: questionList.id
-          });
-        } else {
-          logger.warn('[Codeforces] Question not associated with list', { 
-            submissionId, 
-            questionId: question.id 
-          });
-        }
-      } catch (gradeError) {
-        logger.error('[Codeforces] Error updating grade', {
-          submissionId,
-          studentId: submission.userId,
-          error: gradeError instanceof Error ? gradeError.message : String(gradeError)
-        });
-      }
-
-    } catch (error) {
-      logger.error('[Codeforces] Submission processing failed', {
-        submissionId,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      });
-
-      // Update submission with error status
-      try {
-        await this.submissionRepository.update(submissionId, {
-          status: SubmissionStatus.ERROR,
-          verdict: JudgeVerdict.INTERNAL_ERROR,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error'
-        });
-      } catch (updateError) {
-        logger.error('[Codeforces] Failed to update submission with ERROR status', {
-          submissionId,
-          updateError: updateError instanceof Error ? updateError.message : String(updateError)
-        });
-      }
-
-      throw error;
-    }
-  }
 
   async getSubmissionWithResults(submissionId: string, requestUserId?: string): Promise<SubmissionDetailDTO> {
     logger.info('Fetching submission with detailed results', { submissionId, requestUserId });
-    
+
     const submission = await this.submissionRepository.findById(submissionId);
     if (!submission) {
       logger.warn('Submission with results not found', { submissionId });
@@ -630,10 +507,10 @@ export class SubmissionService {
     }
 
     if (requestUserId && submission.userId !== requestUserId) {
-      logger.warn('User tried to access another user\'s submission results', { 
-        submissionId, 
+      logger.warn('User tried to access another user\'s submission results', {
+        submissionId,
         submissionUserId: submission.userId,
-        requestUserId 
+        requestUserId
       });
       throw new NotFoundError('Submission not found', 'SUBMISSION_NOT_FOUND');
     }

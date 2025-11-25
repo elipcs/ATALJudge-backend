@@ -26,7 +26,7 @@ export class QuestionListMapper {
    */
   static toDTO(questionList: QuestionList): QuestionListResponseDTO {
     const classIds = questionList.classes?.map((c: { id: string }) => c.id) || [];
-    
+
     const questions = (questionList.questions || [])
       .sort((a: any, b: any) => {
         const aTime = a.createdAt?.getTime() || 0;
@@ -34,8 +34,6 @@ export class QuestionListMapper {
         return bTime - aTime;
       })
       .map((q: any) => {
-        const judgeType = q.submissionType === 'codeforces' ? 'codeforces' : 'local';
-        
         return {
           id: q.id,
           title: q.title,
@@ -48,17 +46,11 @@ export class QuestionListMapper {
           timeLimitMs: q.timeLimitMs,
           memoryLimitKb: q.memoryLimitKb,
           examples: q.examples,
-          judgeType,
+          judgeType: 'local',
           authorId: q.authorId,
-          createdAt: q.createdAt,
-          updatedAt: q.updatedAt,
-          ...(q.submissionType === 'codeforces' && {
-            contestId: q.contestId,
-            problemIndex: q.problemIndex
-          })
         };
       });
-    
+
     return new QuestionListResponseDTO({
       id: questionList.id,
       title: questionList.title,

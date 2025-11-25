@@ -26,7 +26,7 @@ export interface UpdateQuestionUseCaseInput {
 export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInput, QuestionResponseDTO> {
   constructor(
     @inject(QuestionRepository) private questionRepository: QuestionRepository
-  ) {}
+  ) { }
 
   async execute(input: UpdateQuestionUseCaseInput): Promise<QuestionResponseDTO> {
     const { questionId, dto, userId, userRole } = input;
@@ -38,10 +38,10 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
     }
 
     // 2. Check authorization (author, assistant, or professor can edit)
-    const canEdit = question.authorId === userId || 
-                     userRole === 'professor' || 
-                     userRole === 'assistant';
-    
+    const canEdit = question.authorId === userId ||
+      userRole === 'professor' ||
+      userRole === 'assistant';
+
     if (!canEdit) {
       throw new ForbiddenError('You do not have permission to edit this question', 'FORBIDDEN');
     }
@@ -49,13 +49,7 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
     // 3. Apply updates
     QuestionMapper.applyUpdateDTO(question, dto);
 
-    // 3.1. If changing from codeforces to local, clear codeforces fields
-    const isChangingToLocal = dto.submissionType === 'local' && question.submissionType === 'codeforces';
-    if (isChangingToLocal) {
-      question.contestId = undefined;
-      question.problemIndex = undefined;
-      logger.info('[UpdateQuestionUseCase] Clearing Codeforces fields when changing to local', { questionId });
-    }
+
 
     // 4. Save changes - Create a plain object excluding relations
     const updateData = {
@@ -66,14 +60,13 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       wallTimeLimitSeconds: question.wallTimeLimitSeconds,
       examples: question.examples,
       submissionType: question.submissionType,
-      contestId: question.contestId,
-      problemIndex: question.problemIndex,
+
       oracleCode: question.oracleCode,
       oracleLanguage: question.oracleLanguage,
       source: question.source,
       tags: question.tags,
     };
-    
+
     await this.questionRepository.update(question.id, updateData);
     const updatedQuestion = await this.questionRepository.findById(question.id);
 
@@ -81,9 +74,9 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       throw new NotFoundError('Error updating question', 'UPDATE_FAILED');
     }
 
-    logger.info('[UpdateQuestionUseCase] Question updated', { 
-      questionId, 
-      userId 
+    logger.info('[UpdateQuestionUseCase] Question updated', {
+      questionId,
+      userId
     });
 
     // 5. Return DTO

@@ -33,8 +33,6 @@ export class QuestionMapper {
       memoryLimitKb: question.memoryLimitKb,
       examples: question.examples,
       submissionType: question.submissionType,
-      contestId: question.contestId,
-      problemIndex: question.problemIndex,
       oracleCode: question.oracleCode,
       oracleLanguage: question.oracleLanguage,
       authorId: question.authorId,
@@ -61,11 +59,7 @@ export class QuestionMapper {
     question.timeLimitMs = dto.timeLimitMs || 1000;
     question.memoryLimitKb = dto.memoryLimitKb || 64000;
     question.examples = dto.examples || [];
-    question.submissionType = dto.submissionType || 'local';
-
-    // Mapeia campos do Codeforces se fornecidos
-    if (dto.contestId !== undefined) question.contestId = dto.contestId;
-    if (dto.problemIndex !== undefined) question.problemIndex = dto.problemIndex;
+    question.submissionType =  'local';
 
     // Mapeia source e tags
     if (dto.source !== undefined && dto.source !== null) question.source = dto.source;
@@ -97,17 +91,7 @@ export class QuestionMapper {
     if (dto.tags !== undefined && dto.tags !== null) question.tags = dto.tags;
   }
 
-  /**
-   * Aplica campos Codeforces ao Question (Domain)
-   * Usado pelo endpoint separado PUT /api/questions/:id/codeforces
-   * 
-   * @param question - Question entity to update
-   * @param dto - UpdateCodeforcesFieldsDTO with contestId, problemIndex
-   */
-  static applyCodeforcesUpdate(question: Question, dto: any): void {
-    if (dto.contestId !== undefined) question.contestId = dto.contestId;
-    if (dto.problemIndex !== undefined) question.problemIndex = dto.problemIndex;
-  }
+
 
   /**
    * Creates a simplified DTO for listing

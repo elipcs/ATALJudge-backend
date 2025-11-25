@@ -7,9 +7,6 @@
  */
 export enum JudgeType {
   /** Local Judge0 instance */
-  LOCAL = 'local',
-  
-  /** Codeforces online judge */
-  CODEFORCES = 'codeforces'
+  LOCAL = 'local'
 }
 

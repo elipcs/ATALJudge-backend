@@ -25,7 +25,7 @@ export { AllowedIPService } from './AllowedIPService';
 export { SystemResetService } from './SystemResetService';
 export { EmailService } from './EmailService';
 export { Judge0Service } from './Judge0Service';
-export { CodeForcesService } from './CodeForcesService';
+
 export { TestCaseGeneratorMicroservice } from './TestCaseGeneratorMicroservice';
 export { JudgeAdaptorService } from './JudgeAdaptorService';
 export { PasswordResetService } from './PasswordResetService';

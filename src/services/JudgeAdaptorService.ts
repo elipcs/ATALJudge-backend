@@ -7,7 +7,6 @@
 
 import { injectable, inject } from 'tsyringe';
 import { Judge0Service, ProcessedSubmissionResult } from './Judge0Service';
-import { CodeForcesService, CodeForcesSubmissionRequest, CodeForcesSubmissionResponse } from './CodeForcesService';
 import { JudgeType } from '../enums/JudgeType';
 import { ProgrammingLanguage } from '../enums/ProgrammingLanguage';
 import { logger } from '../utils';
@@ -55,9 +54,8 @@ export interface UnifiedSubmissionResponse {
 @injectable()
 export class JudgeAdaptorService {
   constructor(
-    @inject(Judge0Service) private judge0Service: Judge0Service,
-    @inject(CodeForcesService) private codeForcesService: CodeForcesService
-  ) {}
+    @inject(Judge0Service) private judge0Service: Judge0Service
+  ) { }
 
   /**
    * Submit code to the appropriate judge system
@@ -71,20 +69,11 @@ export class JudgeAdaptorService {
       codeLength: request.sourceCode.length
     });
 
-    if (request.judgeType === JudgeType.CODEFORCES) {
-      const cfRequest: CodeForcesSubmissionRequest = {
-        sourceCode: request.sourceCode,
-        language: request.language,
-        problemId: request.problemId || '',
-        contestId: request.contestId,
-        stdin: request.stdin,
-        expectedOutput: request.expectedOutput,
-        timeLimitSeconds: request.limits?.cpuTimeLimit,
-        memoryLimitMB: request.limits?.memoryLimit
-      };
-      const cfResponse = await this.codeForcesService.submitProblem(cfRequest);
-      return this.mapCodeForcesResponse(cfResponse);
-    } else {
+    // Only local Judge0 submissions are supported
+    if (request.judgeType !== JudgeType.LOCAL) {
+      throw new Error(`Unsupported judge type: ${request.judgeType}`);
+    }
+    {
       const j0Token = await this.judge0Service.createSubmission(
         request.sourceCode,
         request.language,
@@ -117,10 +106,11 @@ export class JudgeAdaptorService {
       judgeType
     });
 
-    if (judgeType === JudgeType.CODEFORCES) {
-      const cfStatus = await this.codeForcesService.getSubmissionStatus(submissionId);
-      return this.mapCodeForcesResponse(cfStatus);
-    } else {
+    // Only local Judge0 submissions are supported
+    if (judgeType !== JudgeType.LOCAL) {
+      throw new Error(`Unsupported judge type: ${judgeType}`);
+    }
+    {
       const j0Status = await this.judge0Service.getSubmissionStatus(submissionId);
       const processedResult = this.judge0Service.processSubmissionResult(j0Status);
       return this.mapJudge0Response(submissionId, processedResult);
@@ -148,14 +138,11 @@ export class JudgeAdaptorService {
       intervalMs
     });
 
-    if (judgeType === JudgeType.CODEFORCES) {
-      const cfStatus = await this.codeForcesService.waitForSubmission(
-        submissionId,
-        maxAttempts,
-        intervalMs
-      );
-      return this.mapCodeForcesResponse(cfStatus);
-    } else {
+    // Only local Judge0 submissions are supported
+    if (judgeType !== JudgeType.LOCAL) {
+      throw new Error(`Unsupported judge type: ${judgeType}`);
+    }
+    {
       const j0Status = await this.judge0Service.waitForSubmission(
         submissionId,
         maxAttempts,
@@ -181,19 +168,11 @@ export class JudgeAdaptorService {
       judgeType
     });
 
-    if (judgeType === JudgeType.CODEFORCES) {
-      const cfRequests: CodeForcesSubmissionRequest[] = submissions.map(sub => ({
-        sourceCode: sub.sourceCode,
-        language: sub.language,
-        problemId: sub.problemId || '',
-        contestId: sub.contestId,
-        stdin: sub.stdin,
-        expectedOutput: sub.expectedOutput,
-        timeLimitSeconds: sub.limits?.cpuTimeLimit,
-        memoryLimitMB: sub.limits?.memoryLimit
-      }));
-      return this.codeForcesService.submitBatch(cfRequests);
-    } else {
+    // Only local Judge0 submissions are supported
+    if (judgeType !== JudgeType.LOCAL) {
+      throw new Error(`Unsupported judge type: ${judgeType}`);
+    }
+    {
       return this.judge0Service.createBatchSubmissions(
         submissions.map(sub => ({
           sourceCode: sub.sourceCode,
@@ -233,22 +212,11 @@ export class JudgeAdaptorService {
       maxAttempts
     });
 
-    if (judgeType === JudgeType.CODEFORCES) {
-      const cfResponses = await this.codeForcesService.waitForBatchWithCallback(
-        submissionIds,
-        async (progress) => {
-          await onProgress({
-            completed: progress.completed,
-            pending: progress.pending,
-            total: progress.total,
-            percentage: progress.percentage
-          });
-        },
-        maxAttempts,
-        intervalMs
-      );
-      return cfResponses.map(resp => this.mapCodeForcesResponse(resp));
-    } else {
+    // Only local Judge0 submissions are supported
+    if (judgeType !== JudgeType.LOCAL) {
+      throw new Error(`Unsupported judge type: ${judgeType}`);
+    }
+    {
       const j0Responses = await this.judge0Service.waitForBatchSubmissionsWithCallback(
         submissionIds,
         async (progress) => {
@@ -289,20 +257,5 @@ export class JudgeAdaptorService {
     };
   }
 
-  /**
-   * Map Codeforces response to unified format
-   * @private
-   */
-  private mapCodeForcesResponse(response: CodeForcesSubmissionResponse): UnifiedSubmissionResponse {
-    return {
-      submissionId: response.submissionId,
-      judgeType: JudgeType.CODEFORCES,
-      passed: response.passed,
-      verdict: response.verdict,
-      executionTimeMs: response.executionTimeMs,
-      memoryUsedKb: response.memoryUsedKb,
-      output: response.output,
-      errorMessage: response.errorMessage
-    };
-  }
+
 }

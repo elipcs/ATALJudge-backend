@@ -10,7 +10,7 @@ export interface QuestionExample {
   output: string;
 }
 
-export type SubmissionType = 'local' | 'codeforces';
+export type SubmissionType = 'local';
 
 @Entity('questions')
 export class Question {
@@ -41,11 +41,7 @@ export class Question {
   @Column({ name: 'submission_type', type: 'varchar', length: 20, default: 'local' })
   submissionType!: SubmissionType;
 
-  @Column({ name: 'contest_id', type: 'varchar', length: 50, nullable: true })
-  contestId?: string;
 
-  @Column({ name: 'problem_index', type: 'varchar', length: 10, nullable: true })
-  problemIndex?: string;
 
   @Column({ name: 'oracle_code', type: 'text', nullable: true })
   oracleCode?: string;
@@ -118,10 +114,6 @@ export class Question {
     return this.submissionType === 'local';
   }
 
-  isCodeforces(): boolean {
-    return this.submissionType === 'codeforces';
-  }
-
   // ============================================================
   // ADDITIONAL DOMAIN METHODS (Business Logic)
   // ============================================================
@@ -165,14 +157,5 @@ export class Question {
    */
   hasExamples(): boolean {
     return this.examples && this.examples.length > 0;
-  }
-
-
-  /**
-   * Validates if the Codeforces configuration is complete
-   */
-  isCodeforcesConfigComplete(): boolean {
-    if (!this.isCodeforces()) return true;
-    return !!(this.contestId && this.problemIndex);
   }
 }

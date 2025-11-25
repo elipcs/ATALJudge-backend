@@ -26,7 +26,6 @@ import { AllowedIPRepository } from '../repositories/AllowedIPRepository';
 
 import { EmailService } from '../services/EmailService';
 import { Judge0Service } from '../services/Judge0Service';
-import { CodeForcesService } from '../services/CodeForcesService';
 import { TestCaseGeneratorMicroservice } from '../services/TestCaseGeneratorMicroservice';
 import { PasswordResetService } from '../services/PasswordResetService';
 import { RefreshTokenService } from '../services/RefreshTokenService';
@@ -73,7 +72,6 @@ export function setupContainer(): void {
 
   container.registerSingleton(EmailService);
   container.registerSingleton(Judge0Service);
-  container.registerSingleton(CodeForcesService);
   container.registerSingleton(TestCaseGeneratorMicroservice);
   container.registerSingleton(PasswordResetService);
   container.registerSingleton(RefreshTokenService);

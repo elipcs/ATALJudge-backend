@@ -23,7 +23,7 @@ export {
   QuestionExampleDTO,
   CreateQuestionDTO,
   UpdateQuestionDTO,
-  UpdateCodeforcesFieldsDTO,
+
   QuestionResponseDTO,
   PaginatedQuestionResponseDTO
 } from './QuestionDtos';
@@ -71,10 +71,5 @@ export {
   UpdateAllowedIPDTO
 } from './AllowedIPDtos';
 
-export {
-  SubmitCodeForcesProblemDTO,
-  CodeForcesSubmissionResponseDTO,
-  BatchSubmitCodeForcesDTO,
-  CodeForcesProblemDTO
-} from './CodeForcesDtos';
+
 

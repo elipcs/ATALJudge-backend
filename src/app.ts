@@ -44,7 +44,7 @@ import {
   ResetPasswordUseCase
 } from './use-cases/auth';
 import { GetUserUseCase, GetUsersByRoleUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from './use-cases/user';
-import { CreateQuestionUseCase, UpdateQuestionUseCase, UpdateCodeforcesFieldsUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from './use-cases/question';
+import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from './use-cases/question';
 import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase, SearchSubmissionsUseCase } from './use-cases/submission';
 import { GetGradeUseCase, CalculateGradeUseCase, GetStudentGradesUseCase, GetListGradesUseCase, GetGradeByStudentAndListUseCase } from './use-cases/grade';
 import { CreateQuestionListUseCase, GetQuestionListUseCase, UpdateQuestionListUseCase, DeleteQuestionListUseCase, GetAllQuestionListsUseCase, UpdateListScoringUseCase, AddQuestionToListUseCase, RemoveQuestionFromListUseCase } from './use-cases/question-list';
@@ -179,7 +179,6 @@ export function createApp(): Application {
   const changePasswordUseCase = container.resolve(ChangePasswordUseCase);
   const createQuestionUseCase = container.resolve(CreateQuestionUseCase);
   const updateQuestionUseCase = container.resolve(UpdateQuestionUseCase);
-  const updateCodeforcesFieldsUseCase = container.resolve(UpdateCodeforcesFieldsUseCase);
   const deleteQuestionUseCase = container.resolve(DeleteQuestionUseCase);
   const getQuestionByIdUseCase = container.resolve(GetQuestionByIdUseCase);
   const getAllQuestionsUseCase = container.resolve(GetAllQuestionsUseCase);
@@ -270,7 +269,6 @@ export function createApp(): Application {
   app.use('/api/questions', createQuestionController(
     createQuestionUseCase,
     updateQuestionUseCase,
-    updateCodeforcesFieldsUseCase,
     deleteQuestionUseCase,
     getQuestionByIdUseCase,
     getAllQuestionsUseCase,

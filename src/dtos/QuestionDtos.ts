@@ -134,10 +134,10 @@ export abstract class UpdateQuestionDTO {
   @Type(() => QuestionExampleDTO)
   examples?: QuestionExampleDTO[];
 
-  /** Update submission type ('local' or 'codeforces') */
+  /** Update submission type ('local') */
   @IsOptional()
   @IsString()
-  submissionType?: 'local' | 'codeforces';
+  submissionType?: 'local';
 
   /** Oracle code for test case generation */
   @IsOptional()

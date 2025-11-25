@@ -23,13 +23,13 @@ import { logger } from '../utils';
  */
 function parseTimeLimit(limit: string | number): number {
   if (typeof limit === 'number') return limit;
-  
+
   const limitStr = limit.toString().toLowerCase().trim();
-  
+
   if (limitStr.endsWith('ms')) {
     return parseInt(limitStr);
   }
-  
+
   if (limitStr.endsWith('s')) {
     return parseFloat(limitStr) * 1000;
   }
@@ -48,17 +48,17 @@ function parseTimeLimit(limit: string | number): number {
  */
 function parseMemoryLimit(limit: string | number): number {
   if (typeof limit === 'number') return limit;
-  
+
   const limitStr = limit.toString().toUpperCase().trim();
-  
+
   if (limitStr.endsWith('KB')) {
     return parseInt(limitStr);
   }
-  
+
   if (limitStr.endsWith('MB')) {
     return parseInt(limitStr) * 1000;
   }
-  
+
   if (limitStr.endsWith('GB')) {
     return parseInt(limitStr) * 1000000;
   }
@@ -79,7 +79,7 @@ export function convertQuestionPayload(req: Request, _res: Response, next: NextF
         req.body.timeLimitMs = parseTimeLimit(req.body.timeLimit);
         delete req.body.timeLimit;
       } catch (error) {
-        
+
         logger.warn('[PAYLOAD] Erro ao converter timeLimit', { error });
       }
     }
@@ -89,7 +89,7 @@ export function convertQuestionPayload(req: Request, _res: Response, next: NextF
         req.body.memoryLimitKb = parseMemoryLimit(req.body.memoryLimit);
         delete req.body.memoryLimit;
       } catch (error) {
-        
+
         logger.warn('[PAYLOAD] Erro ao converter memoryLimit', { error });
       }
     }
@@ -99,23 +99,15 @@ export function convertQuestionPayload(req: Request, _res: Response, next: NextF
       delete req.body.judge_type;
     }
 
-    if (req.body.codeforcesContestId !== undefined) {
-      req.body.contestId = req.body.codeforcesContestId;
-      delete req.body.codeforcesContestId;
-    }
 
-    if (req.body.codeforcesProblemIndex !== undefined) {
-      req.body.problemIndex = req.body.codeforcesProblemIndex;
-      delete req.body.codeforcesProblemIndex;
-    }
   }
-  
+
   next();
 }
 
 export function convertQuestionResponse(data: any): any {
   if (!data) return data;
-  
+
   return {
     ...data,
     timeLimit: data.timeLimitMs ? `${data.timeLimitMs}ms` : undefined,
@@ -125,7 +117,7 @@ export function convertQuestionResponse(data: any): any {
 
 export function convertUserRegisterPayload(req: Request, _res: Response, next: NextFunction): void {
   if (req.body) {
-    
+
     if (req.body.token !== undefined && req.body.inviteToken === undefined) {
       req.body.inviteToken = req.body.token;
       delete req.body.token;
@@ -146,7 +138,7 @@ export function convertUserRegisterPayload(req: Request, _res: Response, next: N
       delete req.body.class_name;
     }
   }
-  
+
   next();
 }
 

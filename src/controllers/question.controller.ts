@@ -5,7 +5,7 @@
  * @class QuestionController
  */
 import { Router, Response } from 'express';
-import { CreateQuestionUseCase, UpdateQuestionUseCase, UpdateCodeforcesFieldsUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from '../use-cases/question';
+import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from '../use-cases/question';
 import { authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { convertQuestionPayload } from '../middlewares/payload-converter.middleware';
@@ -14,7 +14,6 @@ import { asyncHandler } from '../utils/asyncHandler';
 function createQuestionController(
   createQuestionUseCase: CreateQuestionUseCase,
   updateQuestionUseCase: UpdateQuestionUseCase,
-  updateCodeforcesFieldsUseCase: UpdateCodeforcesFieldsUseCase,
   deleteQuestionUseCase: DeleteQuestionUseCase,
   getQuestionByIdUseCase: GetQuestionByIdUseCase,
   getAllQuestionsUseCase: GetAllQuestionsUseCase,
@@ -124,26 +123,7 @@ function createQuestionController(
     })
   );
 
-  /**
-   * PUT /api/questions/:id/codeforces
-   * Update Codeforces-specific fields (separate from main question update)
-   * Body: { contestId?, problemIndex? }
-   */
-  router.put(
-    '/:id/codeforces',
-    authenticate,
-    requireTeacher,
-    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-      const question = await updateCodeforcesFieldsUseCase.execute({
-        questionId: req.params.id,
-        dto: req.body,
-        userId: req.user!.sub,
-        userRole: req.user!.role
-      });
 
-      successResponse(res, question, 'Codeforces fields updated successfully');
-    })
-  );
 
   router.delete(
     '/:id',

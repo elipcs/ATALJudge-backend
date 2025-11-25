@@ -18,7 +18,7 @@ import { JudgeType } from '../enums/JudgeType';
 export class QuestionService {
   constructor(
     @inject(QuestionRepository) private questionRepository: QuestionRepository
-  ) {}
+  ) { }
 
   async getAllQuestions(): Promise<QuestionResponseDTO[]> {
     const questions = await this.questionRepository.findAll();
@@ -27,11 +27,11 @@ export class QuestionService {
 
   async getQuestionById(id: string): Promise<QuestionResponseDTO> {
     const question = await this.questionRepository.findById(id);
-    
+
     if (!question) {
       throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
     }
-    
+
     return this.toResponseDTO(question);
   }
 
@@ -43,7 +43,7 @@ export class QuestionService {
       submissionType: data.submissionType
     });
 
-    const submissionType: SubmissionType = data.submissionType || (data.contestId ? 'codeforces' : 'local');
+    const submissionType: SubmissionType = 'local';
 
     if (!data.submissionType) {
       return await this.createBasicQuestion(data, authorId, questionListId, submissionType);
@@ -57,8 +57,8 @@ export class QuestionService {
   }
 
   private async createBasicQuestion(
-    data: any, 
-    authorId?: string, 
+    data: any,
+    authorId?: string,
     questionListId?: string,
     submissionType: SubmissionType = 'local'
   ): Promise<QuestionResponseDTO> {
@@ -80,7 +80,7 @@ export class QuestionService {
       question.submissionType = submissionType;
 
       const saved = await this.questionRepository.save(question);
-      
+
       logger.info('[QUESTION SERVICE] Basic question created', {
         questionId: saved.id,
         title: saved.title,
@@ -95,8 +95,8 @@ export class QuestionService {
   }
 
   private async createBasicQuestionAndAddToList(
-    data: any, 
-    authorId: string | undefined, 
+    data: any,
+    authorId: string | undefined,
     questionListId: string,
     submissionType: SubmissionType = 'local'
   ): Promise<QuestionResponseDTO> {
@@ -198,10 +198,7 @@ export class QuestionService {
     question.authorId = authorId;
     question.submissionType = submissionType;
 
-    if (submissionType === 'codeforces') {
-      question.contestId = data.contestId;
-      question.problemIndex = data.problemIndex;
-    }
+
 
     const saved = await this.questionRepository.save(question);
 
@@ -242,10 +239,7 @@ export class QuestionService {
       question.authorId = authorId;
       question.submissionType = submissionType;
 
-      if (submissionType === 'codeforces') {
-        question.contestId = data.contestId;
-        question.problemIndex = data.problemIndex;
-      }
+
 
       const savedQuestion = await queryRunner.manager.save(question);
 
@@ -355,11 +349,6 @@ export class QuestionService {
 
       question.submissionType = data.submissionType || question.submissionType;
 
-      if (question.submissionType === 'codeforces') {
-        question.contestId = data.contestId;
-        question.problemIndex = data.problemIndex;
-      }
-
       if (data.wallTimeLimitSeconds) {
         question.wallTimeLimitSeconds = data.wallTimeLimitSeconds;
       }
@@ -424,11 +413,11 @@ export class QuestionService {
 
   async deleteQuestion(id: string): Promise<void> {
     const question = await this.questionRepository.findById(id);
-    
+
     if (!question) {
       throw new NotFoundError('Questão não encontrada', 'QUESTION_NOT_FOUND');
     }
-    
+
     await this.questionRepository.delete(id);
   }
 
@@ -446,13 +435,7 @@ export class QuestionService {
       submissionType: question.submissionType
     };
 
-    if (question.isCodeforces()) {
-      baseDTO.judgeType = JudgeType.CODEFORCES;
-      baseDTO.contestId = question.contestId;
-      baseDTO.problemIndex = question.problemIndex;
-    } else {
-      baseDTO.judgeType = JudgeType.LOCAL;
-    }
+    baseDTO.judgeType = JudgeType.LOCAL;
 
     return baseDTO as QuestionResponseDTO;
   }

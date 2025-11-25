@@ -12,7 +12,7 @@
 
 - 🔐 **JWT Authentication** - Secure access & refresh tokens
 - 👥 **Role-Based Access** - Student, Assistant, Professor
-- 📝 **Question Management** - Local & Codeforces integration
+- 📝 **Question Management** - Local test case execution
 - 🎯 **Code Judging** - Judge0 multi-language support
 - 📊 **Submission Tracking** - Real-time results
 - 🏫 **Class System** - Organize students and assignments
