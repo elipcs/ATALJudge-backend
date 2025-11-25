@@ -10,8 +10,6 @@ export interface QuestionExample {
   output: string;
 }
 
-export type SubmissionType = 'local';
-
 @Entity('questions')
 export class Question {
   @PrimaryGeneratedColumn('uuid')
@@ -32,16 +30,10 @@ export class Question {
   @Column({ name: 'memory_limit_kb', type: 'int', default: 64000 })
   memoryLimitKb!: number;
 
-  @Column({ name: 'wall_time_limit_s', type: 'float', nullable: true })
-  wallTimeLimitSeconds?: number;
+
 
   @Column({ type: 'jsonb', default: [] })
   examples!: QuestionExample[];
-
-  @Column({ name: 'submission_type', type: 'varchar', length: 20, default: 'local' })
-  submissionType!: SubmissionType;
-
-
 
   @Column({ name: 'oracle_code', type: 'text', nullable: true })
   oracleCode?: string;
@@ -92,10 +84,6 @@ export class Question {
     if (this.memoryLimitKb < 1000 || this.memoryLimitKb > 512000) {
       throw new ValidationError('Memory limit must be between 1MB and 512MB', 'INVALID_MEMORY_LIMIT');
     }
-
-    if (this.wallTimeLimitSeconds && (this.wallTimeLimitSeconds < 1 || this.wallTimeLimitSeconds > 60)) {
-      throw new ValidationError('Wall time limit must be between 1s and 60s', 'INVALID_WALL_TIME_LIMIT');
-    }
   }
 
   getCpuTimeLimitSeconds(): number {
@@ -104,14 +92,6 @@ export class Question {
 
   getMemoryLimitKb(): number {
     return this.memoryLimitKb;
-  }
-
-  getWallTimeLimitSeconds(): number | undefined {
-    return this.wallTimeLimitSeconds;
-  }
-
-  isLocal(): boolean {
-    return this.submissionType === 'local';
   }
 
   // ============================================================

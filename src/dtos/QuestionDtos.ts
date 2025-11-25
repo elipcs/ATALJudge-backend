@@ -6,9 +6,8 @@
  * 
  * @module dtos/QuestionDtos
  */
-import { IsString, MinLength, IsInt, Min, Max, IsArray, IsEnum, IsOptional, ValidateNested } from 'class-validator';
+import { IsString, MinLength, IsInt, Min, Max, IsArray, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { JudgeType } from '../enums';
 import { QuestionExample } from '../models/Question';
 
 /**
@@ -60,24 +59,6 @@ export abstract class CreateQuestionDTO {
   examples?: QuestionExampleDTO[];
 
   @IsOptional()
-  @IsEnum(JudgeType)
-  judgeType?: JudgeType;
-
-  @IsOptional()
-  @IsString()
-  submissionType?: 'local' | 'codeforces';
-
-  /** Codeforces Contest ID (required if submissionType is 'codeforces') */
-  @IsOptional()
-  @IsString()
-  contestId?: string;
-
-  /** Codeforces Problem Index (e.g., 'A', 'B', 'C1') (required if submissionType is 'codeforces') */
-  @IsOptional()
-  @IsString()
-  problemIndex?: string;
-
-  @IsOptional()
   @IsString()
   @MinLength(1, { message: 'Question list ID must be valid if provided' })
   questionListId?: string;
@@ -95,9 +76,6 @@ export abstract class CreateQuestionDTO {
 /**
  * DTO for updating question main content (part 1)
  * Includes: title, statement, examples, time/memory limits, submission type
- * 
- * NOTE: Codeforces fields (contestId, problemIndex) should be updated
- * using the separate endpoint: PUT /api/questions/:id/codeforces
  */
 export abstract class UpdateQuestionDTO {
   @IsOptional()
@@ -122,22 +100,13 @@ export abstract class UpdateQuestionDTO {
   @Max(512000)
   memoryLimitKb?: number;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(60)
-  wallTimeLimitSeconds?: number;
+
 
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuestionExampleDTO)
   examples?: QuestionExampleDTO[];
-
-  /** Update submission type ('local') */
-  @IsOptional()
-  @IsString()
-  submissionType?: 'local';
 
   /** Oracle code for test case generation */
   @IsOptional()
@@ -159,23 +128,6 @@ export abstract class UpdateQuestionDTO {
   tags?: string[] | null;
 }
 
-/**
- * DTO for updating Codeforces-specific fields (part 2 of question editing)
- * Used for PUT /api/questions/:id/codeforces
- * 
- * This is a SEPARATE endpoint from PUT /api/questions/:id
- * Used specifically for managing Codeforces integration fields
- */
-export class UpdateCodeforcesFieldsDTO {
-  @IsOptional()
-  @IsString()
-  contestId?: string;
-
-  @IsOptional()
-  @IsString()
-  problemIndex?: string;
-}
-
 export class QuestionResponseDTO {
   id!: string;
   title!: string;
@@ -183,10 +135,6 @@ export class QuestionResponseDTO {
   timeLimitMs!: number;
   memoryLimitKb!: number;
   examples!: QuestionExample[];
-  judgeType!: JudgeType;
-  submissionType?: 'local' | 'codeforces';
-  contestId?: string;
-  problemIndex?: string;
   oracleCode?: string;
   oracleLanguage?: string;
   authorId?: string;

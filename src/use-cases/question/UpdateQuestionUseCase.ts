@@ -57,10 +57,7 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       text: question.text,
       timeLimitMs: question.timeLimitMs,
       memoryLimitKb: question.memoryLimitKb,
-      wallTimeLimitSeconds: question.wallTimeLimitSeconds,
       examples: question.examples,
-      submissionType: question.submissionType,
-
       oracleCode: question.oracleCode,
       oracleLanguage: question.oracleLanguage,
       source: question.source,

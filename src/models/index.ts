@@ -2,7 +2,7 @@ export { User } from './User';
 export { Student } from './Student';
 export { Professor } from './Professor';
 export { Assistant } from './Assistant';
-export { Question, QuestionExample, SubmissionType } from './Question';
+export { Question, QuestionExample} from './Question';
 export { TestCase } from './TestCase';
 export { Submission } from './Submission';
 export { SubmissionResult } from './SubmissionResult';

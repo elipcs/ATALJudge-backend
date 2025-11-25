@@ -7,7 +7,6 @@
 
 import { injectable, inject } from 'tsyringe';
 import { Judge0Service, ProcessedSubmissionResult } from './Judge0Service';
-import { JudgeType } from '../enums/JudgeType';
 import { ProgrammingLanguage } from '../enums/ProgrammingLanguage';
 import { logger } from '../utils';
 
@@ -20,15 +19,11 @@ export interface UnifiedSubmissionRequest {
   language: ProgrammingLanguage;
   stdin?: string;
   expectedOutput?: string;
-  judgeType: JudgeType;
   limits?: {
     cpuTimeLimit?: number;
     memoryLimit?: number;
     wallTimeLimit?: number;
   };
-  // Codeforces specific
-  problemId?: string;
-  contestId?: string;
 }
 
 /**
@@ -37,7 +32,6 @@ export interface UnifiedSubmissionRequest {
  */
 export interface UnifiedSubmissionResponse {
   submissionId: string;
-  judgeType: JudgeType;
   passed: boolean;
   verdict: string;
   executionTimeMs?: number;
@@ -64,15 +58,10 @@ export class JudgeAdaptorService {
    */
   async submitCode(request: UnifiedSubmissionRequest): Promise<UnifiedSubmissionResponse> {
     logger.info('[JudgeAdaptor] Submitting code', {
-      judgeType: request.judgeType,
       language: request.language,
       codeLength: request.sourceCode.length
     });
 
-    // Only local Judge0 submissions are supported
-    if (request.judgeType !== JudgeType.LOCAL) {
-      throw new Error(`Unsupported judge type: ${request.judgeType}`);
-    }
     {
       const j0Token = await this.judge0Service.createSubmission(
         request.sourceCode,
@@ -83,7 +72,6 @@ export class JudgeAdaptorService {
       );
       return {
         submissionId: j0Token,
-        judgeType: JudgeType.LOCAL,
         passed: false,
         verdict: 'In Queue',
         errorMessage: undefined
@@ -94,22 +82,15 @@ export class JudgeAdaptorService {
   /**
    * Get submission status
    * @param submissionId Submission ID
-   * @param judgeType Judge system type
    * @returns Promise with submission status
    */
   async getSubmissionStatus(
     submissionId: string,
-    judgeType: JudgeType
   ): Promise<UnifiedSubmissionResponse> {
     logger.debug('[JudgeAdaptor] Getting submission status', {
-      submissionId,
-      judgeType
+      submissionId
     });
 
-    // Only local Judge0 submissions are supported
-    if (judgeType !== JudgeType.LOCAL) {
-      throw new Error(`Unsupported judge type: ${judgeType}`);
-    }
     {
       const j0Status = await this.judge0Service.getSubmissionStatus(submissionId);
       const processedResult = this.judge0Service.processSubmissionResult(j0Status);
@@ -120,28 +101,20 @@ export class JudgeAdaptorService {
   /**
    * Wait for submission to complete
    * @param submissionId Submission ID
-   * @param judgeType Judge system type
    * @param maxAttempts Maximum polling attempts
    * @param intervalMs Polling interval in milliseconds
    * @returns Promise with final submission status
    */
   async waitForSubmission(
     submissionId: string,
-    judgeType: JudgeType,
     maxAttempts: number = 60,
     intervalMs: number = 1000
   ): Promise<UnifiedSubmissionResponse> {
     logger.info('[JudgeAdaptor] Waiting for submission', {
       submissionId,
-      judgeType,
       maxAttempts,
       intervalMs
     });
-
-    // Only local Judge0 submissions are supported
-    if (judgeType !== JudgeType.LOCAL) {
-      throw new Error(`Unsupported judge type: ${judgeType}`);
-    }
     {
       const j0Status = await this.judge0Service.waitForSubmission(
         submissionId,
@@ -156,22 +129,14 @@ export class JudgeAdaptorService {
   /**
    * Submit batch of submissions
    * @param submissions Array of unified submission requests
-   * @param judgeType Judge system type
    * @returns Promise with array of submission IDs
    */
   async submitBatch(
     submissions: UnifiedSubmissionRequest[],
-    judgeType: JudgeType
   ): Promise<string[]> {
     logger.info('[JudgeAdaptor] Submitting batch', {
       batchSize: submissions.length,
-      judgeType
     });
-
-    // Only local Judge0 submissions are supported
-    if (judgeType !== JudgeType.LOCAL) {
-      throw new Error(`Unsupported judge type: ${judgeType}`);
-    }
     {
       return this.judge0Service.createBatchSubmissions(
         submissions.map(sub => ({
@@ -188,7 +153,6 @@ export class JudgeAdaptorService {
   /**
    * Wait for batch submissions with progress callback
    * @param submissionIds Array of submission IDs
-   * @param judgeType Judge system type
    * @param onProgress Progress callback
    * @param maxAttempts Maximum polling attempts
    * @param intervalMs Polling interval in milliseconds
@@ -196,7 +160,6 @@ export class JudgeAdaptorService {
    */
   async waitForBatchWithCallback(
     submissionIds: string[],
-    judgeType: JudgeType,
     onProgress: (progress: {
       completed: number;
       pending: number;
@@ -208,14 +171,8 @@ export class JudgeAdaptorService {
   ): Promise<UnifiedSubmissionResponse[]> {
     logger.info('[JudgeAdaptor] Waiting for batch with callback', {
       batchSize: submissionIds.length,
-      judgeType,
       maxAttempts
     });
-
-    // Only local Judge0 submissions are supported
-    if (judgeType !== JudgeType.LOCAL) {
-      throw new Error(`Unsupported judge type: ${judgeType}`);
-    }
     {
       const j0Responses = await this.judge0Service.waitForBatchSubmissionsWithCallback(
         submissionIds,
@@ -247,7 +204,6 @@ export class JudgeAdaptorService {
   ): UnifiedSubmissionResponse {
     return {
       submissionId,
-      judgeType: JudgeType.LOCAL,
       passed: result.passed,
       verdict: result.verdict,
       executionTimeMs: result.executionTimeMs,

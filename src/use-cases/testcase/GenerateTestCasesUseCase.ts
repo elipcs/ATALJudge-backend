@@ -41,17 +41,12 @@ export class GenerateTestCasesUseCase implements IUseCase<GenerateTestCasesUseCa
       throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
     }
 
-    // 2. Validate question is local type
-    if (question.submissionType !== 'local') {
-      throw new ValidationError('Test case generation is only available for local questions', 'INVALID_QUESTION_TYPE');
-    }
-
-    // 3. Validate oracle code is Python (microservice currently only supports Python)
+    // 2. Validate oracle code is Python (microservice currently only supports Python)
     if (dto.language !== ProgrammingLanguage.PYTHON) {
       throw new ValidationError('Test case generation via microservice currently only supports Python', 'UNSUPPORTED_LANGUAGE');
     }
 
-    // 4. Call microservice to generate test cases
+    // 3. Call microservice to generate test cases
     logger.info('[GenerateTestCasesUseCase] Chamando microservice', {
       questionId,
       count: dto.count,

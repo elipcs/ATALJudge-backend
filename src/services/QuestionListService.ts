@@ -211,8 +211,6 @@ export class QuestionListService {
         return bTime - aTime;
       })
       .map((q: any) => {
-        const judgeType = q.submissionType === 'codeforces' ? 'codeforces' : 'local';
-        
         return {
           id: q.id,
           title: q.title,
@@ -220,14 +218,9 @@ export class QuestionListService {
           timeLimitMs: q.timeLimitMs,
           memoryLimitKb: q.memoryLimitKb,
           examples: q.examples,
-          judgeType,
           authorId: q.authorId,
           createdAt: q.createdAt,
           updatedAt: q.updatedAt,
-          ...(q.submissionType === 'codeforces' && {
-            contestId: q.contestId,
-            problemIndex: q.problemIndex
-          })
         };
       });
     

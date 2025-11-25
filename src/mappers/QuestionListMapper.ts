@@ -46,7 +46,6 @@ export class QuestionListMapper {
           timeLimitMs: q.timeLimitMs,
           memoryLimitKb: q.memoryLimitKb,
           examples: q.examples,
-          judgeType: 'local',
           authorId: q.authorId,
         };
       });

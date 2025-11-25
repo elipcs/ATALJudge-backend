@@ -32,7 +32,6 @@ export class QuestionMapper {
       timeLimitMs: question.timeLimitMs,
       memoryLimitKb: question.memoryLimitKb,
       examples: question.examples,
-      submissionType: question.submissionType,
       oracleCode: question.oracleCode,
       oracleLanguage: question.oracleLanguage,
       authorId: question.authorId,
@@ -59,7 +58,6 @@ export class QuestionMapper {
     question.timeLimitMs = dto.timeLimitMs || 1000;
     question.memoryLimitKb = dto.memoryLimitKb || 64000;
     question.examples = dto.examples || [];
-    question.submissionType =  'local';
 
     // Mapeia source e tags
     if (dto.source !== undefined && dto.source !== null) question.source = dto.source;
@@ -69,18 +67,13 @@ export class QuestionMapper {
   /**
    * Aplica dados de UpdateQuestionDTO ao Question (Domain)
    * Inclui campos principais: título, enunciado, exemplos, limites, submission type
-   * NÃO inclui campos Codeforces (contestId, problemIndex) - use applyCodeforcesUpdate
    */
   static applyUpdateDTO(question: Question, dto: UpdateQuestionDTO): void {
     if (dto.title !== undefined) question.title = dto.title;
     if (dto.text !== undefined) question.text = dto.text;
     if (dto.timeLimitMs !== undefined) question.timeLimitMs = dto.timeLimitMs;
     if (dto.memoryLimitKb !== undefined) question.memoryLimitKb = dto.memoryLimitKb;
-    if (dto.wallTimeLimitSeconds !== undefined) question.wallTimeLimitSeconds = dto.wallTimeLimitSeconds;
     if (dto.examples !== undefined) question.examples = dto.examples;
-
-    // Apenas submission type (os campos contestId/problemIndex vão via endpoint separado)
-    if (dto.submissionType !== undefined) question.submissionType = dto.submissionType;
 
     // Oracle code fields
     if (dto.oracleCode !== undefined) question.oracleCode = dto.oracleCode;
@@ -96,11 +89,10 @@ export class QuestionMapper {
   /**
    * Creates a simplified DTO for listing
    */
-  static toListItemDTO(question: Question): Pick<QuestionResponseDTO, 'id' | 'title' | 'submissionType'> {
+  static toListItemDTO(question: Question): Pick<QuestionResponseDTO, 'id' | 'title'> {
     return {
       id: question.id,
       title: question.title,
-      submissionType: question.submissionType
     };
   }
 }

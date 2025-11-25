@@ -60,13 +60,13 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     userId?: string;
     status?: SubmissionStatus;
     verdict?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<{ submissions: any[]; total: number }> {
+    page: number;
+    limit: number;
+  }): Promise<{ submissions: Submission[]; total: number }> {
     const queryBuilder = this.repository.createQueryBuilder('submission')
       .leftJoinAndSelect('submission.user', 'user')
       .leftJoinAndSelect('submission.question', 'question')
-      .leftJoinAndSelect('question.questionList', 'questionList');
+      .leftJoinAndSelect('question.questionLists', 'questionList');
 
     if (filters.questionId) {
       queryBuilder.andWhere('submission.questionId = :questionId', { questionId: filters.questionId });
@@ -111,7 +111,7 @@ export class SubmissionRepository extends BaseRepository<Submission> {
   async findByIdWithListInfo(id: string): Promise<Submission | null> {
     return this.repository.findOne({
       where: { id },
-      relations: ['user', 'question', 'question.questionList']
+      relations: ['user', 'question', 'question.questionLists']
     });
   }
 
@@ -130,7 +130,7 @@ export class SubmissionRepository extends BaseRepository<Submission> {
     const queryBuilder = this.repository.createQueryBuilder('submission')
       .leftJoinAndSelect('submission.user', 'user')
       .leftJoinAndSelect('submission.question', 'question')
-      .leftJoinAndSelect('question.questionList', 'questionList');
+      .leftJoinAndSelect('question.questionLists', 'questionList');
 
     // Buscar por título da questão, nome da lista, nome do estudante ou linguagem
     const searchLower = `%${searchTerm.toLowerCase()}%`;

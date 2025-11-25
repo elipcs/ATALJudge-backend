@@ -139,8 +139,6 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "wall_time_limit_s" float,
         "examples" jsonb DEFAULT '[]',
         "submission_type" varchar(20) DEFAULT 'local',
-        "contest_id" varchar(50),
-        "problem_index" varchar(10),
         "oracle_code" text,
         "oracle_language" varchar(20),
         "source" varchar(200),

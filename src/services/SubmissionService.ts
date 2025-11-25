@@ -19,6 +19,8 @@ import { Judge0Service } from './Judge0Service';
 import { SubmissionQueueService } from './SubmissionQueueService';
 import { GradeService } from './GradeService';
 import { logger, NotFoundError, ValidationError } from '../utils';
+import { SubmissionMapper } from '@/mappers/';
+import { config } from '../config';
 
 /**
  * Service for submission management and processing.
@@ -93,29 +95,7 @@ export class SubmissionService {
     const limit = filters.limit || 20;
     const totalPages = Math.ceil(total / limit);
 
-    const submissionsDTO = submissions.map(sub => new SubmissionResponseDTO({
-      id: sub.id,
-      userId: sub.userId,
-      questionId: sub.questionId,
-      code: sub.code,
-      language: sub.language,
-      status: sub.status,
-      score: sub.score,
-      totalTests: sub.totalTests,
-      passedTests: sub.passedTests,
-      executionTimeMs: sub.executionTimeMs,
-      memoryUsedKb: sub.memoryUsedKb,
-      verdict: sub.verdict,
-      errorMessage: sub.errorMessage,
-      createdAt: sub.createdAt,
-      updatedAt: sub.updatedAt,
-      userName: sub.user?.name,
-      userEmail: sub.user?.email,
-      studentRegistration: (sub.user as any)?.studentRegistration,
-      questionName: sub.question?.title,
-      questionListId: (sub as any).questionListId,
-      questionListTitle: (sub as any).questionListTitle
-    }));
+    const submissionsDTO = submissions.map(sub => SubmissionMapper.toDTO(sub));
 
     return {
       submissions: submissionsDTO,
@@ -280,12 +260,6 @@ export class SubmissionService {
         throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
       }
 
-      // Only local submissions are supported
-      if (question.submissionType !== 'local') {
-        logger.warn('Unsupported question type', { submissionId, submissionType: question.submissionType });
-        throw new ValidationError('Unsupported question type', 'INVALID_QUESTION_TYPE');
-      }
-
       logger.debug('Fetching test cases', { submissionId, questionId: question.id });
       const testCases = await this.testCaseRepository.findByQuestion(question.id);
       if (testCases.length === 0) {
@@ -302,7 +276,7 @@ export class SubmissionService {
       const limits = {
         cpuTimeLimit: question.getCpuTimeLimitSeconds(),
         memoryLimit: question.getMemoryLimitKb(),
-        wallTimeLimit: question.getWallTimeLimitSeconds()
+        wallTimeLimit: config.limits.defaultWallTimeLimit
       };
 
       const batchSubmissions = testCases.map(testCase => ({

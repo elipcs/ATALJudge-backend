@@ -94,12 +94,6 @@ export function convertQuestionPayload(req: Request, _res: Response, next: NextF
       }
     }
 
-    if (req.body.judgeType === undefined && req.body.judge_type !== undefined) {
-      req.body.judgeType = req.body.judge_type;
-      delete req.body.judge_type;
-    }
-
-
   }
 
   next();

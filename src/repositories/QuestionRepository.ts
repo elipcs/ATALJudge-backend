@@ -50,14 +50,7 @@ export class QuestionRepository extends BaseRepository<Question> {
 
     return query.getManyAndCount();
   }
-
-  async findByJudgeType(judgeType: string): Promise<Question[]> {
-    return this.repository.find({
-      where: { judgeType } as any,
-      relations: ['author']
-    });
-  }
-
+  
   async findWithTestCases(id: string): Promise<Question | null> {
     return this.repository.findOne({
       where: { id },

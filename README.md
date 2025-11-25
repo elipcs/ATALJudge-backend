@@ -128,9 +128,6 @@ export class CreateQuestionDto {
   @IsString()
   @Length(1, 200)
   title: string;
-  
-  @IsEnum(JudgeType)
-  judgeType: JudgeType;
 }
 ```
 
