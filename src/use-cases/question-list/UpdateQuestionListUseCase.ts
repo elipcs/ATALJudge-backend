@@ -39,24 +39,19 @@ export class UpdateQuestionListUseCase implements IUseCase<UpdateQuestionListUse
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }
 
-    // 2. Check permission (only author can edit)
-    if (questionList.authorId !== userId) {
-      throw new ForbiddenError('You do not have permission to edit this list', 'FORBIDDEN');
-    }
-
-    // 3. Check if list can be edited
+    // 2. Check if list can be edited
     if (!questionList.canBeEdited()) {
       throw new ForbiddenError('This questionList can no longer be edited', 'CANNOT_EDIT_LIST');
     }
 
-    // 4. Apply updates
+    // 3. Apply updates
     if (dto.title) questionList.title = dto.title;
     if (dto.description !== undefined) questionList.description = dto.description;
     if (dto.startDate) questionList.startDate = new Date(dto.startDate);
     if (dto.endDate) questionList.endDate = new Date(dto.endDate);
     if (dto.isRestricted !== undefined) questionList.isRestricted = dto.isRestricted;
 
-    // 5. Update classes (if specified)
+    // 4. Update classes (if specified)
     if (dto.classIds !== undefined) {
       if (dto.classIds.length > 0) {
         const classes = await this.classRepository.findByIds(dto.classIds);
@@ -66,7 +61,7 @@ export class UpdateQuestionListUseCase implements IUseCase<UpdateQuestionListUse
       }
     }
 
-    // 6. Save changes
+    // 5. Save changes
     const updatedList = await this.questionListRepository.save(questionList);
 
     logger.info('[UpdateQuestionListUseCase] List updated', { questionListId, userId });
@@ -79,7 +74,6 @@ export class UpdateQuestionListUseCase implements IUseCase<UpdateQuestionListUse
       id: questionList.id,
       title: questionList.title,
       description: questionList.description,
-      authorId: questionList.authorId,
       startDate: questionList.startDate?.toISOString(),
       endDate: questionList.endDate?.toISOString(),
       scoringMode: questionList.scoringMode,

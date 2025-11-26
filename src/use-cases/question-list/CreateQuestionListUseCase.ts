@@ -7,7 +7,6 @@ import { logger } from '../../utils';
 
 export interface CreateQuestionListUseCaseInput {
   dto: CreateQuestionListDTO;
-  authorId?: string;
 }
 
 /**
@@ -27,7 +26,7 @@ export class CreateQuestionListUseCase implements IUseCase<CreateQuestionListUse
   ) {}
 
   async execute(input: CreateQuestionListUseCaseInput): Promise<QuestionListResponseDTO> {
-    const { dto, authorId } = input;
+    const { dto } = input;
 
     // 1. Normalize question groups
     const normalizedGroups = (dto.questionGroups || []).map((g: any) => ({
@@ -42,7 +41,6 @@ export class CreateQuestionListUseCase implements IUseCase<CreateQuestionListUse
     const questionList = new QuestionList();
     questionList.title = dto.title;
     questionList.description = dto.description;
-    questionList.authorId = authorId;
     questionList.startDate = dto.startDate ? new Date(dto.startDate) : null as any;
     questionList.endDate = dto.endDate ? new Date(dto.endDate) : null as any;
     questionList.scoringMode = dto.scoringMode || 'simple';

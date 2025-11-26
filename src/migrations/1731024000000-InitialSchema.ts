@@ -19,7 +19,7 @@ export class InitialSchema1731024000000 implements MigrationInterface {
     await queryRunner.query(`
       DO $$ BEGIN
         CREATE TYPE "programming_language" AS ENUM (
-          'c', 'cpp', 'java', 'python', 'javascript', 'typescript', 'go', 'rust', 'kotlin', 'swift'
+          'java', 'python'
         );
       EXCEPTION
         WHEN duplicate_object THEN null;
@@ -102,7 +102,6 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         "title" varchar(500) NOT NULL,
         "description" text,
-        "author_id" uuid,
         "start_date" timestamp with time zone NOT NULL,
         "end_date" timestamp with time zone NOT NULL,
         "scoring_mode" varchar(20) DEFAULT 'simple',
@@ -133,12 +132,9 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "title" varchar(500) NOT NULL,
         "text" text NOT NULL,
         "question_list_id" uuid ,
-        "author_id" uuid,
         "time_limit_ms" int NOT NULL DEFAULT 1000,
         "memory_limit_kb" int NOT NULL DEFAULT 64000,
-        "wall_time_limit_s" float,
         "examples" jsonb DEFAULT '[]',
-        "submission_type" varchar(20) DEFAULT 'local',
         "oracle_code" text,
         "oracle_language" varchar(20),
         "source" varchar(200),
@@ -169,7 +165,7 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "question_id" uuid NOT NULL,
         "input" text NOT NULL,
         "expected_output" text NOT NULL,
-        "weight" int DEFAULT 0,
+        "weight" int DEFAULT 1,
         "created_at" timestamp with time zone NOT NULL DEFAULT now(),
         "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
         CONSTRAINT "fk_test_cases_question" FOREIGN KEY ("question_id") 
@@ -259,7 +255,7 @@ export class InitialSchema1731024000000 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE INDEX idx_question_list_questions_question_id ON question_list_questions(question_id)
-    `);        
+    `);
 
     // Create question_list_classes junction table
     await queryRunner.query(`

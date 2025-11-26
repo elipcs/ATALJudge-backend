@@ -32,12 +32,7 @@ export class DeleteQuestionUseCase implements IUseCase<DeleteQuestionUseCaseInpu
       throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
     }
 
-    // 2. Check authorization (only author can delete)
-    if (question.authorId !== userId) {
-      throw new ForbiddenError('You do not have permission to delete this question', 'FORBIDDEN');
-    }
-
-    // 3. Check if question can be deleted (business rule)
+    // 2. Check if question can be deleted (business rule)
     if (!question.canBeDeleted()) {
       throw new ValidationError(
         'This question cannot be deleted because it has submissions',
@@ -45,7 +40,7 @@ export class DeleteQuestionUseCase implements IUseCase<DeleteQuestionUseCaseInpu
       );
     }
 
-    // 4. Delete question
+    // 3. Delete question
     await this.questionRepository.delete(questionId);
 
     logger.info('[DeleteQuestionUseCase] Question deleted', { 

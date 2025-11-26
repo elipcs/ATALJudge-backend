@@ -23,33 +23,6 @@ export class QuestionRepository extends BaseRepository<Question> {
       relations: ['author', 'testCases']
     });
   }
-
-  async findByAuthor(
-    authorId: string,
-    filters?: { source?: string; tags?: string[] },
-    skip?: number,
-    take?: number
-  ): Promise<[Question[], number]> {
-    const query = this.repository.createQueryBuilder('question')
-      .leftJoinAndSelect('question.author', 'author')
-      .leftJoinAndSelect('question.testCases', 'testCases')
-      .where('question.authorId = :authorId', { authorId });
-
-    if (filters?.source) {
-      query.andWhere('question.source = :source', { source: filters.source });
-    }
-
-    if (filters?.tags && filters.tags.length > 0) {
-      query.andWhere("question.tags ?| array[:...tags]", { tags: filters.tags });
-    }
-
-    query.orderBy('question.createdAt', 'DESC');
-
-    if (skip !== undefined) query.skip(skip);
-    if (take !== undefined) query.take(take);
-
-    return query.getManyAndCount();
-  }
   
   async findWithTestCases(id: string): Promise<Question | null> {
     return this.repository.findOne({

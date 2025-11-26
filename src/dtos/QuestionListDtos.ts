@@ -157,7 +157,6 @@ export class QuestionListResponseDTO {
   id!: string;
   title!: string;
   description?: string;
-  authorId?: string;
   startDate?: string;
   endDate?: string;
   scoringMode!: 'simple' | 'groups';

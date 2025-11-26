@@ -4,7 +4,7 @@ FROM node:18-alpine AS dependencies
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Stage 2: Build the application
 FROM node:18-alpine AS builder
@@ -12,7 +12,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci && npm cache clean --force
+RUN npm install && npm cache clean --force
 
 COPY . .
 RUN npm run build
@@ -31,6 +31,10 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
@@ -40,4 +44,4 @@ USER nodejs
 
 EXPOSE 3333
 
-CMD ["node", "dist/server.js"]
+CMD ["./docker-entrypoint.sh"]

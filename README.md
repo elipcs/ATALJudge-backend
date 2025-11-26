@@ -87,7 +87,7 @@ npm run migration:run
 npm run dev
 ```
 
-Open [http://localhost:5000](http://localhost:5000)
+Open [http://localhost:3333](http://localhost:3333)
 
 ## 📜 Available Scripts
 

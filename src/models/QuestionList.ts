@@ -23,9 +23,6 @@ export class QuestionList {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ name: 'author_id', type: 'uuid', nullable: true })
-  authorId?: string;
-
   @Column({ name: 'start_date', type: 'timestamp with time zone', nullable: true })
   startDate!: Date;
 

@@ -34,10 +34,9 @@ export class QuestionService {
     return this.toResponseDTO(question);
   }
 
-  async createQuestion(data: CreateQuestionDTO, authorId?: string): Promise<QuestionResponseDTO> {
+  async createQuestion(data: CreateQuestionDTO): Promise<QuestionResponseDTO> {
     logger.debug('[QUESTION SERVICE] createQuestion called', {
       title: data.title,
-      authorId,
     });
 
     const question = new Question();
@@ -46,7 +45,6 @@ export class QuestionService {
     question.timeLimitMs = data.timeLimitMs || 1000;
     question.memoryLimitKb = data.memoryLimitKb || 128000;
     question.examples = data.examples || [];
-    question.authorId = authorId;
 
     const saved = await this.questionRepository.save(question);
 
@@ -182,7 +180,6 @@ export class QuestionService {
       timeLimitMs: question.timeLimitMs,
       memoryLimitKb: question.memoryLimitKb,
       examples: question.examples,
-      authorId: question.authorId,
       createdAt: question.createdAt,
       updatedAt: question.updatedAt,
     };

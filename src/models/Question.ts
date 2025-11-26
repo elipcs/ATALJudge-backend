@@ -21,9 +21,6 @@ export class Question {
   @Column({ type: 'text', nullable: false })
   text!: string;
 
-  @Column({ name: 'author_id', type: 'uuid', nullable: true })
-  authorId?: string;
-
   @Column({ name: 'time_limit_ms', type: 'int', default: 1000 })
   timeLimitMs!: number;
 

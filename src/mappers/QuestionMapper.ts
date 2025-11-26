@@ -34,7 +34,6 @@ export class QuestionMapper {
       examples: question.examples,
       oracleCode: question.oracleCode,
       oracleLanguage: question.oracleLanguage,
-      authorId: question.authorId,
       source: question.source ?? undefined,
       tags: question.tags ?? [],
       createdAt: question.createdAt,

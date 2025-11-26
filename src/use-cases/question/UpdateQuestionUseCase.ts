@@ -38,9 +38,7 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
     }
 
     // 2. Check authorization (author, assistant, or professor can edit)
-    const canEdit = question.authorId === userId ||
-      userRole === 'professor' ||
-      userRole === 'assistant';
+    const canEdit = userRole === 'professor' ||  userRole === 'assistant';
 
     if (!canEdit) {
       throw new ForbiddenError('You do not have permission to edit this question', 'FORBIDDEN');

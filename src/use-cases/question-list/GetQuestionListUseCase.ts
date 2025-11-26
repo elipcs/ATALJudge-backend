@@ -38,7 +38,6 @@ export class GetQuestionListUseCase implements IUseCase<string, QuestionListResp
       id: questionList.id,
       title: questionList.title,
       description: questionList.description,
-      authorId: questionList.authorId,
       startDate: questionList.startDate?.toISOString(),
       endDate: questionList.endDate?.toISOString(),
       scoringMode: questionList.scoringMode,

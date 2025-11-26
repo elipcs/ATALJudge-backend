@@ -68,13 +68,6 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     return this.repository.save(questionList);
   }
 
-  async findByAuthor(authorId: string): Promise<QuestionList[]> {
-    return this.repository.find({
-      where: { authorId },
-      order: { createdAt: 'DESC' }
-    });
-  }
-
   async findByClass(classId: string): Promise<QuestionList[]> {
     return this.repository
       .createQueryBuilder('question_list')

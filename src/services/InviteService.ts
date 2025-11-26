@@ -16,10 +16,10 @@ import { NotFoundError, ValidationError } from '../utils';
 export class InviteService {
   constructor(
     @inject(InviteRepository) private inviteRepository: InviteRepository
-  ) {}
+  ) { }
 
   async createInvite(dto: CreateInviteDTO): Promise<InviteResponseDTO> {
-    
+
     const token = this.generateToken();
 
     const invite = new Invite();
@@ -100,12 +100,18 @@ export class InviteService {
     }
 
     invite.incrementUses();
-    await this.inviteRepository.save(invite);
+
+    // Force update to ensure currentUses is persisted
+    await this.inviteRepository.update(invite.id, {
+      currentUses: invite.currentUses,
+      isUsed: invite.isUsed,
+      usedAt: invite.usedAt
+    });
   }
 
   async deleteInvite(inviteId: string): Promise<void> {
     const deleted = await this.inviteRepository.delete(inviteId);
-    
+
     if (!deleted) {
       throw new NotFoundError('Convite não encontrado', 'INVITE_NOT_FOUND');
     }
@@ -113,7 +119,7 @@ export class InviteService {
 
   async revokeInvite(inviteId: string): Promise<void> {
     const invite = await this.inviteRepository.findById(inviteId);
-    
+
     if (!invite) {
       throw new NotFoundError('Convite não encontrado', 'INVITE_NOT_FOUND');
     }
@@ -121,7 +127,7 @@ export class InviteService {
     invite.isUsed = true;
     invite.usedAt = new Date();
     invite.currentUses = invite.maxUses;
-    
+
     await this.inviteRepository.save(invite);
   }
 

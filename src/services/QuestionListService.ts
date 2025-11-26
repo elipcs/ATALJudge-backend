@@ -62,7 +62,7 @@ export class QuestionListService {
     return this.toResponseDTO(questionList);
   }
 
-  async createList(data: CreateQuestionListDTO, authorId?: string): Promise<QuestionListResponseDTO> {
+  async createList(data: CreateQuestionListDTO): Promise<QuestionListResponseDTO> {
     const normalizedGroups = (data.questionGroups || []).map((g: any) => ({
       id: g.id,
       name: g.name,
@@ -74,7 +74,6 @@ export class QuestionListService {
     const questionList = await this.questionListRepository.create({
       title: data.title,
       description: data.description,
-      authorId,
       startDate: data.startDate ? new Date(data.startDate) : undefined,
       endDate: data.endDate ? new Date(data.endDate) : undefined,
       scoringMode: data.scoringMode || 'simple',
@@ -218,7 +217,6 @@ export class QuestionListService {
           timeLimitMs: q.timeLimitMs,
           memoryLimitKb: q.memoryLimitKb,
           examples: q.examples,
-          authorId: q.authorId,
           createdAt: q.createdAt,
           updatedAt: q.updatedAt,
         };
@@ -228,7 +226,6 @@ export class QuestionListService {
       id: questionList.id,
       title: questionList.title,
       description: questionList.description,
-      authorId: questionList.authorId,
       startDate: questionList.startDate?.toISOString(),
       endDate: questionList.endDate?.toISOString(),
       scoringMode: questionList.scoringMode,

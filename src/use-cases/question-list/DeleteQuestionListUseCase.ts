@@ -33,12 +33,7 @@ export class DeleteQuestionListUseCase implements IUseCase<DeleteQuestionListUse
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }
 
-    // 2. Check permission (only author)
-    if (questionList.authorId !== userId) {
-      throw new ForbiddenError('You do not have permission to delete this list', 'FORBIDDEN');
-    }
-
-    // 3. Check if can be deleted
+    // 2. Check if can be deleted
     if (!questionList.canBeDeleted()) {
       throw new ForbiddenError(
         'This list cannot be deleted because it has recorded grades',
@@ -46,7 +41,7 @@ export class DeleteQuestionListUseCase implements IUseCase<DeleteQuestionListUse
       );
     }
 
-    // 4. Delete list
+    // 3. Delete list
     await this.questionListRepository.delete(questionListId);
 
     logger.info('[DeleteQuestionListUseCase] List deleted', { questionListId, userId });

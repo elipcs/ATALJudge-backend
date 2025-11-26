@@ -66,9 +66,7 @@ router.post(
   validateBody(CreateQuestionListDTO),
   asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     const questionList = await createQuestionListUseCase.execute({
-      dto: req.body,
-      authorId: req.user!.sub
-    });
+      dto: req.body});
     
     successResponse(res, questionList, 'Question list created successfully', 201);
   })

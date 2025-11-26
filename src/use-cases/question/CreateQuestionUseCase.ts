@@ -8,7 +8,6 @@ import { logger, NotFoundError } from '../../utils';
 
 export interface CreateQuestionUseCaseInput {
   dto: CreateQuestionDTO;
-  authorId: string;
 }
 
 /**
@@ -29,7 +28,7 @@ export class CreateQuestionUseCase implements IUseCase<CreateQuestionUseCaseInpu
   ) {}
 
   async execute(input: CreateQuestionUseCaseInput): Promise<QuestionResponseDTO> {
-    const { dto, authorId } = input;
+    const { dto } = input;
 
     // 1. Create question instance
     const question = new Question();
@@ -37,19 +36,15 @@ export class CreateQuestionUseCase implements IUseCase<CreateQuestionUseCaseInpu
     // 2. Apply DTO data
     QuestionMapper.applyCreateDTO(question, dto);
 
-    // 3. Set author
-    question.authorId = authorId;
-
-    // 4. Save to database
+    // 3. Save to database
     const savedQuestion = await this.questionRepository.create(question);
 
     logger.info('[CreateQuestionUseCase] Question created', { 
       questionId: savedQuestion.id, 
       title: savedQuestion.title,
-      authorId 
     });
 
-    // 5. Optionally add to question list if provided
+    // 4. Optionally add to question list if provided
     if (dto.questionListId) {
       const questionList = await this.questionListRepository.findByIdWithRelations(dto.questionListId, true);
       
@@ -73,7 +68,7 @@ export class CreateQuestionUseCase implements IUseCase<CreateQuestionUseCaseInpu
       }
     }
 
-    // 6. Return DTO
+    // 5. Return DTO
     return QuestionMapper.toDTO(savedQuestion);
   }
 }

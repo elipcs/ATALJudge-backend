@@ -21,6 +21,14 @@ import { logger } from '../utils';
  * - Entity and migration auto-discovery
  * - Query logging in development mode
  */
+// Detect if using local database (judge0-db, localhost) or external (AWS RDS)
+const isLocalDatabase = config.database.host === 'judge0-db' ||
+  config.database.host === 'localhost' ||
+  config.database.host === '127.0.0.1';
+
+// Only enable SSL for external databases (AWS RDS)
+const shouldUseSSL = config.nodeEnv === 'production' && !isLocalDatabase;
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: config.database.host,
@@ -29,6 +37,11 @@ export const AppDataSource = new DataSource({
   password: config.database.password,
   database: config.database.database,
   url: config.database.url,
+
+  // Enable SSL only for external databases (AWS RDS)
+  ssl: shouldUseSSL ? {
+    rejectUnauthorized: false // AWS RDS uses self-signed certificates
+  } : false,
 
   synchronize: false,
 
@@ -41,16 +54,20 @@ export const AppDataSource = new DataSource({
   subscribers: [],
 
   extra: {
-    max: 10, 
-    min: 2,  
-    idleTimeoutMillis: 30000, 
-    connectionTimeoutMillis: 2000 
+    max: 10,
+    min: 2,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+    // SSL configuration for connection pool
+    ssl: shouldUseSSL ? {
+      rejectUnauthorized: false
+    } : undefined
   },
 
   connectTimeoutMS: 5000,
 
   cache: {
-    duration: 30000 
+    duration: 30000
   }
 });
 
@@ -66,10 +83,22 @@ export const AppDataSource = new DataSource({
  */
 export async function initializeDatabase(): Promise<void> {
   try {
+    logger.info(`Tentando conectar ao PostgreSQL...`);
+    logger.info(`Host: ${config.database.host}`);
+    logger.info(`Port: ${config.database.port}`);
+    logger.info(`Database: ${config.database.database}`);
+    logger.info(`Username: ${config.database.username}`);
+    logger.info(`URL presente: ${config.database.url ? 'Sim' : 'Não'}`);
+
     await AppDataSource.initialize();
     logger.info(`Conectado ao PostgreSQL: ${config.database.host}:${config.database.port}/${config.database.database}`);
-  } catch (error) {
-    logger.error('Erro ao conectar ao PostgreSQL', { error });
+  } catch (error: any) {
+    logger.error('Erro ao conectar ao PostgreSQL', {
+      error,
+      message: error?.message,
+      code: error?.code,
+      detail: error?.detail
+    });
     throw error;
   }
 }

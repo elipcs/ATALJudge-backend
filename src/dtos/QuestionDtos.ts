@@ -137,7 +137,6 @@ export class QuestionResponseDTO {
   examples!: QuestionExample[];
   oracleCode?: string;
   oracleLanguage?: string;
-  authorId?: string;
   source?: string;
   tags!: string[];
   createdAt!: Date;

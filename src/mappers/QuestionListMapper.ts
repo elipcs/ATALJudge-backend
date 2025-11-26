@@ -46,7 +46,6 @@ export class QuestionListMapper {
           timeLimitMs: q.timeLimitMs,
           memoryLimitKb: q.memoryLimitKb,
           examples: q.examples,
-          authorId: q.authorId,
         };
       });
 
@@ -54,7 +53,6 @@ export class QuestionListMapper {
       id: questionList.id,
       title: questionList.title,
       description: questionList.description,
-      authorId: questionList.authorId,
       startDate: questionList.startDate?.toISOString(),
       endDate: questionList.endDate?.toISOString(),
       scoringMode: questionList.scoringMode,

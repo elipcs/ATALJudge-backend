@@ -29,9 +29,7 @@ function createQuestionController(
     convertQuestionPayload,
     asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
       const question = await createQuestionUseCase.execute({
-        dto: req.body,
-        authorId: req.user!.sub
-      });
+        dto: req.body});
 
       successResponse(res, question, 'Question created successfully', 201);
     })
@@ -44,32 +42,6 @@ function createQuestionController(
       const questions = await getAllQuestionsUseCase.execute();
 
       successResponse(res, { questions }, 'List of questions');
-    })
-  );
-
-  router.get(
-    '/my-questions',
-    authenticate,
-    requireTeacher,
-    asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-      const source = req.query.source as string | undefined;
-      const tagsParam = req.query.tags as string | undefined;
-      const tags = tagsParam ? tagsParam.split(',') : undefined;
-
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 20;
-
-      const result = await getQuestionsByAuthorUseCase.execute({
-        authorId: req.user!.sub,
-        filters: {
-          source,
-          tags
-        },
-        page,
-        limit
-      });
-
-      successResponse(res, result, 'User questions');
     })
   );
 
