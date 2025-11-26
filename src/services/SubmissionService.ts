@@ -19,7 +19,7 @@ import { Judge0Service } from './Judge0Service';
 import { SubmissionQueueService } from './SubmissionQueueService';
 import { GradeService } from './GradeService';
 import { logger, NotFoundError, ValidationError } from '../utils';
-import { SubmissionMapper } from '@/mappers/';
+import { SubmissionMapper } from '../mappers';
 import { config } from '../config';
 
 /**

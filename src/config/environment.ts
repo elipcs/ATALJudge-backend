@@ -22,7 +22,7 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
  * - Rate limiting and size restrictions
  */
 export const config = {
-  
+
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '5000', 10),
 
@@ -49,8 +49,8 @@ export const config = {
       }
       return 'dev-jwt-secret-not-for-production';
     })(),
-    accessExpires: parseInt(process.env.JWT_ACCESS_EXPIRES || '3600', 10), 
-    refreshExpires: parseInt(process.env.JWT_REFRESH_EXPIRES || '2592000', 10) 
+    accessExpires: parseInt(process.env.JWT_ACCESS_EXPIRES || '3600', 10),
+    refreshExpires: parseInt(process.env.JWT_REFRESH_EXPIRES || '2592000', 10)
   },
 
   email: {
@@ -63,7 +63,7 @@ export const config = {
 
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 
-  allowedOrigins: process.env.ALLOWED_ORIGINS 
+  allowedOrigins: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : [],
 
@@ -81,7 +81,7 @@ export const config = {
 
   testCaseGenerator: {
     apiUrl: process.env.TEST_CASE_GENERATOR_API_URL || 'http://localhost:9000',
-    timeout: parseInt(process.env.TEST_CASE_GENERATOR_TIMEOUT || '300000', 10) // 300 seconds (5 minutos) - geração pode demorar
+    timeout: parseInt(process.env.TEST_CASE_GENERATOR_TIMEOUT || '600000', 10) // 600 seconds (10 minutos) - geração pode demorar
   },
 
   limits: {
@@ -116,7 +116,7 @@ export function validateConfig(): void {
     if (config.jwt.secret.includes('dev-') || config.jwt.secret.includes('default')) {
       errors.push('CRITICAL: JWT_SECRET contains development value!');
     }
-    
+
     if (config.secretKey.length < 32) {
       errors.push('CRITICAL: SECRET_KEY must be at least 32 characters!');
     }
@@ -124,7 +124,7 @@ export function validateConfig(): void {
       errors.push('CRITICAL: JWT_SECRET must be at least 32 characters!');
     }
   } else {
-    
+
     if (!process.env.SECRET_KEY) {
       console.warn('WARNING: SECRET_KEY not defined, using development value');
     }
@@ -136,7 +136,7 @@ export function validateConfig(): void {
   if (!config.judge0.url) {
     errors.push('JUDGE0_URL not configured');
   }
-  
+
   if (errors.length > 0) {
     throw new Error(`Configuration errors:\n${errors.map(e => `  - ${e}`).join('\n')}`);
   }
