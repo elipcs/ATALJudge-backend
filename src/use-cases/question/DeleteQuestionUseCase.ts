@@ -13,7 +13,6 @@ export interface DeleteQuestionUseCaseInput {
  * 
  * Responsibilities:
  * - Find question by ID
- * - Check if user is author (authorization)
  * - Check if question can be deleted (without submissions)
  * - Delete question
  */

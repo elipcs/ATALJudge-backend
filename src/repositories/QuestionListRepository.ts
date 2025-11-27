@@ -15,15 +15,10 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
     id: string,
     includeQuestions: boolean = false,
     includeClasses: boolean = false,
-    includeAuthor: boolean = false
   ): Promise<QuestionList | null> {
     const queryBuilder = this.repository
       .createQueryBuilder('question_list')
       .where('question_list.id = :id', { id });
-
-    if (includeAuthor) {
-      queryBuilder.leftJoinAndSelect('question_list.author', 'author');
-    }
 
     if (includeQuestions) {
       queryBuilder.leftJoinAndSelect('question_list.questions', 'questions');
@@ -39,15 +34,10 @@ export class QuestionListRepository extends BaseRepository<QuestionList> {
   async findAllWithRelations(
     includeQuestions: boolean = false,
     includeClasses: boolean = false,
-    includeAuthor: boolean = false
   ): Promise<QuestionList[]> {
     const queryBuilder = this.repository
       .createQueryBuilder('question_list')
       .orderBy('question_list.createdAt', 'DESC');
-
-    if (includeAuthor) {
-      queryBuilder.leftJoinAndSelect('question_list.author', 'author');
-    }
 
     if (includeQuestions) {
       queryBuilder.leftJoinAndSelect('question_list.questions', 'questions');

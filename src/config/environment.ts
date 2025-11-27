@@ -18,13 +18,13 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
  * Contains all environment-dependent settings including:
  * - Database connection
  * - JWT and security settings
- * - External service integrations (Judge0, Codeforces, Email)
+ * - External service integrations (Judge0, Email)
  * - Rate limiting and size restrictions
  */
 export const config = {
 
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '5000', 10),
+  port: parseInt(process.env.PORT || '3333', 10),
 
   database: {
     host: process.env.DB_HOST || 'localhost',
@@ -73,14 +73,8 @@ export const config = {
     rapidApiKey: process.env.JUDGE0_RAPID_API_KEY
   },
 
-  codeforces: {
-    apiUrl: process.env.CODEFORCES_API_URL || 'https://codeforces.com/api',
-    pythonApiUrl: process.env.CODEFORCES_PYTHON_API_URL || 'http://localhost:8000',
-    pythonApiTimeout: parseInt(process.env.CODEFORCES_PYTHON_API_TIMEOUT || '120000', 10) // 120 seconds (2 minutos) - submissão pode demorar
-  },
-
   testCaseGenerator: {
-    apiUrl: process.env.TEST_CASE_GENERATOR_API_URL || 'http://localhost:9000',
+    apiUrl: process.env.TEST_CASE_GENERATOR_API_URL || 'http://localhost:8000',
     timeout: parseInt(process.env.TEST_CASE_GENERATOR_TIMEOUT || '600000', 10) // 600 seconds (10 minutos) - geração pode demorar
   },
 
@@ -88,7 +82,7 @@ export const config = {
     maxCodeSizeKB: parseInt(process.env.MAX_CODE_SIZE_KB || '200', 10),
     maxInputSizeKB: parseInt(process.env.MAX_INPUT_SIZE_KB || '64', 10),
     maxOutputSizeKB: parseInt(process.env.MAX_OUTPUT_SIZE_KB || '64', 10),
-    maxTestCasesPerQuestion: parseInt(process.env.MAX_TEST_CASES_PER_QUESTION || '200', 10),
+    maxTestCasesPerQuestion: parseInt(process.env.MAX_TEST_CASES_PER_QUESTION || '100', 10),
     defaultCpuTimeLimit: parseFloat(process.env.DEFAULT_CPU_TIME_LIMIT || '2.0'),
     defaultWallTimeLimit: parseFloat(process.env.DEFAULT_WALL_TIME_LIMIT || '5.0'),
     defaultMemoryLimitKB: parseInt(process.env.DEFAULT_MEMORY_LIMIT_KB || '262144', 10),

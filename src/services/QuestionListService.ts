@@ -52,7 +52,7 @@ export class QuestionListService {
   }
 
   async getListById(id: string): Promise<QuestionListResponseDTO> {
-    const questionList = await this.questionListRepository.findByIdWithRelations(id, true, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(id, true, true);
 
     if (!questionList) {
       logger.warn('Lista não encontrada', { questionListId: id });

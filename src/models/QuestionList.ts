@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinColumn, JoinTable, BeforeInsert, BeforeUpdate } from 'typeorm';
-import { User } from './User';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { Question } from './Question';
 import { Class } from './Class';
 import { ValidationError } from '../utils';
@@ -52,10 +51,6 @@ export class QuestionList {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
-
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'author_id' })
-  author?: User;
 
   @ManyToMany(() => Question, question => question.questionLists)
   @JoinTable({

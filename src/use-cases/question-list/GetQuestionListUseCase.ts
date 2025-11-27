@@ -21,7 +21,7 @@ export class GetQuestionListUseCase implements IUseCase<string, QuestionListResp
 
   async execute(questionListId: string): Promise<QuestionListResponseDTO> {
     // 1. Find list with relationships
-    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, true, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, true);
 
     // 2. Validate existence
     if (!questionList) {

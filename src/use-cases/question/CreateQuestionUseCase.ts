@@ -16,7 +16,6 @@ export interface CreateQuestionUseCaseInput {
  * Responsibilities:
  * - Create Question entity
  * - Apply DTO data
- * - Set author
  * - Save to database
  * - Return DTO
  */

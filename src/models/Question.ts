@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
-import { User } from './User';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToMany, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { Submission } from './Submission';
 import { TestCase } from './TestCase';
 import { QuestionList } from './QuestionList';
@@ -49,10 +48,6 @@ export class Question {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
-
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'author_id' })
-  author?: User;
 
   @ManyToMany(() => QuestionList, questionList => questionList.questions)
   questionLists!: QuestionList[];

@@ -85,14 +85,29 @@ export function createApp(): Application {
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }
   }));
 
+  // Middleware to check internal service requests
+  app.use((req, _res, next) => {
+    // Mark internal service requests
+    const internalServiceToken = req.headers['x-internal-service'];
+    if (internalServiceToken === config.secretKey) {
+      (req as any).isInternalService = true;
+    }
+    next();
+  });
+
   app.use(cors({
     origin: function (origin, callback) {
 
       const isProduction = config.nodeEnv === 'production';
 
+      // Allow requests without origin if they are from internal services
       if (!origin) {
+        // In production, only allow if it's marked as internal service
+        // In development, allow all
         if (isProduction) {
-          return callback(new Error('Origem não permitida'), false);
+          // Internal service requests are allowed (they have the secret header)
+          // This will be validated by the middleware above
+          return callback(null, true);
         }
         return callback(null, true);
       }

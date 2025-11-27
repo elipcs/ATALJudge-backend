@@ -125,7 +125,7 @@ export class GradeService {
   async calculateGradeForList(studentId: string, questionListId: string): Promise<number> {
     logger.info('Calculating student grade', { studentId, questionListId });
 
-    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, false, false);
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, false);
     if (!questionList) {
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }

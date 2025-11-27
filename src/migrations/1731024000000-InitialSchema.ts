@@ -112,13 +112,7 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "count_toward_score" boolean DEFAULT true,
         "created_at" timestamp with time zone NOT NULL DEFAULT now(),
         "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
-        CONSTRAINT "fk_question_lists_author" FOREIGN KEY ("author_id") 
-          REFERENCES "users"("id") ON DELETE SET NULL
       )
-    `);
-
-    await queryRunner.query(`
-      CREATE INDEX "idx_question_lists_author_id" ON "question_lists" ("author_id")
     `);
 
     await queryRunner.query(`
@@ -141,13 +135,7 @@ export class InitialSchema1731024000000 implements MigrationInterface {
         "tags" jsonb DEFAULT '[]',
         "created_at" timestamp with time zone NOT NULL DEFAULT now(),
         "updated_at" timestamp with time zone NOT NULL DEFAULT now(),
-        CONSTRAINT "fk_questions_author" FOREIGN KEY ("author_id") 
-          REFERENCES "users"("id") ON DELETE SET NULL,
       )
-    `);
-
-    await queryRunner.query(`
-      CREATE INDEX "idx_questions_author_id" ON "questions" ("author_id")
     `);
 
     await queryRunner.query(`

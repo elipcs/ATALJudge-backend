@@ -13,7 +13,6 @@ export interface DeleteQuestionListUseCaseInput {
  * 
  * Responsibilities:
  * - Find list
- * - Check permission (only author)
  * - Check if can be deleted
  * - Delete list
  */
@@ -27,7 +26,7 @@ export class DeleteQuestionListUseCase implements IUseCase<DeleteQuestionListUse
     const { questionListId, userId } = input;
 
     // 1. Find list
-    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, false, false, true);
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, false, false);
 
     if (!questionList) {
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');

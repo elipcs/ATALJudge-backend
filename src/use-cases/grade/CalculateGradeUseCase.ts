@@ -35,7 +35,7 @@ export class CalculateGradeUseCase implements IUseCase<CalculateGradeUseCaseInpu
     logger.info('[CalculateGradeUseCase] Calculating grade', { studentId, questionListId });
 
     // 1. Find list with questions
-    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, false, false);
+    const questionList = await this.questionListRepository.findByIdWithRelations(questionListId, true, false);
     if (!questionList) {
       throw new NotFoundError('List not found', 'LIST_NOT_FOUND');
     }

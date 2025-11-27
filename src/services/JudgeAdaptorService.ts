@@ -1,7 +1,7 @@
 /**
  * @module services/JudgeAdaptorService
  * @description Service adapter for abstracting different judge systems.
- * Provides a unified interface for handling submissions across Judge0 and Codeforces.
+ * Provides a unified interface for handling submissions across Judge0.
  * @class JudgeAdaptorService
  */
 
@@ -42,7 +42,7 @@ export interface UnifiedSubmissionResponse {
 
 /**
  * Service adaptor for unified judge system interface
- * Routes submissions to the appropriate judge system (Judge0 or Codeforces)
+ * Routes submissions to the appropriate judge system (Judge0)
  * @class JudgeAdaptorService
  */
 @injectable()

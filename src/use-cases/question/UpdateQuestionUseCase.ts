@@ -17,7 +17,7 @@ export interface UpdateQuestionUseCaseInput {
  * 
  * Responsibilities:
  * - Find question by ID
- * - Check authorization (author, assistant, or professor can edit)
+ * - Check authorization (assistant, or professor can edit)
  * - Apply DTO updates
  * - Save changes
  * - Return updated DTO
@@ -37,7 +37,7 @@ export class UpdateQuestionUseCase implements IUseCase<UpdateQuestionUseCaseInpu
       throw new NotFoundError('Question not found', 'QUESTION_NOT_FOUND');
     }
 
-    // 2. Check authorization (author, assistant, or professor can edit)
+    // 2. Check authorization (professor or assistant can edit)
     const canEdit = userRole === 'professor' ||  userRole === 'assistant';
 
     if (!canEdit) {

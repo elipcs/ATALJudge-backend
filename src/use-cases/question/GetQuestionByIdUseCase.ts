@@ -10,7 +10,7 @@ import { QuestionMapper } from '../../mappers';
  * 
  * Responsibilities:
  * - Find question by ID
- * - Include relationships (testCases, author)
+ * - Include relationships (testCases)
  * - Convert to DTO
  * - Validate existence
  */
