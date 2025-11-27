@@ -5,7 +5,7 @@
  * @class QuestionController
  */
 import { Router, Response } from 'express';
-import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from '../use-cases/question';
+import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, SearchQuestionsUseCase } from '../use-cases/question';
 import { authenticate, requireTeacher, AuthRequest } from '../middlewares';
 import { successResponse } from '../utils/responses';
 import { convertQuestionPayload } from '../middlewares/payload-converter.middleware';
@@ -17,7 +17,6 @@ function createQuestionController(
   deleteQuestionUseCase: DeleteQuestionUseCase,
   getQuestionByIdUseCase: GetQuestionByIdUseCase,
   getAllQuestionsUseCase: GetAllQuestionsUseCase,
-  getQuestionsByAuthorUseCase: GetQuestionsByAuthorUseCase,
   searchQuestionsUseCase: SearchQuestionsUseCase
 ): Router {
   const router = Router();

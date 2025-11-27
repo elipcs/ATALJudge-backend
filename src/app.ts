@@ -44,7 +44,7 @@ import {
   ResetPasswordUseCase
 } from './use-cases/auth';
 import { GetUserUseCase, GetUsersByRoleUseCase, UpdateProfileUseCase, ChangePasswordUseCase } from './use-cases/user';
-import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, GetQuestionsByAuthorUseCase, SearchQuestionsUseCase } from './use-cases/question';
+import { CreateQuestionUseCase, UpdateQuestionUseCase, DeleteQuestionUseCase, GetQuestionByIdUseCase, GetAllQuestionsUseCase, SearchQuestionsUseCase } from './use-cases/question';
 import { CreateSubmissionUseCase, GetSubmissionUseCase, GetAllSubmissionsUseCase, GetSubmissionWithResultsUseCase, ResubmitSubmissionUseCase, SearchSubmissionsUseCase } from './use-cases/submission';
 import { GetGradeUseCase, CalculateGradeUseCase, GetStudentGradesUseCase, GetListGradesUseCase, GetGradeByStudentAndListUseCase } from './use-cases/grade';
 import { CreateQuestionListUseCase, GetQuestionListUseCase, UpdateQuestionListUseCase, DeleteQuestionListUseCase, GetAllQuestionListsUseCase, UpdateListScoringUseCase, AddQuestionToListUseCase, RemoveQuestionFromListUseCase } from './use-cases/question-list';
@@ -182,7 +182,6 @@ export function createApp(): Application {
   const deleteQuestionUseCase = container.resolve(DeleteQuestionUseCase);
   const getQuestionByIdUseCase = container.resolve(GetQuestionByIdUseCase);
   const getAllQuestionsUseCase = container.resolve(GetAllQuestionsUseCase);
-  const getQuestionsByAuthorUseCase = container.resolve(GetQuestionsByAuthorUseCase);
   const searchQuestionsUseCase = container.resolve(SearchQuestionsUseCase);
   const createSubmissionUseCase = container.resolve(CreateSubmissionUseCase);
   const getSubmissionUseCase = container.resolve(GetSubmissionUseCase);
@@ -272,7 +271,6 @@ export function createApp(): Application {
     deleteQuestionUseCase,
     getQuestionByIdUseCase,
     getAllQuestionsUseCase,
-    getQuestionsByAuthorUseCase,
     searchQuestionsUseCase
   ));
   app.use('/api/classes', createClassController(

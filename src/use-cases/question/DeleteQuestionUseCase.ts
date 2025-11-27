@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import { IUseCase } from '../interfaces/IUseCase';
 import { QuestionRepository } from '../../repositories';
-import { logger, NotFoundError, ForbiddenError, ValidationError } from '../../utils';
+import { logger, NotFoundError, ValidationError } from '../../utils';
 
 export interface DeleteQuestionUseCaseInput {
   questionId: string;
@@ -43,9 +43,9 @@ export class DeleteQuestionUseCase implements IUseCase<DeleteQuestionUseCaseInpu
     // 3. Delete question
     await this.questionRepository.delete(questionId);
 
-    logger.info('[DeleteQuestionUseCase] Question deleted', { 
-      questionId, 
-      userId 
+    logger.info('[DeleteQuestionUseCase] Question deleted', {
+      questionId,
+      userId
     });
   }
 }
